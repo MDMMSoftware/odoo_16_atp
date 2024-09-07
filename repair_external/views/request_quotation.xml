@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        
+
+        <record id="view_request_quotation_form_tree" model="ir.ui.view">
+            <field name="name">request.quotation.tree</field>
+            <field name="model">request.quotation</field>
+            <field name="arch" type="xml">
+                <tree string="Quotation">
+                    <field name="quotation_date"/>
+                    <field name="request_id"/>
+                    <field name="name"/>
+                    <field name="customer"/>
+                    <field name="fleet_id"/>
+                    <field name="issued_date"/>
+                    <field name="mileage"/>
+                    <field name="pic"/>
+                    <field name="payment_date"/>
+                    <field name="customer_order_no"/>
+                    <field name="labor_parts_total"/>
+                    <field name="company_id"/>
+                    <field name="branch_id"/>
+                    <field name="state" widget="badge" decoration-danger="state == 'cancel'" decoration-muted="state == 'draft'" 
+                                                        decoration-primary="state == 'confirm'" decoration-success="state == 'invoiced'" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_request_quotation_form_form" model="ir.ui.view">
+            <field name="name">request.quotation.form</field>
+            <field name="model">request.quotation</field>
+            <field name="arch" type="xml">
+                <form string="Quotation"  duplicate="0">
+                    <header>
+                        <button name="action_submit" type="object" class="oe_highlight" string="Confirm" attrs="{'invisible':[('state','!=','draft')]}"/>
+                        <button name="action_reset_to_draft" type="object" class="oe_highlight" string="Reset to Draft" attrs="{'invisible':[('state','!=','confirm')]}"/>
+                        <button name="action_create_invoice" type="object" class="oe_highlight" string="Create Invoice" attrs="{'invisible':['|',('state','!=','confirm'),('show_status_for_invoice','!=','show')]}"/> 
+                        <button name="action_cancel" type="object" class="oe_highlight btn-danger" string="Cancel" attrs="{'invisible':[('state','=','cancel')]}" confirm="Are you sure want to cancel the quotation?"/>
+                        <button name="action_print" type="object"  context="{'filename':'mmm_mauto_sale_quotation_repair'}"  class="oe_highlight btn-info" string="Print Quotation" attrs="{'invisible':[('state','=','cancel')]}" />
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_job_orders" class="oe_stat_button" icon="fa-book"  type="object" string="Job Order"/>  
+                            <button name="action_open_transfer" class="oe_stat_button" icon="fa-star"  type="object" string="Transfer"/>  
+                            <button name="action_open_invoice" class="oe_stat_button" icon="fa-list"  type="object" string="Invoices"/>                             
+                        </div>
+                        <field name="invoice_state" invisible="1"/>
+                        <field name="show_status_for_invoice" invisible="1"/>
+                        <widget name="web_ribbon" title="Waiting Invoice"  attrs="{'invisible': [('invoice_state', '!=', 'waiting')]}"/>
+                        <widget name="web_ribbon" title="Finished"  attrs="{'invisible': [('invoice_state', '!=', 'draft')]}"/>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left">  
+                                <!-- <field name="create_invoice_without_validation" invisible="1"/> -->
+                                <field name="customer"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>
+                                <field name="payment_date" attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>
+                                <field name="location_id"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="pricelist_id" required="1" attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>
+                                <field name="term_type" attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>
+                                <field name="branch_id" readonly="1" force_save="1"/>
+                                <field name="mileage" force_save="1" readonly="1"/>
+                                <field name="company_id" invisible="1"/>
+                            </group>
+                            <group name="right">   
+                                <field name="fleet_id"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>
+                                <field name="quotation_date" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>  
+                                <field name="customer_order_no" attrs="{'readonly':[('state','!=','draft')]}"/>    
+                                <field name="discount_account_id"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','not in',['draft','confirm'])]}"/>  
+                                <field name="repair_service_type_id" readonly="1" required="1"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','!=','draft')]}" />
+                                <field name="issued_date" readonly="1" attrs="{'invisible':[('issued_date','=',False)]}" force_save="1"/>  
+                                <field name="pic" />    
+                                <field name="request_id" readonly="1" force_save="1"/>
+                                <field name="tax_id" options="{'no_create': True, 'no_edit_create': True}" context="{'search_view_ref': 'account.account_tax_view_search'}" attrs="{'readonly': [('state','not in',['draft','confirm'])]}" domain="[('company_id','=',company_id)]"/>                                                       
+                            </group>                            
+                        </group>
+                        <br/><br/>
+                        <group>
+                            <group name="labor_parts">
+                                <field name="total_parts" readonly="1"/>
+                                <field name="total_labor" readonly="1"/>
+                                <field name="labor_parts_total" readonly="1"/>
+                                
+                            </group>
+                            <group name="parts">
+                                
+                                <field name="discount" readonly="1"/>
+                                <field name="amount_untaxed" readonly="1"/>
+                                <field name="total" readonly="1"/>
+                                <field name="invoice_amt" readonly="1" invisible="1"/>
+                            </group>
+                        </group>
+
+                        <br/>
+                        <div class="oe_title">
+                            <h3>
+                                Job
+                            </h3>   
+                        </div><br/>
+                        <field name="job_lines" nolabel="1" attrs="{'readonly':[('state','not in',['draft','confirm'])]}">
+                            <tree editable="bottom">
+                                <field name="is_tax_line" optional="hide" readonly="1" force_save="1"/>  
+                                <field name="job_code" attrs="{'readonly':[('is_tax_line','=',True)]}" required="1" options="{'no_quick_create': true, 'no_create_edit':true}" />               
+                                <field name="job_desc" attrs="{'readonly':[('is_tax_line','=',True)]}" />             
+                                <!-- <field name="job_name"/> -->
+                                <field name="job_type_id" required="1" readonly="1" force_save="1"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                <field name="start_time"/>
+                                <field name="end_time"/>
+                                <field name="duration" widget="repair_timer"/>   
+                                <field name="qty" attrs="{'readonly':[('is_tax_line','=',True)]}"/>
+                                <field name="unit_price" attrs="{'readonly':[('is_tax_line','=',True)]}"/>
+                                <field name="discount_type" attrs="{'readonly':[('is_tax_line','=',True)]}"/>
+                                <field name="discount"  attrs="{'readonly':[('is_tax_line','=',True)]}"/>
+                                <field name="sub_total"/>
+                                <field name="remark" optional="hide"/>
+                            </tree>
+                        </field>  
+
+                        <br/><br/>
+                        <div class="oe_title">
+                            <h3>
+                                Parts
+                            </h3>   
+                        </div><br/>
+                        <field name="part_lines" nolabel="1" attrs="{'readonly':[('state','not in',['draft','confirm'])]}">
+                            <tree editable="bottom" decoration-danger="qty == 0.0">
+                                <field name="parts_name" attrs="{'readonly':[('state','=','validate')]}" required="1"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                <field name="parts_code"  />
+                                <field name="qty"            attrs="{'readonly':[('state','=','validate')]}" />
+                                <field name="unit_price"     attrs="{'readonly':[('state','=','validate')]}" />
+                                <field name="discount_type"  attrs="{'readonly':[('state','=','validate')]}" />
+                                <field name="discount"       attrs="{'readonly':[('state','=','validate')]}" />
+                                <field name="sub_total"      attrs="{'readonly':[('state','=','validate')]}" />
+                                <field name="state" widget="badge" optional="hide"/>
+                                <field name="remark" optional="hide"/>
+                            </tree>
+                        </field>   
+
+                        <br/><br/>
+                                  
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_order_request_quotation_pivot" model="ir.ui.view">
+            <field name="name">request.quotation.pivot</field>
+            <field name="model">request.quotation</field>
+            <field name="arch" type="xml">
+                <pivot string="Quotation Analysis" sample="1">
+                    <field name="quotation_date" interval="month" type="row"/>
+                    <field name="labor_parts_total" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_order_request_quotation_graph" model="ir.ui.view">
+            <field name="name">request.quotation.graph</field>
+            <field name="model">request.quotation</field>
+            <field name="arch" type="xml">
+                <graph string="Quotation Analysis" type="line" sample="1">
+                    <field name="fleet_id"/>
+                    <field name="labor_parts_total" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_request_quotation_form_view" model="ir.actions.act_window">
+            <field name="name">Quotation</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">request.quotation</field>
+            <field name="view_mode">tree,form,graph,pivot</field>
+            
+        </record>
+
+        <record id="view_request_quotation_search_view" model="ir.ui.view">
+            <field name="name">request.quotation.search</field>
+            <field name="model">request.quotation</field>
+            <field name="arch" type="xml">   
+                <search string="Quotation">
+                    <field name="name" string="Reference No."/>
+                    <field name="customer" string="Customer"/>
+                    <field name="fleet_id" string="Fleet"/>
+                </search>  
+            </field>
+        </record>   
+
+        <record id="view_job_description_form_tree" model="ir.ui.view">
+            <field name="name">job.description.tree</field>
+            <field name="model">job.description</field>
+            <field name="arch" type="xml">
+                <tree string="Job Description">
+                    <field name="name"/>
+                    <field name="job_code"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_description_form_form" model="ir.ui.view">
+            <field name="name">job.description.form</field>
+            <field name="model">job.description</field>
+            <field name="arch" type="xml">
+                <form string="Job Description"  duplicate="0">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group>
+                                <field name="job_code"/>
+                                <field name="company_id"/>
+                            </group>                         
+                        </group>
+
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_job_description_form_view" model="ir.actions.act_window">
+            <field name="name">Job Description</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.description</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+        <menuitem id="menu_repair_external_configuration" name="Configuration" sequence="4" parent="menu_repair_external"/>
+        <menuitem id="menu_job_description" action="action_job_description_form_view" name="Job Description" sequence="2" parent="menu_repair_external_configuration"/>
+        <menuitem id="menu_repair_service_type" action="action_repair_service_type_view" name="Repair Service Type" sequence="2" parent="menu_repair_external_configuration"/>
+        <menuitem id="menu_request_quotation" action="action_request_quotation_form_view" name="Quotation" sequence="2" parent="menu_repair_external_operation"/>
+        <menuitem id="menu_account_customer_repair" name="Customers" action="account.res_partner_action_customer" parent="menu_repair_external_operation" sequence="110"/>
+        
+        <record id="hr_kanban_view_employees_technician" model="ir.ui.view">
+           <field name="name">hr.employee.kanban</field>
+           <field name="model">hr.employee</field>
+           <field name="arch" type="xml">
+               <kanban class="o_hr_employee_kanban" js_class="hr_employee_kanban" sample="1">
+                    <field name="id"/>
+                    <field name="hr_presence_state"/>
+                    <field name="user_id"/>
+                    <field name="user_partner_id"/>
+                    <field name="hr_icon_display"/>
+                    <field name="show_hr_icon_display"/>
+                    <field name="image_128" />
+                    <field name="repair_status" />
+                    <field name="job_order_id" />
+                    <field name="fleet_id"/>
+                    <field name="is_technician"/>
+                    <field name="res_branch_id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
+                                <field name="image_1024" class="o_kanban_image_fill_left d-block" preview_image="image_128" widget="background_image" options="{'zoom': true, 'zoom_delay': 1000}"/>
+
+                                <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <t t-if="record.show_hr_icon_display.raw_value">
+                                                    <div class="float-end"
+                                                        t-if="record.hr_icon_display.raw_value == 'presence_present'"
+                                                        name="presence_present">
+                                                        <!-- Employee is present/connected and it is normal according to his work schedule  -->
+                                                        <span class="fa fa-circle text-success" role="img" aria-label="Present"
+                                                            title="Present" name="presence_present">
+                                                        </span>
+                                                    </div>
+                                                    <div class="float-end"
+                                                        t-if="record.hr_icon_display.raw_value == 'presence_absent'"
+                                                        name="presence_absent">
+                                                        <!-- Employee is not present and it is normal according to his work schedule -->
+                                                        <span class="fa fa-circle-o text-muted" role="img" aria-label="Absent"
+                                                            title="Absent" name="presence_absent">
+                                                        </span>
+                                                    </div>
+                                                    <div class="float-end"
+                                                        t-if="record.hr_icon_display.raw_value == 'presence_absent_active'"
+                                                            name="presence_absent_active">
+                                                        <!-- Employee is connected but according to his work schedule,
+                                                            he should not work for now  -->
+                                                        <span class="fa fa-circle-o text-success" role="img"
+                                                            aria-label="Present but not active"
+                                                            title="Present but not active"
+                                                            name="presence_absent_active">
+                                                        </span>
+                                                    </div>
+                                                    <div class="float-end"
+                                                        t-if="record.hr_icon_display.raw_value == 'presence_to_define'"
+                                                            name="presence_to_define">
+                                                        <!-- Employee is not here but according to his work schedule, he should be connected -->
+                                                        <span class="fa fa-circle text-warning" role="img"
+                                                            aria-label="To define" title="To define"
+                                                            name="presence_to_define">
+                                                        </span>
+                                                    </div>
+                                                </t>
+                                                <field name="name" placeholder="Employee's Name"/>
+                                        </strong>
+                                        <span t-if="record.job_title.raw_value" class="o_kanban_record_subtitle"><field name="job_title"/></span>
+                                    </div>
+                                </div>
+                                <field name="category_ids" widget="many2many_tags" options="{'color_field': 'color'}" groups="hr.group_hr_user"/>
+                                <ul>
+                                    <li t-if="record.is_technician.raw_value" class="o_text_overflow"><field name="res_branch_id" /></li>
+                                    <li t-if="record.job_order_id.raw_value" class="o_force_ltr"><field name="job_order_id" /></li>
+                                    <li t-if="record.fleet_id.raw_value" class="o_text_overflow"><field name="fleet_id" /></li>
+                                    <li><span t-attf-class="badge #{ ['free'].indexOf(record.repair_status.raw_value) &gt; -1 ? 'bg-success' : 'bg-danger'}" style="font-size: 1.2em;"><t t-esc="record.repair_status.value"/></span></li>
+                                </ul>
+                            </div>
+                            <div class="oe_kanban_content o_hr_employee_kanban_bottom position-absolute bottom-0 start-0 end-0 me-2 pe-none">
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left"/>
+                                    <div class="oe_kanban_bottom_right float-end pe-auto">
+                                            <widget name="hr_employee_chat"/>
+                                            <div class="hr_activity_container mb-1 me-n1">
+                                                <field name="activity_ids" widget="kanban_activity"/>
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </t>
+                    </templates>
+               </kanban>
+            </field>
+        </record>      
+
+        <record id="view_employee_filter_repair" model="ir.ui.view">
+            <field name="name">hr.employee.repair.search</field>
+            <field name="model">hr.employee</field>
+            <field name="arch" type="xml">
+                <search string="Employees">
+                    <field name="name"/>
+                    <field name="name"/>
+                    <filter name="free_technician" string="Free" domain="[('repair_status', '=', 'free')]"/>
+                    <filter name="repair_technician" string="Repairing" domain="[('repair_status', '=', 'repair')]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_repair_status" string="Status" domain="[]" context="{'group_by': 'repair_status'}"/>
+                        <filter name="group_res_branch" string="Branch" domain="[]" context="{'group_by': 'res_branch_id'}"/>
+                    </group>
+                    <searchpanel>
+                        <field name="company_id" groups="base.group_multi_company" icon="fa-building" enable_counters="1"/>
+                        <field name="res_branch_id" icon="fa-users" enable_counters="1"/>
+                    </searchpanel>
+                </search>
+             </field>
+        </record>           
+
+        <record id="open_view_employee_list_my_technician" model="ir.actions.act_window">
+            <field name="name">Technician</field>
+            <field name="res_model">hr.employee</field>
+            <field name="view_mode">kanban</field>
+            <field name="domain">[('is_technician','=',True),('filter_branch','=',False)]</field>
+            <field name="context">{'chat_icon': True,'create':0}</field>
+            <field name="view_id" ref="hr_kanban_view_employees_technician"/>
+            <field name="search_view_id" ref="view_employee_filter_repair"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Add a new technician
+                </p>
+                <p>
+                    With just a quick glance on the Odoo technician screen, you
+                    can easily find all the information you need for each person;
+                    contact data, job position, availability, etc.
+                </p>
+            </field>
+        </record>
+
+        <menuitem
+                id="menu_hr_technician"
+                name="Technician"
+                action="open_view_employee_list_my_technician"
+                parent="menu_repair_external_dashboard"
+                sequence="1"/>
+    
+        <record id="view_employee_view_forms" model="ir.ui.view">
+            <field name="name">hr.employee.form</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='department_id']" position='after'>
+                    <field name="is_technician"/>
+                    <field name="job_detail_id" force_save="1" invisible="1"/>
+                    <field name="job_order_id" force_save="1" invisible="1"/>
+                    <field name="res_branch_id"   options="{'no_quick_create': true, 'no_create_edit':true}"  force_save="1"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_move_form_repair_external_inherit" model="ir.ui.view">
+            <field name="name">account.move.form.repair.external.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="repair_quotation_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='preview_invoice']" position="after">
+                    <button name="action_print_repair" context="{'filename':'mmm_mauto_sale_invoice_repair'}" string="Print Invoice" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('repair_quotation_id','=',False),('state','!=','posted')]}"/> 
+                    <button name="action_print_repair" context="{'filename':'mmm_mauto_sale_receipt_repair'}" string="Print Receipt" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|','|',('repair_quotation_id','=',False),('state','!=','posted'),('payment_state','not in',['paid','partial'])]}"/> 
+                </xpath>
+            </field>
+        </record>        
+
+    </data>
+</odoo>

@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_asset,account.asset,model_account_asset,account.group_account_readonly,1,0,0,0
+access_account_asset_manager,account.asset,model_account_asset,account.group_account_manager,1,1,1,1
+access_account_asset_invoicing_payment,account.asset,model_account_asset,account.group_account_invoice,1,0,1,0
+access_asset_modify,access.asset.modify,model_asset_modify,account.group_account_user,1,1,1,0
+
+access_asset_group_type,asset.group.type,model_asset_group_type,account.group_account_user,1,1,1,0
+access_asset_category,asset.category,model_asset_category,account.group_account_user,1,1,1,0
+access_asset_type,asset.type,model_asset_type,account.group_account_user,1,1,1,0
+access_asset_brand,asset.brand,model_asset_brand,account.group_account_user,1,1,1,0
+access_asset_model,asset.model,model_asset_model,account.group_account_user,1,1,1,0
+access_asset_color,asset.color,model_asset_color,account.group_account_user,1,1,1,0
+access_asset_location,asset.location,model_asset_location,account.group_account_user,1,1,1,0
+access_asset_code_prefix,asset.code.prefix,model_asset_code_prefix,account.group_account_user,1,1,1,0
+access_asset_code_sequence,asset.code.sequence,model_asset_code_sequence,account.group_account_user,1,1,1,0
+

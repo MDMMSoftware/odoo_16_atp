@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_multi_currencies_cashbook_form" model="ir.ui.view">
+            <field name="name">Multi Currencies CashBook</field>
+            <field name="model">account.multi.currencies.cashbook</field>
+            <field name="arch" type="xml">
+                <form>   
+                    <header>
+                        <button name="action_confirm" string ="Confirm" type="object" states="draft"
+                            style="display:block;background-color:green;color:white;"/>
+                        <button name="action_reset_to_draft" string ="Reset To Draft" type="object" attrs="{'invisible': [('state', 'in', ['draft','done'])]}"
+                            style="display:block;background-color:green;color:white;"/>          
+                        <button name="action_validate" string ="Validate" type="object" attrs="{'invisible': [('state', '!=', 'confirm')]}"
+                            style="display:block;background-color:green;color:white;"/>
+                        <field name="state" widget="statusbar"/>
+
+                    </header>                
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="label_compount" invisible="1"/>
+                                <field name="desc" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <field name="ref_no" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <field name="branch_id" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}" options="{'no_create':True,'no_create_edit': True}"/> 
+                                <!-- <field name="journal_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/> -->
+                                <field name="exchange_account_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <field name="calculation_method" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                            </group>
+                            <group>
+                                <field name="date" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <field name="company_id" readonly="1" force_save="1"/>
+
+                            </group> 
+                            <group>
+                                <field name="f_journal_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <field name="f_account_id" force_save="1" readonly="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <div class="o_row o_td_label">
+                                    <label for="f_currency_id" string="Currency" />
+                                </div>
+                                <div class="o_row">
+                                    <field name="f_currency_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                   <label for="f_exchange_rate" string="-"/>
+                                    <field name="f_exchange_rate" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': ['|',('state', 'in', ['done','confirm']),('calculation_method', '=', 'method2')]}" force_save="1"/>
+                                </div>
+                                
+                                <field name="f_amt" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                            </group> 
+                            <group>
+                                <field name="t_journal_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+
+                                <field name="t_account_id" force_save="1" readonly="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                <div class="o_row o_td_label">
+                                    <label for="t_currency_id" string="Currency" />
+                                </div>
+                                <div class="o_row">
+                                    <field name="t_currency_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/>
+                                   <label for="t_exchange_rate" string="-"/>
+                                    <field name="t_exchange_rate" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': ['|',('state', 'in', ['done','confirm']),('calculation_method', '=', 'method3')]}" force_save="1"/>
+                                </div>
+                                <field name="t_amt" attrs="{'readonly': ['|',('state', 'in', ['done','confirm']),('calculation_method', '=', 'method1')]}" force_save="1"/>
+                            </group> 
+                            <group string="Additional Info:">
+                                <!-- <field name="analytic_company_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/> -->
+                                <!-- <field name="department_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'in', ['done','confirm'])]}"/> -->
+                                <field name="from_move_id" readonly="1"/>
+                                <field name="to_move_id" readonly="1"/>
+                            </group>                         
+                        </group>
+                        <notebook>
+                            <page name="journal_items" string="Journal Items" >
+                                <field name="move_line_ids" nolabel="1" readonly="1">
+                                    <tree>
+                                        <field name="account_id" />
+                                        <field name="name" />
+                                        <field name="description"/>
+                                        <!-- <field name="analytic_company_id" options="{'no_create':True,'no_create_edit': True}"/> -->
+                                         <field name="amount_currency" invisible="0"/>
+                                        <field name="currency_id" invisible="0"/>
+                                        <field name="debit" sum="debit"/>
+                                        <field name="credit" sum="credit"/>                                       
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>    
+                    </sheet>
+                   <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+         </record>
+
+         <record id="view_multi_currencies_cashbook_tree" model="ir.ui.view">
+            <field name="name">Multi Currencies CashBook</field>
+            <field name="model">account.multi.currencies.cashbook</field>
+            <field name="arch" type="xml">
+                <tree decoration-muted="state in ('done','confirm')">
+                    <field name="date"/>
+                   <field name="name"/>
+                   <field name="ref_no"/>
+                   <field name="desc"/>
+                   <field name="date"/>
+                   <field name="state"/>
+                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_multi_currencies_cashbook_action" model="ir.actions.act_window">
+            <field name="name">Multi Currencies CashBook</field>
+            <field name="res_model">account.multi.currencies.cashbook</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_multi_currencies_cashbook_tree" />
+        </record>
+
+        <menuitem id="menu_multi_currencies_cashbook" name="Multi Currencies CashBook" sequence="2" parent="account_cashbook.menu_cashbook" action="view_multi_currencies_cashbook_action"/>
+
+    </data>
+</odoo>

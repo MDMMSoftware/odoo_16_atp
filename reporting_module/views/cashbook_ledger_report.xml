@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!--- Wizard Action For Daily Income Report -->
+		<record id="action_cashbook_ledger_wizard" model="ir.actions.act_window">
+			<field name="name">Cashbook Ledger Report</field>
+			<field name="res_model">cashbook.ledger.report.wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+			<field name="target">new</field>
+		</record>
+		
+		<menuitem id="menu_cashbook_ledger_report_print" name="Cashbook Ledger Report" parent="reporting_menu" action="action_cashbook_ledger_wizard" sequence="2" />
+
+		<!-- Wizard Form Daily Income Report-->
+		<record id="view_form_cashbook_ledger_report_wizard" model="ir.ui.view">
+			<field name="name">Cashbook Ledger Report Wizard</field>
+			<field name="model">cashbook.ledger.report.wizard</field>
+			<field name="arch" type="xml">
+				<form>
+					<group name="group-top">
+						<group name="group-left">
+							<field name="from_date" required="1"/>
+							<field name="account_id" required="1" options="{'no_create_edit':True,'no_create':True}" />
+							<field name="account_code" />
+							<field name="state" required="1"/>
+						</group>
+						<group name="group-right">
+							<field name="to_date" required="1"/>
+							<field name="company_id" required="1" options="{'no_create_edit':True,'no_create':True}"  />
+							<field name="branch_id"  options="{'no_create_edit':True,'no_create':True}" />
+							<field name="currency_id" required="1" options="{'no_create_edit':True,'no_create':True}" />
+						</group>
+					</group>
+					<footer>
+						<button context="{'filename':'mmm_cashbook_ledger_report'}" string="Birt Cashbook Ledger Report" type="object" class="btn-info" name="print_cashbook_ledger"/>
+						<button string="Cancel" special="cancel"/>
+					</footer>
+				</form>
+			</field>
+		</record>
+	</data>
+</odoo>

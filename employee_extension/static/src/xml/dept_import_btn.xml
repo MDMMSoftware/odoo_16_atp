@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+   <t t-name="button_dept_import.ListView.import_btn" t-inherit="web.ListView.Buttons">
+       <xpath expr="//*[@class='btn btn-primary o_list_button_add']" position="after">
+           <button type="button" class="btn btn-primary" style="margin-left: 10px;"  t-on-click="OnClickImport">
+               Import Approval Users
+           </button>
+       </xpath>
+   </t>
+</templates>

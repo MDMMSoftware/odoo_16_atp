@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="fleet_attachment_form_view" model="ir.ui.view">
+            <field name="name">fleet.attachment.form</field>
+            <field name="model">fleet.attachment</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Lines">
+                                <field name="attachment_lines">
+                                    <tree editable="bottom">
+                                        <field name="date_from"/>
+                                        <field name="date_to"/>
+                                        <field name="family_price"/>
+                                        <field name="internal_price"/>
+                                        <field name="external_price"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                        
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="fleet_attachment_list_view" model="ir.ui.view">
+            <field name="name">fleet.attachment.list</field>
+            <field name="model">fleet.attachment</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_fleet_attachment_view" model="ir.actions.act_window">
+            <field name="name">Fleet Attachment</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">fleet.attachment</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+
+        <menuitem action="action_fleet_attachment_view" parent="fleet.fleet_vehicles_configuration" id="fleet_attachment_menu" sequence="16"/>
+
+    </data>
+</odoo>

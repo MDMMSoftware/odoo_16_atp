@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_nrc_number_tree" model="ir.ui.view">
+            <field name="name">View NRC Number Tree</field>
+            <field name="model">nrc.no</field>
+            <field name="arch" type="xml">
+                <tree string="NRC Number list" editable="bottom">
+                     <field name="name" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_nrc_number" model="ir.actions.act_window">
+            <field name="name">NRC Number</field>
+            <field name="res_model">nrc.no</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_nrc_number_tree"/>
+            <field name="help">Create and manage NRC Number.</field>
+        </record>
+
+        <!-- nrc code======================== -->
+
+        <record id="view_nrc_code_tree" model="ir.ui.view">
+            <field name="name">View NRC code Tree</field>
+            <field name="model">nrc.code</field>
+            <field name="arch" type="xml">
+                <tree string="NRC Code list" editable="bottom">
+                     <field name="name" />
+                     <field name="no_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_nrc_code" model="ir.actions.act_window">
+            <field name="name">NRC Code</field>
+            <field name="res_model">nrc.code</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_nrc_code_tree"/>
+            <field name="help">Create and manage NRC Code.</field>
+        </record>
+
+        <!-- nrc type=================================== -->
+        <record id="view_nrc_type_tree" model="ir.ui.view">
+            <field name="name">View NRC type Tree</field>
+            <field name="model">nrc.type</field>
+            <field name="arch" type="xml">
+                <tree string="NRC type list" editable="bottom">
+                     <field name="name" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_nrc_type" model="ir.actions.act_window">
+            <field name="name">NRC Type</field>
+            <field name="res_model">nrc.type</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_nrc_type_tree"/>
+            <field name="help">Create and manage NRC Type.</field>
+        </record>
+
+        <!-- Religion -->
+        <record id="view_religion_tree" model="ir.ui.view">
+            <field name="name">Religion Tree View</field>
+            <field name="model">hr.employee.religion</field>
+            <field name="arch" type="xml">
+                <tree string="Religion List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_religion_tree" model="ir.actions.act_window">
+            <field name="name">Religion</field>
+            <field name="res_model">hr.employee.religion</field>
+            <field name="view_id" ref="view_religion_tree"/>
+            <field name="help">Create and Manage Religion</field>
+        </record>
+
+        <!-- Race -->
+        <record id="view_race_tree" model="ir.ui.view">
+            <field name="name">Race Tree View</field>
+            <field name="model">hr.race</field>
+            <field name="arch" type="xml">
+                <tree string="Race List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_race_tree" model="ir.actions.act_window">
+            <field name="name">Race</field>
+            <field name="res_model">hr.race</field>        
+            <field name="view_id" ref="view_race_tree"/>
+            <field name="help">Create and Manage Race</field>
+        </record>
+
+        <!-- Grade -->
+        <record id="view_grade_tree" model="ir.ui.view">
+            <field name="name">Grade Tree View</field>
+            <field name="model">hr.employee.grade</field>
+            <field name="arch" type="xml">
+                <tree string="Grade List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_grade_tree" model="ir.actions.act_window">
+            <field name="name">Grade</field>
+            <field name="res_model">hr.employee.grade</field>
+            <field name="view_id" ref="view_grade_tree"/>
+            <field name="help">Create and Manage Grade</field>
+        </record>
+
+        <!-- BloodType -->
+        <record id="view_bloodtype_tree" model="ir.ui.view">
+            <field name="name">Blood Type Tree View</field>
+            <field name="model">hr.blood</field>
+            <field name="arch" type="xml">
+                <tree string="Blood Type List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_bloodtype_tree" model="ir.actions.act_window">
+            <field name="name">BloodType</field>
+            <field name="res_model">hr.blood</field>
+            <field name="view_id" ref="view_bloodtype_tree"/>
+            <field name="help">Create and Manage Blood Type</field>
+        </record>
+
+        <!-- Branch -->
+        <record id="view_branch_tree" model="ir.ui.view">
+            <field name="name">Branch Tree View</field>
+            <field name="model">hr.branch</field>
+            <field name="arch" type="xml">
+                <tree string="Brand List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_branch_tree" model="ir.actions.act_window">
+            <field name="name">Branch</field>
+            <field name="res_model">hr.branch</field>
+            <field name="view_id" ref="view_branch_tree"/>
+            <field name="help">Create and Manage Branch</field>
+        </record>
+
+        <!-- Rank -->
+        <record id="view_rank_tree" model="ir.ui.view">
+            <field name="name">Rank Tree View</field>
+            <field name="model">hr.employee.rank</field>
+            <field name="arch" type="xml">
+                <tree string="Rank List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_rank_tree" model="ir.actions.act_window">
+            <field name="name">Rank</field>
+            <field name="res_model">hr.employee.rank</field>
+            <field name="view_id" ref="view_rank_tree"/>
+            <field name="help">Create and Manage Rank</field>
+        </record>
+
+        <!-- Job Location -->
+        <record id="view_joblocation_tree" model="ir.ui.view">
+            <field name="name">Job Location Tree</field>
+            <field name="model">hr.job.location</field>
+            <field name="arch" type="xml">
+                <tree string="Job Location List" editable="bottom">
+                    <field name="name"/>
+                    <field name="latti"/>
+                    <field name="longi"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_joblocation_tree" model="ir.actions.act_window">
+            <field name="name">Job Location</field>
+            <field name="res_model">hr.job.location</field>
+            <field name="view_id" ref="view_joblocation_tree"/>
+            <field name="help">Create and Manage Job Location</field>
+        </record>
+
+        <!-- Hostel -->
+        <record id="view_hostel_tree" model="ir.ui.view">
+            <field name="name">Hostel Tree View</field>
+            <field name="model">hr.employee.hostel</field>
+            <field name="arch" type="xml">
+                <tree string="Hostel List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_hostel_tree" model="ir.actions.act_window">
+            <field name="name">Hostel</field>
+            <field name="res_model">hr.employee.hostel</field>
+            <field name="view_id" ref="view_hostel_tree"/>
+            <field name="help">Create and Manage Hostel</field>
+        </record>
+
+        <!-- Employee Grading -->
+        <record id="view_grading_tree" model="ir.ui.view">
+            <field name="name">Employee Grading Tree View</field>
+            <field name="model">hr.employee.grading</field>
+            <field name="arch" type="xml">
+                <tree string="Employee Grading List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_grading_tree" model="ir.actions.act_window">
+            <field name="name">Employee Grading</field>
+            <field name="res_model">hr.employee.grading</field>
+            <field name="view_id" ref="view_grading_tree"/>
+            <field name="help">Create and Manage Employee Grading</field>
+        </record>
+
+        <!-- Employee Designation Type -->
+        <record id="view_designation_type_tree" model="ir.ui.view">
+            <field name="name">Employee Designation Type Tree View</field>
+            <field name="model">hr.designation.type</field>
+            <field name="arch" type="xml">
+                <tree string="Employee Designation Type List" editable="bottom">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_designation_type_tree" model="ir.actions.act_window">
+            <field name="name">Employee Designation Type</field>
+            <field name="res_model">hr.designation.type</field>
+            <field name="view_id" ref="view_designation_type_tree"/>
+            <field name="help">Create and Manage Employee Designation Type</field>
+        </record>
+
+        <menuitem name="NRC" id="menu_nrc" sequence="1" parent="hr.menu_human_resources_configuration" />
+
+
+        <menuitem name="NRC Number" id="menu_nrc_no" sequence="1" parent="menu_nrc" action="action_nrc_number" />
+
+        <menuitem name="NRC Type" id="menu_nrc_type" sequence="2" parent="menu_nrc" action="action_nrc_type" />
+
+        <menuitem name="NRC Code" id="menu_nrc_code" sequence="3" parent="menu_nrc" action="action_nrc_code" />
+
+        <menuitem id="menu_hr_religion_tree" action="action_religion_tree" parent="hr.menu_human_resources_configuration" sequence="2"/>
+
+        <menuitem id="menu_hr_race_tree" action="action_race_tree" parent="hr.menu_human_resources_configuration" sequence="3"/>
+
+        <menuitem id="menu_hr_grade_tree" action="action_grade_tree" parent="hr.menu_human_resources_configuration" sequence="4"/>
+
+        <menuitem id="menu_hr_bloodtype_tree" action="action_bloodtype_tree" parent="hr.menu_human_resources_configuration" sequence="5"/>
+
+        <menuitem id="menu_hr_branch_tree" action="action_branch_tree" parent="hr.menu_human_resources_configuration" sequence="6"/>
+
+        <menuitem id="menu_hr_rank_tree" action="action_rank_tree" parent="hr.menu_human_resources_configuration" sequence="7" />
+
+        <menuitem id="menu_hr_joblocation_tree" action="action_joblocation_tree" parent="hr.menu_human_resources_configuration" sequence="8"/>
+
+        <menuitem id="menu_hr_hostel_tree" action="action_hostel_tree" parent="hr.menu_human_resources_configuration" sequence="9" />
+
+        <menuitem id="menu_hr_grading_tree" action="action_grading_tree" parent="hr.menu_human_resources_configuration" sequence="10" />
+
+        <menuitem id="menu_hr_designation_tree" action="action_designation_type_tree" parent="hr.menu_human_resources_configuration" sequence="11" />
+
+
+        <!-- <menuitem name="Document" id="menu_document" sequence="12" parent="hr.menu_human_resources_configuration" /> -->
+
+        <menuitem id="menu_partner_name" name="Partner Name" sequence="51" parent="contacts.res_partner_menu_config"/>
+        
+        <menuitem id="menu_partner_name_prefix" name="Partner Name Prefix"  parent="menu_partner_name" action="view_action_partner_name_prefix"/>     
+
+    </data> 
+</odoo>

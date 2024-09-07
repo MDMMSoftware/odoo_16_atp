@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_hr_accident_and_warning"
+              name="Accident"
+              sequence="10"
+              web_icon="hr_employee_accident,static/description/accident.png"
+              groups="hr.group_hr_manager"          />
+
+
+    <menuitem id="employee_accident_menu" 
+        name="Accidents" parent="menu_hr_accident_and_warning" 
+        action="hr_employee_accident_view_action" sequence="10"/>
+
+    <menuitem id="hr_employee_warning_menu" 
+        name="Warnings" parent="menu_hr_accident_and_warning" 
+        action="hr_employee_warning_view_action" sequence="20"/>
+
+    <menuitem id="hr_salary_deduction_menu" 
+        name="Salary Deduction" parent="menu_hr_accident_and_warning" 
+        action="hr_salary_deduction_view_action" sequence="30"/>
+
+    <menuitem id="hr_salary_deduction_line_menu" 
+        name="Salary Deduction Lines" parent="hr_payroll_community.menu_hr_payroll_community_configuration" 
+        action="hr_salary_deduction_line_view_action" sequence="40"/>
+
+    <menuitem id="accident_configuration_menu" 
+        name="Configuration" parent="menu_hr_accident_and_warning"   
+        sequence="40">
+        <menuitem name="Deduction Type" id="deduction_type_menu" action="salary_deduction_type_view_action" sequence="1"/>
+        <menuitem name="Accident Type" id="accident_type_menu" action="accident_type_view_action" sequence="2"/>
+        <menuitem name="Warning Type" id="warning_type_menu" action="warning_type_view_action" sequence="3"/>
+
+
+    </menuitem>
+</odoo>

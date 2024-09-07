@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <delete model="ir.rule" id="purchase.purchase_order_comp_rule"/>
+        <delete model="ir.rule" id="purchase.purchase_user_account_move_rule"/>
+    </data>
+</odoo>

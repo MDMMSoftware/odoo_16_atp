@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_repair_pivot" model="ir.ui.view">
+         <field name="name">repair.report.pivot</field>
+         <field name="model">repair.report</field>
+         <field name="arch" type="xml">
+             <pivot string="Repairs Analysis" sample="1">
+                 <field name="employee" type="col"/>
+                 <field name="quotation_date" interval="month" type="row"/>
+                 <field name="balance" type="measure"/>
+             </pivot>
+         </field>
+    </record>
+
+    <record id="view_order_repair_graph" model="ir.ui.view">
+         <field name="name">repair.report.graph</field>
+         <field name="model">repair.report</field>
+         <field name="arch" type="xml">
+             <graph string="Repairs Analysis" type="line" sample="1">
+                 <field name="employee"/>
+                 <field name="balance" type="measure"/>
+             </graph>
+         </field>
+    </record>
+
+    <record id="repair_report_view_tree" model="ir.ui.view">
+        <field name="name">repair.report.view.tree</field>
+        <field name="model">repair.report</field>
+        <field name="arch" type="xml">
+            <tree string="Repairs Analysis">
+                <field name="quotation_date" widget="date"/>
+                <field name="issued_date" widget="date"/>
+                <field name="customer"/>
+                <field name="pic"/>
+                <field name="employee"/>
+                <field name="branch"/>
+                <field name="quotation"/>
+                <field name="fleet"/>
+                <field name="balance"/>
+                <field name="job_type_id"/>
+                <field name="job_code"/>
+                <field name="job_desc"/>
+                <field name="state"/>
+                
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_order_repair_search" model="ir.ui.view">
+        <field name="name">repair.report.search</field>
+        <field name="model">repair.report</field>
+        <field name="arch" type="xml">
+            <search string="repairs Analysis">
+                <field name="quotation_date"/>
+                <field name="issued_date"/>
+                <field name="customer"/>
+                <field name="pic"/>
+                <field name="employee"/>
+                <field name="branch"/>
+                <field name="quotation"/>
+                <field name="fleet"/>
+                <field name="balance"/>
+                <field name="job_type_id"/>
+                <field name="job_code"/>
+                <field name="job_desc"/>
+                <field name="state"/>
+                
+                <group expand="1" string="Group By">
+                    <filter string="Employee" name="Employee" context="{'group_by':'employee'}"/>
+                    <filter string="Branch" name="branch" context="{'group_by':'branch'}"/>
+                    <filter string="Quotation" name="quotation" context="{'group_by':'quotation'}"/>
+                    <filter string="Fleet" name="fleet" context="{'group_by':'fleet'}"/>
+                    <filter string="Job Type" name="job_type_id" context="{'group_by':'job_type_id'}"/>
+                    <filter string="Job Code" name="job_code" context="{'group_by':'job_code'}"/>
+                    <filter string="Job Desc" name="job_desc" context="{'group_by':'job_desc'}"/>
+                    <filter string="Job Status" name="state" context="{'group_by':'state'}"/>
+                    
+                    <separator/>
+                    <filter string="Quotation Date" name="quotation_date" context="{'group_by':'quotation_date'}"/>
+                    <filter string="Issued Date" name="issued_date" context="{'group_by':'issued_date:day'}"/>
+                    
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_order_repair_report_all" model="ir.actions.act_window">
+        <field name="name">repairs Analysis</field>
+        <field name="res_model">repair.report</field>
+        <field name="view_mode">graph,pivot,tree</field>
+        <field name="view_id"></field>  <!-- force empty -->
+        <field name="search_view_id" ref="view_order_repair_search"/>
+        
+        <field name="help">This report performs analysis on your quotations and repairs orders. Analysis check your repairs revenues and sort it by different group criteria (repairsman, partner, repair, etc.) Use this report to perform analysis on repairs not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.</field>
+    </record>
+
+    <menuitem id="menu_repair_analysis_report"  name="Repair Analysis" parent="menu_repair_external_configuration" action="action_order_repair_report_all" sequence="3" />
+
+</odoo>

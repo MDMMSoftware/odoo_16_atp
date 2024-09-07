@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_sale_order_form_inherit_exchange" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.exchange</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header/button[@name='action_draft']" position="after">
+                    <button name="action_create_commercial"
+                        string="Create Commission" type="object"
+                        attrs="{'invisible': [('invisible_commercial', '=', True)]}" class="oe_highlight"/>                       
+                </xpath>
+                <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                    <button name="action_open_commercial"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-dollar" string="Commission Bill"
+                    />                    
+                </xpath>
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_shipping_id']" position="after">
+                    <field name="is_commission" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>
+                    <field name="extra_amt" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>	
+                    <field name="invisible_commercial" invisible="1"/>					
+                </xpath>
+                <xpath expr="//field[@name='currency_id']" position="after">
+                    <field name="global_discount"/>
+                </xpath>
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='discount']" position="replace">
+                    <field name="discount_type"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount_amt"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}" force_save="1"/>
+                    <field name="commercial_type"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
+                    <field name="commercial_amt"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
+                    <field name="add_type"  attrs="{'column_invisible': [('parent.extra_amt', '=', False)]}"/>
+                    <field name="add_amt"  attrs="{'column_invisible': [('parent.extra_amt', '=', False)]}"/>
+                </xpath>	
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='discount']" position="attributes">
+                    <attribute name="string">Disc</attribute>
+                </xpath>
+                <xpath expr="//field[@name='note']" position="before">
+                    <field name="discount_type" attrs="{'invisible': [('global_discount', '=', False)]}"/>
+                    <field name="discount" attrs="{'invisible': [('global_discount', '=', False)]}"/>
+                    <field name="discount_account_id"/>
+                </xpath>			
+                <xpath expr="//field[@name='tax_totals']" position="replace">
+                    <field name="amount_untaxed"/>
+                    <field name="discount_amt" force_save="1"/>
+                    <field name="amount_tax" attrs="{'invisible': [('amount_tax','&lt;=',0.0)]}"/>
+                    <field name="amount_total"/>
+                    <field name="amount_commercial"/>
+                    <field name="amount_add"/>
+                </xpath>			
+            </field>
+        </record>   
+
+
+        <record id="view_partner_property_form_inherit" model="ir.ui.view">
+            <field name="name">res.partner.product.property.form.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='property_product_pricelist']" position="after">
+                    <field name="commission_setting"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="product_template_form_view_ext1">
+            <field name="name">product.template.form.ext1</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">              
+                <xpath expr="//sheet[@name='product_form']//div[@name='options']//span[2]" position="after">
+                    <span class="d-inline-block">
+                        <field name="commercial_ok"/>
+                        <label for="commercial_ok"/>
+                    </span>
+                                         
+                </xpath>  
+            </field>
+        </record>
+
+        
+    </data>
+</odoo>

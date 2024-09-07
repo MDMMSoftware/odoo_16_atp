@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <menuitem name="Discuss"
+            id="mail.menu_root_discuss"
+            action="mail.action_discuss"
+            web_icon="advance_expense,static/description/discuss.png"
+            groups="base.group_user"
+            sequence="1"
+        />
+
+        <menuitem
+        id="calendar.mail_menu_calendar"
+        name="Calendar"
+        sequence="10"
+        action="calendar.action_calendar_event"
+        web_icon="advance_expense,static/description/calendar.png"
+        groups="base.group_user"/>
+
+        <menuitem
+            id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"
+            name="Dashboards"
+            action="spreadsheet_dashboard.ir_actions_dashboard_action"
+            web_icon="advance_expense,static/description/dashboard.png"
+            sequence="37"/>
+
+        <menuitem id="utm.menu_link_tracker_root"
+            name="Link Tracker"
+            sequence="270"
+            web_icon="advance_expense,static/description/link.png"
+            groups="base.group_no_one"/>  
+
+        <menuitem id="base.menu_management" name="Apps" sequence="500" web_icon="advance_expense,static/description/application.png" groups="base.group_system"/>
+        <menuitem name="Settings"
+          id="base.menu_administration"
+          web_icon="advance_expense,static/description/settings.png"
+          sequence="550"
+          groups="base.group_erp_manager"/>                      
+
+        <menuitem id="menu_advance" name="Advance &amp; Expense"  web_icon="advance_expense,static/description/icon.png"/>
+
+        <record id="view_account_advance_tree" model="ir.ui.view">
+            <field name="name">account.advance.prepaid.tree</field>
+            <field name="model">advance.prepaid</field>
+            <field name="arch" type="xml">
+                <tree edit="false" sample="1" decoration-info="state == 'draft'" decoration-muted="state == 'paid'">
+                    <field name="branch_ids"/>
+                    <field name="department_id"/>
+                    <field name="payment_type"/>
+                    <field name="company_currency_id" invisible="1"/>
+                    <field name="date"/>
+                    <field name="name"/>
+                    <field name="partner_id" string="Partner"/>
+                    <field name="contact_id" string="Contact"/>
+                    <field name="desc"/>
+                    <field name="prepare_amt" string="Prepare Amount"/>
+                    <field name="done_amt" string="Done Amount"/>
+                    <field name="state" widget="badge" decoration-danger="state == 'draft'" decoration-success="state == 'paid'"/>
+                    <field name="payment_status" widget="badge" decoration-danger="payment_status == 'not_paid'" decoration-success="payment_status == 'paided'"/>
+                    <field name="is_reconciled"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_account_advance_kanban" model="ir.ui.view">
+            <field name="name">account.advance.kanban</field>
+            <field name="model">advance.prepaid</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile" create="0" group_create="0" sample="1">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="date"/>
+                    <field name="state"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_global_click">
+                                <div class="row mb4">
+                                    <div class="col-6">
+                                        <strong><span><field name="name"/></span></strong>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <strong><i class="fa fa-clock-o" role="img" aria-label="Date" title="Date"/> <t t-esc="record.date.value"/></strong>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <span><field name="partner_id"/></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <field name="prepare_amt" widget='monetary'/>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="float-end">
+                                            <field name="state" widget="label_selection" options="{'classes': {'draft': 'secondary', 'sent': 'success'}}"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="view_account_advance_search" model="ir.ui.view">
+            <field name="name">account.advance.search</field>
+            <field name="model">advance.prepaid</field>
+            <field name="arch" type="xml">
+                <search string="Advances">
+                    <field name="name" string="Advance" filter_domain="['|',  ('name', 'ilike', self), ('partner_id', 'ilike', self)]"/>
+                    <field name="partner_id" string="Partner"/>
+                    <field name="transfer_partner_id" string="Transfer Partner"/>
+                    <field name="desc" string="Description"/>
+                    <field name="internal_ref" string="Internal Reference"/>
+                    <separator/>
+                    <filter string="Draft" name="state_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Paid" name="state_posted" domain="[('state', '=', 'paid')]"/>
+                    <separator/>
+                    <filter string="Advance Date" name="date" date="date"/>
+                    <separator/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <filter string="Customer/Vendor" name="partner" domain="[]" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Status" name="state" domain="[]" context="{'group_by': 'state'}"/>
+                    <filter string="Advance Date" name="groupby_date" domain="[]" context="{'group_by': 'date'}"/>
+                    <filter string="Company" name="company" domain="[]" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <separator/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_account_advance_form" model="ir.ui.view">
+            <field name="name">account.advance.form</field>
+            <field name="model">advance.prepaid</field>
+            <field name="arch" type="xml">
+                <form string="Advance" delete="">
+                    <header>
+                        <button name="action_submit" string="Submit" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','draft')]}"/>
+                        <button name="action_hod_approve" string="HOD Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','hod_approve')]}"/>
+                        <button name="action_reset_to_draft" string="Reset to Draft" class="oe_highlight btn-warning" type="object" attrs="{'invisible': [('state', '!=','hod_approve')]}"/>
+                        <button name="action_check" string="Finance Check" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','check')]}"/>
+                        <button name="action_finance_approve" string="Finance Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','finance_approve')]}"/>
+                        <button name="action_dir_approve" string="Director Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','director_approve')]}"/>
+                        <button name="action_wait_payment" string="Payment" class="oe_highlight btn-info" type="object" attrs="{'invisible': [('state', '!=','waiting_payment')]}"/>
+                        <button name="action_refuse" string="Refused" class="oe_highlight btn-danger" type="object" attrs="{'invisible': [('state', 'not in',['finance_approve','director_approve'])]}"/>
+                        <button name="action_close" string="Close" class="oe_highlight btn-danger" type="object" attrs="{'invisible': [('state', '!=','waiting_payment')]}"/>
+                        <button name="action_print_advance" context="{'filename':'mmm_prepaid_expense_construction'}" string="Print Advance" class="oe_highlight" type="object" attrs="{'invisible': [('state','=','draft')]}"/>
+                        <!-- <button name="reset_to_draft" string="Reset to Draft" class="oe_highlight btn-warning" type="object" attrs="{'invisible': [('state', 'in',('director_approve','waiting_payment','paid','draft','refuse'))]}"/> -->
+                        <!-- <field name="state" widget="statusbar" statusbar_visible="draft,hod_approve,check,finance_approve,director_approve,waiting_payment,paid,refuse"/> -->
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','draft')]}" statusbar_visible="draft,hod_approve"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','hod_approve')]}" statusbar_visible="draft,hod_approve,check"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','check')]}" statusbar_visible="hod_approve,check,finance_approve"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','finance_approve')]}" statusbar_visible="check,finance_approve,director_approve"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','director_approve')]}" statusbar_visible="finance_approve,director_approve,waiting_payment"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','waiting_payment')]}" statusbar_visible="director_approve,waiting_payment,paid"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','paid')]}" statusbar_visible="waiting_payment,paid,refuse"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','refuse')]}" statusbar_visible="paid,refuse"/>                        
+                    </header>
+                    
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_payments" class="oe_stat_button" icon="fa-book"  type="object" string="Payments"/>  
+                            <button name="action_open_transfer_moves" class="oe_stat_button" icon="fa-book"  type="object" string="Transfer Moves" attrs="{'invisible':[('is_internal_transfer', '=', False)]}"/>
+                        </div>
+                        <div class="oe_title">
+                            <h1 attrs="{'invisible': [('state', '!=', 'draft')]}"><span>Draft</span></h1>
+                            <h1 attrs="{'invisible': [('state', '=', 'draft')]}"><field name="name" readonly="1"/></h1>
+                            <h3><label for="desc" string="Description"/></h3>
+                            <field name="desc" colspan="6" rowspan="2" widget="text" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        </div>
+                        <br/><br/>  
+                        
+                        <group>
+                            
+                            <group name="group1">
+                                <field name="is_internal_transfer"  attrs="{'readonly': [('state', '!=', 'draft')]}" invisible="not context.get('default_is_internal_transfer')"/>
+                                <field name="partner_type" widget="radio" options="{'horizontal': True}"  invisible="context.get('default_is_internal_transfer')"  attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="payment_type" widget="radio" options="{'horizontal': True}"
+                                                attrs="{'readonly': [('state', '!=', 'draft')],'invisible':[('is_internal_transfer', '=', True)]}"/>
+                                
+                                <field name="partner_id" context="{'default_is_company': True}" string="Partner"
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')]}"/>
+                                <field name="partner_account" context="{'default_is_company': True}" string="Partner Account"
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],'required':[('is_internal_transfer', '=', True)],'invisible':[('is_internal_transfer', '=', False)]}"/>
+                                <field name="transfer_partner_id" context="{'default_is_company': True}" string="Transfer Partner"
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],'required':[('is_internal_transfer', '=', True)],'invisible':[('is_internal_transfer', '=', False)]}"/>
+                                <field name="transfer_partner_account" context="{'default_is_company': True}" string="Transfer Partner Account"
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],'required':[('is_internal_transfer', '=', True)],'invisible':[('is_internal_transfer', '=', False)]}"/>
+                                <field name="fleet_id" context="{'default_is_company': True}" 
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],'required':[('is_internal_transfer', '=', True)],'invisible':[('is_internal_transfer', '=', False)]}"/>
+                                <field name="advance_account_id" 
+                                       options="{'no_create':True,'no_create_edit':True}" readonly="1" force_save="1" attrs="{'invisible':[('is_internal_transfer', '=', True)]}" />
+                                <field name="contact_id" 
+                                       options="{'no_create_edit':True,'no_create':True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')]}"/>
+                                <field name="branch_ids" options="{'no_create_edit':True,'no_create':True}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="allow_division_feature" invisible="1"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="division_id" domain="[('company_id','=',company_id)]" attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('allow_division_feature', '=', False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')] }" options="{'no_create_edit':True,'no_create':True}"/>
+                                <field name="department_id" domain="[('company_id','=',company_id)]" attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('allow_division_feature', '=', True)]}" options="{'no_create_edit':True,'no_create':True}"/>
+                                <label for="prepare_amt"/>
+                                <div name="amount_div" class="o_row">
+                                    <field name="prepare_amt"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="currency_id"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           required="1"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                           groups="base.group_multi_currency"/>
+                                </div>
+                                <label for="done_amt"/>
+                                <div name="amount_div" class="o_row">
+                                    <field name="done_amt"/>
+                                    <field name="currency_id"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           required="1"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                           groups="base.group_multi_currency"/>
+                                </div>
+                                <br/><br/>
+                                <field name="memo"/>
+                                
+                                
+                                <field name="available_partner_bank_ids" invisible="1"/>
+                            </group>
+                            <group name="group2">
+                                <field name="date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="partner_bank_id" options="{'no_create_edit':True,'no_create':True}" attrs="{'readonly': [('state', '!=', 'draft')]}" string="Company Bank Account" context="{'default_partner_id': partner_id}"/>          
+                                <field name="internal_ref" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <!-- <field name="is_recon" invisible="1"/> -->
+                                <field name="need_of_dir_approve" attrs="{'invisible': [('state', 'not in',['finance_approve','director_approve','waiting_payment','paid'])],'readonly': [('state', '!=', 'finance_approve')]}"/>
+                                <field name="director_id" options="{'no_create_edit':True,'no_create':True}" attrs="{'invisible': [('need_of_dir_approve', '=',False)],'required': [('need_of_dir_approve', '=',True),('state', '=','finance_approve')],'readonly': [('state', '!=', 'finance_approve')]}"/>
+                            </group>
+                           
+                        </group>
+
+                        
+                    </sheet>
+                    <div class="o_attachment_preview"/>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_account_advances" model="ir.actions.act_window">
+            <field name="name">Advances Prepaid</field>
+            <field name="res_model">advance.prepaid</field>
+            <field name="domain">[('is_internal_transfer','=',False)]</field>
+            <field name="context">{'default_is_internal_transfer': False}</field>
+            <field name="view_mode">tree,kanban,form</field>
+            <field name="view_id" ref="view_account_advance_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                  Register a advance
+                </p><p>
+                  advances are used to register liquidity movements. You can process those advances by your own means or by using installed facilities.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_account_advances_transfer" model="ir.actions.act_window">
+            <field name="name">Advances Transfer</field>
+            <field name="res_model">advance.prepaid</field>
+            <field name="domain">[('is_internal_transfer','=',True)]</field>
+            <field name="context">{'default_is_internal_transfer': True}</field>
+            <field name="view_mode">tree,kanban,form</field>
+            <field name="view_id" ref="view_account_advance_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                  Register a advance
+                </p><p>
+                  advances are used to register liquidity movements. You can process those advances by your own means or by using installed facilities.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_advance_moves" model="ir.actions.act_window">
+            <field name="name">Advance Payment</field>
+            <field name="res_model">account.payment</field>
+            <field name="view_mode">tree,kanban,form,graph</field>
+            <field name="view_id" ref="account.view_account_payment_tree"/>
+            <field name="domain">[('prepaid_id','!=',False)]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                  Register a payment
+                </p><p>
+                  Payments are used to register liquidity movements. You can process those payments by your own means or by using installed facilities.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_advance_users" model="ir.actions.act_window">
+            <field name="name">Advance Users</field>
+            <field name="res_model">res.partner</field>
+            <field name="domain">[('partner_type','=','advance')]</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="context">{'default_advance_user': True}</field>
+            <field name="filter" eval="True"/>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a new advance user in your address book
+              </p><p>
+                Odoo helps you easily track all activities related to a advance user.
+              </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_account_advance" name="Advances" parent="menu_advance" sequence="0" groups="advance_expense.group_advance_expense_readonly"/>
+        <menuitem id="menu_account_advance_report" name="Reporting" parent="menu_advance" sequence="4" groups="advance_expense.group_advance_expense_user"/>
+        <menuitem id="menu_action_account_report_partner_ledger_inherit_advance" name="Partner Ledger Inherit" action="account_reports.action_account_report_partner_ledger_inherit" parent="menu_account_advance_report"/>
+        <menuitem id="menu_account_advance_prepaid" action="action_account_advances" name="Advance Prepaid" parent="menu_account_advance"/>
+        <menuitem id="menu_account_advance_payment" action="action_advance_moves" name="Advance Payment" parent="menu_account_advance"/>
+        <menuitem id="menu_account_advance_transfer" action="action_account_advances_transfer" name="Advance Transfer" parent="menu_account_advance"/>
+
+        <record id="view_account_payment_advance_form_inherited" model="ir.ui.view">
+            <field name="name">account.payment.advance.form.inherited</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_draft']" position="replace">
+                    <button name="action_draft" string="Reset To Draft" type="object" class="btn btn-secondary" attrs="{'invisible': [('state', 'not in', ('posted'))]}"
+                                groups="account.group_account_invoice" data-hotkey="w"/>
+                </xpath>
+                <xpath expr="//form//header//field[@name='state']" position="replace">
+                        <field name="state" widget="statusbar" invisible="1" statusbar_visible="draft,posted"/>
+
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','draft')]}" statusbar_visible="draft,check"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','check')]}" statusbar_visible="draft,check,finance_approve"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','finance_approve')]}" statusbar_visible="check,finance_approve,director_approve"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','director_approve')]}" statusbar_visible="finance_approve,director_approve,waiting_payment"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','waiting_payment')]}" statusbar_visible="director_approve,waiting_payment,paid"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','paid')]}" statusbar_visible="waiting_payment,paid,refuse"/>
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','refuse')]}" statusbar_visible="paid,refuse"/>  
+                        <field name="x_state" widget="statusbar" attrs="{'invisible': [('x_state', '!=','cancel')]}" statusbar_visible="paid,cancel"/> 
+                </xpath>
+                <xpath expr="//form//header//button[@name='action_post']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//form//header//button[@name='action_draft']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//form//header//button[@name='action_cancel']" position="after">
+                    <button name="action_change_status" context="{'to_status':'check'}" string="Submit" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'draft')]}"/>
+                    <button name="action_change_status" context="{'to_status':'finance_approve'}" string="Finance Check" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'check')]}"/> 
+                    <button name="action_change_status" context="{'to_status':'director_approve'}" string="Finance  Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'finance_approve')]}"/> 
+                    <button name="action_change_status" context="{'to_status':'waiting_payment'}" string="Director Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'director_approve')]}"/>
+                    <button name="action_change_status" context="{'to_status':'paid'}" string="Payment" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'waiting_payment')]}"/>
+                    <button name="action_change_status" context="{'to_status':'refuse'}" string="Refuse" type="object" class="oe_highlight btn-danger" attrs="{'invisible': [('x_state', 'not in', ['check','finance_approve','director_approve'])]}"/>
+                    <button name="action_change_status" context="{'to_status':'cancel'}" string="Cancel" type="object" class="oe_highlight btn-danger" attrs="{'invisible': [('x_state', '!=', 'paid')]}"/>
+                </xpath>  
+                <xpath expr="//form//header//button[@name='action_cancel']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>                                                
+                <!-- <xpath expr="//field[@name='partner_id'][1]" position="replace">
+                    <field name="partner_id" context="{'default_is_company': True}" string="Customer"
+                                       options="{'no_quick_create': True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],
+                                             'invisible':[('partner_type','!=','customer')]}"/>
+                </xpath>
+
+                <xpath expr="//field[@name='partner_id'][2]" position="replace">
+                    <field name="partner_id" context="{'default_is_company': True}" string="Vendor"
+                                       options="{'no_quick_create': True}"
+                                       attrs="{'readonly':[('state', '!=', 'draft')],
+                                               'invisible':[('partner_type','!=','supplier')]}"/>
+                </xpath>
+                
+                 -->
+
+                <xpath expr="//field[@name='is_internal_transfer']" position="replace">
+                    <field name="is_internal_transfer" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='is_internal_transfer']" position="after">
+                    <field name="is_transfer" attrs="{'readonly':[('x_state','!=','draft')]}" />
+                </xpath>
+                <xpath expr="//field[@name='partner_id'][1]" position="attributes">
+                    <attribute name="attrs">{'readonly':[('x_state', '!=', 'draft')],'invisible':['|', ('partner_type','!=','customer'), ('is_internal_transfer', '=', True)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='partner_id'][2]" position="attributes">    
+                    <attribute name="attrs">{'readonly':[('x_state', '!=', 'draft')],'invisible':['|', ('partner_type','!=','supplier'), ('is_internal_transfer', '=', True)]}</attribute>            
+                </xpath>
+                <xpath expr="//field[@name='amount']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath> 
+                <xpath expr="//field[@name='currency_id']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>     
+                <xpath expr="//field[@name='date']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>   
+                <xpath expr="//field[@name='ref']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>     
+                <xpath expr="//field[@name='journal_id']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>  
+                <xpath expr="//field[@name='payment_method_line_id']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>  
+                <xpath expr="//field[@name='branch_id']" position="attributes"> 
+                    <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                </xpath>                                                                                     
+                <xpath expr="//field[@name='partner_id'][2]" position="after">
+                    <field name="destination_account_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>  
+                    <field name="transfer_partner_id" invisible="1"/>  
+                    <field name="partner_account" invisible="1"/>  
+                    <field name="transfer_partner_account" invisible="1"/>    
+                                 
+                </xpath>
+                <xpath expr="//field[@name='payment_type']" position="replace">
+                    <field name="payment_type" widget="radio" options="{'horizontal': True}"
+                                        attrs="{'readonly': [('x_state', '!=', 'draft')],'invisible':[('is_transfer', '=', True)]}"/>
+                </xpath>
+
+                <xpath expr="//group//field[@name='journal_id']" position="after">
+                    <field name="allow_division_feature" invisible="1"/>
+                    <field name="division_id"  domain="[('company_id','=',company_id)]"  attrs="{'readonly': [('x_state', '!=', 'draft')], 'invisible': [('allow_division_feature', '=', False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')] }"  options="{'no_create_edit':True,'no_create':True}"/>
+                    <field name="department_id" required="0" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')]}" domain="[('company_id','=',company_id)]" options="{'no_create': True,'no_create_edit':True}"/>
+                </xpath>
+                
+
+                <xpath expr="//div[hasclass('oe_title')]" position="replace">
+                    <div class="oe_title">
+                        <h1 attrs="{'invisible': [('x_state', '!=', 'draft')]}"><span>Draft</span></h1>
+                        <h1 attrs="{'invisible': [('x_state', '=', 'draft')]}"><field name="seq_name" readonly="1"/></h1>
+                        <h3><label for="desc" string="Descriptions"/></h3>
+                        <h3><field name="desc" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/></h3>
+                    </div>
+                    
+                </xpath>
+                
+                <xpath expr="//field[@name='payment_method_line_id']" position="after">
+                    <field name="source_do" attrs="{'readonly': [('x_state', '!=', 'draft')]}" />
+                    <field name="need_of_dir_approve" attrs="{'invisible': [('x_state', 'in', ['draft','check'])], 'readonly':[('x_state','not in', ['draft','check','finance_approve'])]}" />
+                    <field name="director_id" options="{'no_create_edit':True,'no_create':True}" attrs="{'invisible': ['|', ('x_state', 'in', ['draft','check']), ('need_of_dir_approve', '=', False)], 'readonly':[('x_state','not in', ['draft','check','finance_approve'])]}" />
+                    <label for="advance_account_id" string="Advance Account" attrs="{'invisible': [('is_transfer', '=', True)]}"/>
+                    <label for="advance_account_id" string="Transfer Account" attrs="{'invisible': [('is_transfer', '=', False)]}"/>
+                    <field name="advance_account_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}" readonly="1" nolabel="1"/>
+                    <field name="prepaid_id" readonly="1"/>
+                </xpath>
+                <xpath expr="//field[@name='date']" position="after">
+                    <field name="bank_reference" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
+                    <field name="cheque_reference" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
+                    <field name="acc_holder_name" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
+                    <field name="bank_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
+                </xpath>
+                <!-- <xpath expr="//field[@name='journal_id']" position="before">
+                    <field name="description" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
+                </xpath> -->
+            </field>
+        </record>
+
+
+        <record id="view_advance_payment_tree_inherit" model="ir.ui.view">
+            <field name="name">advance.payment.tree</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="seq_name"/>
+                </xpath>
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="string">Partner</attribute>
+                </xpath>
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="x_state" widget="badge"/>
+                </xpath>
+                <xpath expr="//field[@name='journal_id']" position="before">
+                    <field name="prepaid_id" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_advance_payment_search_inherit" model="ir.ui.view">
+			<field name="name">.view.advance.payment.search.inherit</field>
+			<field name="model">account.payment</field>
+			<field name="inherit_id" ref="account.view_account_payment_search"/>
+			<field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="replace">
+					<field string="Payment" name="seq_name"/>
+				</xpath>
+                <xpath expr="//field[@name='journal_id']" position="after">
+					<field string="Prepaid No" name="prepaid_id"/>
+				</xpath>
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="string">Partner</attribute>
+                </xpath>
+
+				<xpath expr="//filter[@name='inbound_filter']" position="replace">
+					<filter string="Customer Payments"
+                            name="inbound_filter"
+                            domain="[('partner_type', '=', 'customer'), ('is_internal_transfer', '=', False),('prepaid_id','=',False)]"/>
+				</xpath>
+                
+                <xpath expr="//filter[@name='outbound_filter']" position="replace">
+					<filter string="Vendor Payments"
+                            name="outbound_filter"
+                            domain="[('partner_type', '=', 'supplier'), ('is_internal_transfer', '=', False),('prepaid_id','=',False)]"/>
+				</xpath>
+			</field>
+		</record>
+
+
+        <!-- Account Journal Configuration New Set Up -->
+        <!-- <record id="view_account_journal_form_inherits" model="ir.ui.view">
+        	<field name="name">view.account.journal.form.inherits</field>
+        	<field name="model">account.journal</field>
+        	<field name="inherit_id" ref="account.view_account_journal_form"/>
+			<field name="arch" type="xml">
+                <xpath expr="//page[@id='inbound_payment_settings']" position="replace">
+                    <page id="inbound_payment_settings" string="Incoming Payments">
+                        <field name="available_payment_method_ids" invisible="1"/>
+                        <field name="inbound_payment_method_line_ids" nolabel="1" context="{'default_payment_type': 'inbound'}">
+                            <tree string="Payment Methods" editable="bottom">
+                                <field name="available_payment_method_ids" invisible="1"/>
+                                <field name="payment_type" invisible="1"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="sequence" widget="handle"/>
+                                <field name="payment_method_id" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="name"/>
+                                <field name="payment_account_id"
+                                        placeholder="Leave empty to use the default outstanding account"
+                                        string="Outstanding Receipts accounts"
+                                        optional="hide"
+                                        options="{'no_quick_create': True}"
+                                        groups="account.group_account_readonly"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+
+                <xpath expr="//page[@id='outbound_payment_settings']" position="replace">
+                    <page id="outbound_payment_settings" string="Outgoing Payments">
+                        <field name="outbound_payment_method_line_ids" nolabel="1" context="{'default_payment_type': 'outbound'}">
+                            <tree string="Payment Methods" editable="bottom" nolabel="1">
+                                <field name="available_payment_method_ids" invisible="1"/>
+                                <field name="payment_type" invisible="1"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="sequence" widget="handle"/>
+                                <field name="payment_method_id" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="name"/>
+                                <field name="payment_account_id"
+                                        placeholder="Leave empty to use the default outstanding account"
+                                        string="Outstanding Payments accounts"
+                                        optional="hide"
+                                        options="{'no_quick_create': True}"
+                                        groups="account.group_account_readonly"/>
+                            </tree>
+                        </field>
+                        <field name="selected_payment_method_codes" invisible="1"/>
+                        <group name="outgoing_payment" />
+                    </page>
+                </xpath>
+			</field>
+        </record> -->
+    
+</odoo>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_purchase_summary_report_search_view" model="ir.ui.view">
+            <field name="name">purchase.summary.report.search</field>
+            <field name="model">purchase.summary.report</field>
+            <field name="arch" type="xml">
+                <search>
+                    <!-- <field name="project_code_id" filter_domain="[('project_code_id', 'ilike', self)]"/> -->
+                    <field name="company_id" filter_domain="[('company_id', 'ilike', self)]"/>
+                    <field name="department_id" filter_domain="[('department_id', 'ilike', self)]"/>  
+                    <field name="branch_id" filter_domain="[('branch_id', 'ilike', self)]"/>                  
+                    <field name="type" filter_domain="[('type', 'ilike', self)]"/>
+                    <field name="partner_id" filter_domain="[('partner_id', 'ilike', self)]"/>
+                    <group expand="0" string="Group By">
+                        <!-- <filter name="project_code_id" domain="[]" context="{'group_by':'project_code_id'}"/> -->
+                        <filter name="company_id" domain="[]" context="{'group_by':'company_id'}"/>
+                        <filter name="departmet_id" domain="[]" context="{'group_by':'department_id'}"/>
+                        <filter name="branch_id" domain="[]" context="{'group_by':'branch_id'}"/>
+                        <filter name="type" domain="[]" context="{'group_by':'type'}"/>
+                        <filter name="partner_id" domain="[]" context="{'group_by':'partner_id'}"/>
+                        <filter name="invoice_date" string="Invoice Date:" domain="[]" context="{'group_by':'invoice_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_purchase_summary_report_tree" model="ir.ui.view">
+            <field name="name">Purchase Summary Report</field>
+            <field name="model">purchase.summary.report</field>
+            <field name="arch" type="xml">
+                <tree create='0'>                   
+                    <field name="type" />
+                    <field name="invoice_date" />
+                    <field name="year_str" />
+                    <field name="month_str" />
+                    <field name="ref_invoice" />
+                    <field name="internal_ref"/>
+                    <field name="partner_id" />
+                    <field name="payment_term_id" />
+                    <!-- <field name="project_code_id" />
+                    <field name="pj_desc" /> -->
+                    <field name="company_id" />
+                    <field name="department_id" />
+                    <field name="branch_id" />
+                    <field name="total_amount" sum="total_amount" />
+                    <field name="discount" sum="discount" />
+                    <field name="tax" sum="tax" />
+                    <field name="net_amt" sum="net_amt" />
+                    <field name="settled_amt" sum="settled_amt" />
+                    <field name="balance" sum="balance" />
+                    <field name="vendor_category_id" />
+                    <button name="action_enter_move_id" string="Go To Bill" type="object" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_view_purchase_summary_report" model="ir.actions.act_window">          
+            <field name="name">Purchase Summary Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">purchase.summary.report</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_purchase_summary_report_tree" />
+        </record>
+
+       <menuitem id="menu_purchase_summary_repot" name="Purchase Summary" parent="purchase.purchase_report_main" action="action_view_purchase_summary_report" sequence="20"/>
+    </data>
+</odoo>

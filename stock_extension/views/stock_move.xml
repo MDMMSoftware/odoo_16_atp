@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+    
+            <record id="stove_move_detail_operation_inherit" model="ir.ui.view">
+                <field name="name">stock.move.line.operations.tree.inherit</field>
+                <field name="model">stock.move.line</field>
+                <field name="inherit_id" ref="stock.view_stock_move_line_detailed_operation_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='lot_id']" position="attributes">
+                        <attribute name="readonly">1</attribute>
+                    </xpath>
+                </field>
+            </record>
+        <record id="stock_move_form_inherit_part_id" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.part_id</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_toggle_is_locked']" position="after">
+                  <button name="action_print"  context="{'filename':'mmm_store_transfer_report'}"  string="Print" type="object" class="oe_highlight btn-info"/>           
+                </xpath>            
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='description_picking']" position="after">
+                    <field name="product_name" optional="hide"/>
+                    <field name="custom_part" readonly="1" optional="hide" />
+                </xpath>
+
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='lot_ids']" position="attributes">
+                    <attribute name="options">{'no_quick_create': True, 'no_create_edit' : True}</attribute>
+                </xpath>
+            </field>
+        </record>   
+
+        <menuitem id="stock.menu_warehouse_report" name="Reporting" sequence="99" parent="stock.menu_stock_root" groups="stock.group_stock_manager,access_right.group_stock_readonly"/>       
+        <menuitem id="stock.menu_valuation" name="Locations" parent="stock.menu_warehouse_report" sequence="150" action="stock.action_view_quants" groups="base.group_system"/>
+
+    </data>
+</odoo>

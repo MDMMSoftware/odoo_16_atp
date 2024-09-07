@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        
+
+        <record id="view_part_requisition_tree" model="ir.ui.view">
+            <field name="name">part.requisition.tree</field>
+            <field name="model">part.requisition</field>
+            <field name="arch" type="xml">
+                <tree string="Part Requisition">
+                    <field name="branch_id"/>
+                    <field name="department_id"/>
+                    <field name="date" string="Date"/>  
+                    <field name="job_request_id"/>
+                    <field name="job_order_id"/>
+                    <field name="name"/> 
+                    <field name="company_no"/>
+                    <field name="location_id"/>
+                    <field name="parts_state"                    
+                        decoration-muted="parts_state == 'draft'"
+                        decoration-info="parts_state == 'confirm'"
+                        decoration-warning="parts_state == 'approve'"
+                        decoration-success="parts_state == 'done'"
+                        decoration-danger="parts_state == 'reject' or parts_state == 'close'"
+                        widget="badge" 
+                    />  
+                    <field name="state"                    
+                        decoration-muted="state == 'draft'"
+                        decoration-info="state == 'confirm'"
+                        decoration-warning="state == 'approve'"
+                        decoration-success="state == 'done'"
+                        decoration-danger="state == 'reject' or state == 'close'"
+                        widget="badge" 
+                    />  
+                    <field name="sale_state"
+                        decoration-success="sale_state == 'sale' or sale_state == 'done'"
+                        decoration-info="sale_state == 'sent'"
+                        decoration-muted="sale_state == 'draft' "
+                        decoration-danger="sale_state == 'cancel' "
+                        widget="badge"
+                    />
+                    <field name="adjustment_state"
+                        decoration-success="adjustment_state == 'done'"
+                        decoration-info="adjustment_state == 'confirm'"
+                        decoration-muted="adjustment_state == 'draft'"
+                        decoration-warning="adjustment_state == 'return'"  
+                        widget="badge"                  
+                    />
+                    <field name="accounting_status" optional="hide"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_part_requisition_form" model="ir.ui.view">
+            <field name="name">part.requisition.form</field>
+            <field name="model">part.requisition</field>
+            <field name="arch" type="xml">
+                <form string="Part Requisition">
+                    <header>
+                        <button name="action_submit" type="object" class="oe_highlight btn-info" string="Submit" attrs="{'invisible':[('state','not in',['draft'])]}" />
+                        <button name="action_approve" type="object" class="oe_highlight btn-info" string="Approve" attrs="{'invisible':[('state','not in',['confirm'])]}" />
+                        <button name="%(repair_internal.act_stock_part_requisition)d" type="action" class="oe_highlight btn-success" string="Prepare Parts" attrs="{'invisible':[('state','not in',['approve'])]}" />
+                        <button name="action_revert_approve" type="object" class="oe_highlight" string="Revert Approve btn-warning" attrs="{'invisible':[('state','not in',['approve'])]}" />
+                        <button name="action_print" context="{'filename':'mmm_requisition_form'}" type="object" class="oe_highlight" string="Print" attrs="{'invisible':[('state','in',['draft','reject','close'])]}" />
+                        <button name="action_reject" type="object" class="oe_highlight btn-danger" string="Reject" attrs="{'invisible':[('state','not in',['draft','confirm'])]}" />
+                        <button name="action_close" type="object" class="oe_highlight btn-danger" string="Manual Close" attrs="{'invisible':[('state','!=','approve')]}" />
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirm,approve,reject,close"/>                        
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_sale_order" class="oe_stat_button" icon="fa-book"  type="object" string="Sales"/>  
+                            <button name="action_open_adjustment" class="oe_stat_button" icon="fa-book"  type="object" string="Adjustment"/>  
+                        </div>
+                        <field name="parts_state" invisible="1"/>
+
+                        <widget name="web_ribbon" title="Request"  attrs="{'invisible': [('parts_state', 'not in', ['draft','confirm'])]}"/>
+                        <widget name="web_ribbon" title="Waiting Parts"  attrs="{'invisible': [('parts_state', '!=', 'approve')]}"/>
+                        <widget name="web_ribbon" title="Finished"  attrs="{'invisible': [('parts_state', '!=', 'done')]}"/>
+                        <widget name="web_ribbon" title="Rejected"  attrs="{'invisible': [('parts_state', '!=', 'reject')]}"/>
+                        <widget name="web_ribbon" title="Closed"  attrs="{'invisible': [('parts_state', '!=', 'close')]}"/>
+
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left">  
+                                <field name="job_order_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                <field name="job_request_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                <field name="location_id"  options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'required': [('state', 'not in', ['draft','approve'])],'readonly': [('state', 'in', ['approve'])]}"/>
+                                <label for="company_no" string="Fleet"  attrs="{'invisible':[('repair_object_type','!=','fleet')]}"/>
+                                <label for="company_no" string="Repair Product"  attrs="{'invisible':[('repair_object_type','!=','repair_product')]}"/>
+                                <field name="company_no" nolabel="1"/>
+                                <field name="owner_name" readonly="1"/>
+                                <field name="smu"  attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="repair_object_type" invisible="1"/>
+                            </group>
+                            <group name="right">  
+                                <field name="branch_id" options="{'no_create_edit':True,'no_create':True}"     attrs="{'readonly':[('state','!=','draft')]}"/> 
+                                <field name="department_id" options="{'no_create_edit':True,'no_create':True}" required="0"  domain="[('company_id','=',company_id)]"  attrs="{'readonly':[('state','!=','draft')]}"/> 
+                                <field name="date" attrs="{'readonly':[('state','!=','draft')]}"/> 
+                                <field name="journal_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  required="1"  attrs="{'readonly': [('state', 'not in', ['draft','confirm'])]}"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="adjust_account_id" invisible="1"/>
+                                <field name="pricelist_id" readonly="1"/>
+                            </group>                            
+                        </group>
+                        <notebook>
+                           <page string="Products">
+                                <field name="requisition_line" attrs="{'readonly': [('state','not in',['draft','confirm'])]}">
+                                    <tree editable="bottom">
+                                        <field name="part_no"/>
+                                        <field name="product_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('repair_ok','=',True)]"/>
+                                        <field name="product_name"/>
+                                        <field name="custom_brand_id" readonly="1" optional="hide"/>
+                                        <field name="custom_part" readonly="1" />
+                                        <field name="desc"/>
+                                        <field name="uom_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  optional="show"/>
+                                        <field name="onhand_qty" optional="show"/>
+                                        <field name="done_qty"/>
+                                        <field name="issue_qty"  attrs="{'readonly': [('parent_state', 'not in', ['draft'])]}"/>
+                                        <field name="unit_price" optional="show"/>
+                                        <field name="price_subtotal" optional="show"/>
+                                        <field name="remark"/>
+                                        <field name="lead_time" widget="float_time" optional="hide"/>
+                                        <field name="freight" optional="hide" />
+                                        <field name="parent_state" optional="show"/>
+                                        <field name="need_request" optional="show"/>
+                                        <button name="view_action_stock_quant" type="object" class="oe_highlight" string="Check Quant" attrs="{'invisible':[('parent_state','in',['draft'])]}" />
+                                    </tree>
+                                </field>
+                           </page>
+                           
+                           
+                       </notebook>
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_part_requisition_view" model="ir.actions.act_window">
+            <field name="name">Part Requisition</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">part.requisition</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+        <record id="view_part_requisition_search" model="ir.ui.view">
+            <field name="name">part.requisition.search</field>
+            <field name="model">part.requisition</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="name" />
+                    <field name="job_request_id" />
+                    <field name="job_order_id" />
+                    <field name="company_no" />
+                </search>
+            </field>
+        </record>
+        <menuitem id="menu_part_requisition" action="action_part_requisition_view" name="Part Requisitions" sequence="2" parent="menu_repair_operation"/>
+
+        <record id="view_stock_quant_tree_inventory_editable_inherit_stock_accounts" model="ir.ui.view">
+            <field name="name">stock.quant.inventory.tree.editable.inherit.stock.accounts</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock_account.view_stock_quant_tree_inventory_editable_inherit_stock_account"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='inventory_quantity']" position="replace">
+                    <field name="inventory_quantity" invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='action_apply_inventory']" position="replace">
+                </xpath>
+                <xpath expr="//button[@name='action_set_inventory_quantity']" position="replace">
+                </xpath>
+                <xpath expr="//button[@name='action_set_inventory_quantity_to_zero']" position="replace">
+                </xpath>
+               
+            </field>
+        </record>
+
+        <!-- Sale -->
+
+        <record id="view_sale_order_form_inherit_repair" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.repair</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="after">
+                    <field name="repair_request_id" invisible="1"/>
+                    <field name="job_order_id" invisible="1"/>
+                    <field name="requisition_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id" optional="show" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','not in',['draft','sent'])], 'column_invisible': ['&amp;','&amp;',('parent.repair_request_id','=',False),('parent.job_order_id','=',False),('parent.requisition_id','=',False)] }" />
+                </xpath>
+            </field>
+        </record> 
+
+        <!-- Account Move -->
+
+        <record id="view_move_form_inherit_repair" model="ir.ui.view">
+            <field name="name">account.move.form.inherit.repair</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="job_order_id" invisible="1"/>
+                    <field name="job_request_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//page[@id='invoice_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id" optional="show" attrs="{'column_invisible': ['&amp;',('parent.job_order_id','=',False),('parent.job_request_id','=',False)]}" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id" optional="show" attrs="{'column_invisible': ['&amp;',('parent.job_order_id','=',False),('parent.job_request_id','=',False)]}" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>                
+            </field>   
+        </record>    
+
+        <!-- Adjustment -->
+
+        <record id="form_view_inv_adjustment_inherit_repair" model="ir.ui.view">
+            <field name="name">stock.inventory.adjustment.form.repair</field>
+            <field name="model">stock.inventory.adjustment</field> 
+            <field name="inherit_id" ref="stock_adjustment.form_view_inv_adjustment"/>
+            <field name="arch" type="xml">      
+                <xpath expr="//field[@name='journal_id']" position="after">
+                    <field name="repair_request_id" invisible="1"/>
+                    <field name="job_order_id" invisible="1"/>
+                    <field name="requisition_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//notebook//page[@name='adjust_lines']//field[@name='adjustment_line_id']//tree//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id"  optional="hide" options="{'no_create':True,'no_create_edit': True}"  /> 
+                </xpath>
+            </field>
+        </record>  
+
+        <!-- Account Move -->     
+
+        <record id="view_move_line_tree_inherited_repair" model="ir.ui.view">
+            <field name="name">account.move.line.tree.inherit.repair</field>
+            <field name="model">account.move.line</field>
+            <field name="inherit_id" ref="account_accountant.view_move_line_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='fleet_id']" position="after">
+                    <field name="repair_object_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_move_expense_form_inherit_repair" model="ir.ui.view">
+            <field name="name">account.move.expense.form.inherit.repair</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//page[@id='invoice_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="repair_object_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>                
+            </field>   
+        </record>
+
+        <!-- Requisition -->
+
+        <record id="requisition_form_view_repair" model="ir.ui.view">
+            <field name="name">requisition.form.inherit</field>
+            <field name="model">requisition</field>
+            <field name="inherit_id" ref="requisition.requisition_form_view"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//notebook//page[@name='product_line']//tree//field[@name='part_id']" position="after">
+						<field name="repair_object_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                    </xpath>
+                </field>
+        </record> 
+
+        <!-- Stock Valuation Layer -->
+
+        <record id="stock_location_valuation_layer_tree_inherit_repair" model="ir.ui.view">
+            <field name="name">stock.location.valuation.tree.inherit</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='quantity']" position="before">
+                        <field name="repair_object_id" optional="hide"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                    </xpath>
+                </field>
+        </record> 
+
+        <!-- Stock Valuation Report -->      
+
+        <record id="tree_view_valuation_report_inherit_repair" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.repair</field>
+            <field name="model">stock.location.valuation.report</field> 
+            <field name="inherit_id" ref="stock_extension.tree_view_valuation_report"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree//field[@name='desc']" position="before">
+                    <field name="repair_object_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" /> 
+                </xpath>
+            </field>
+        </record>    
+
+        <record id="form_view_valuation_report_inherit_repair" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.form.repair</field>
+            <field name="model">stock.location.valuation.report</field> 
+            <field name="inherit_id" ref="stock_extension.form_view_valuation_report"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//group//field[@name='qty_in']" position="before">
+                    <field name="repair_object_id" readonly="1" options="{'no_create':True,'no_create_edit': True}" /> 
+                </xpath>
+            </field>
+        </record>             
+
+    </data>
+</odoo>

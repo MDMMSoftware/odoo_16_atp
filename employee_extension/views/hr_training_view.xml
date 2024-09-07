@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record model="ir.ui.view" id="hr_training_calendar_view">
+	        <field name="name">HR Training Record Calendar</field>
+	        <field name="model">hr.training</field>
+	        <field name="priority" eval="2"/>
+	        <field name="arch" type="xml">
+	            <calendar string="Trainings" date_start="date_start" date_stop="date_end" mode="month" quick_add="False" >
+	                <field name="course" />
+					<field name="place" />
+					<field name="responsible" />
+					<field name="type" />
+	            </calendar>
+	        </field>
+	    </record>
+
+		<record id="view_hr_training_record_form" model="ir.ui.view">
+			<field name="name">HR Training Record Form</field>
+			<field name="model">hr.training</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Record">
+					<sheet>						
+						<group name="group_top">
+							<group name="group_left">
+								<field name="name" />
+								<field name="course" />
+								<field name="type" />
+								<field name="provided_type" />
+								<field name="responsible" />														
+							</group>
+							<group name="group_right">
+								<field name="date_start" />
+								<field name="date_end" />
+								<field name="total_time" />
+								<field name="place" />
+								<field name="amt"/>								
+							</group>
+						</group>
+						<group string="Employees">
+							<field name="employee_ids" nolabel="1"/>
+						</group>				
+					</sheet>
+					<div class="oe_chatter">
+	                    <field name="message_follower_ids" widget="mail_followers"/>
+	                    <field name="message_ids" widget="mail_thread"/>
+	                </div>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="view_hr_training_record_tree" model="ir.ui.view">
+			<field name="name">HR Training Record Tree</field>
+			<field name="model">hr.training</field>
+			<field name="arch" type="xml">
+				<tree string="HR Training Course">
+					<field name="name" />
+					<field name="course" />
+					<field name="place" />
+					<field name="responsible" />
+					<field name="type" />
+					<field name="date_start" />
+					<field name="date_end" />
+					<field name="total_time" />
+					<field name="amt"/>						
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_hr_training_record_search" model="ir.ui.view">
+			<field name="name">HR Training Search</field>
+			<field name="model">hr.training</field>
+			<field name="arch" type="xml">
+				<search string="Training">
+					<field name="name"/>
+					<filter string="Current Month" name="current_month"
+					domain="[('date_start','&gt;=',(context_today()-relativedelta(months=0)).strftime('%Y-%m-01')),('date_start','&lt;',(context_today()+relativedelta(months=1)).strftime('%Y-%m-01'))]" 
+						/>
+		      		<field name="course" string="Course"/>
+		      		<field name="date_start" string="Start Date"/>
+		      		<field name="date_end" string="End Date"/>
+				</search>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_record_view" model="ir.actions.act_window">
+			<field name="name">Training Record</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training</field>
+			<field name="view_mode">calendar,tree,form</field>
+			<field name="view_id" ref="hr_training_calendar_view" />
+		</record>
+
+
+		
+		<record id="view_hr_training_record_line_form" model="ir.ui.view">
+			<field name="name">HR Training Record Line Form</field>
+			<field name="model">hr.training.line</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Record Line">
+					<sheet>						
+						<group name="group_top">
+							<group name="group_left">
+								<field name="record_id" />
+								<field name="course" />
+								<field name="type" />
+								<field name="provided_type" />
+								<field name="responsible" string="Trainer"/>
+								<field name="attachment_ids" widget='many2many_binary' />														
+							</group>
+							<group name="group_right">
+								<field name="date_start" />
+								<field name="date_end" />
+								<field name="total_time" />
+								<field name="place" />	
+								<field name="amt"/>							
+							</group>
+						</group>
+						<group string="Results">
+							<group>
+								<field name="employee_id" readonly="True"/>
+							</group>
+							<group>
+								<field name="result" invisible="1"/>
+								<field name="remark"/>
+							</group>
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+		
+		<record id="view_hr_training_record_line_tree" model="ir.ui.view">
+			<field name="name">HR Training Record Line Tree</field>
+			<field name="model">hr.training.line</field>
+			<field name="arch" type="xml">
+				<tree create="false" string="HR Training Records">
+					<field name="record_id" />					
+					<field name="employee_id" />
+					<field name="date_start" />
+					<field name="date_end" />
+					<field name="amt"/>
+					<field name="result" />
+					<field name="remark" />
+
+				</tree>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_record_line_view" model="ir.actions.act_window">
+			<field name="name">Training Record Line</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.line</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_training_record_line_tree" />
+		</record>
+
+		<record id="view_hr_training_record_line_filter" model="ir.ui.view">
+			<field name="name">Training Record Line Filter</field>
+			<field name="model">hr.training.line</field>
+			<field name="arch" type="xml">
+				<search string="Training Records">
+					<field name="record_id" string="Training"/>
+					<field name="result" string="Result"/>
+					<group expand="0" string="Group By">
+                        <filter name="record_id" string="Training" icon="terp-personal" domain="[]" context="{'group_by':'record_id'}"/>
+                        <filter name="result" string="Result" icon="terp-personal" domain="[]" context="{'group_by':'result'}"/>
+                    </group>
+				</search>
+			</field>
+		</record>
+
+		<menuitem id="hr_training_menu_parent" parent="hr.menu_hr_root" sequence="3" name="Training" groups="base.group_erp_manager,hr.group_hr_user"/>
+
+		<menuitem action="action_hr_training_record_view" id="hr_training_record_menu" parent="hr_training_menu_parent" name="Training" sequence="1" groups="base.group_erp_manager,hr.group_hr_user"/>
+
+		<menuitem action="action_hr_training_record_line_view" id="hr_training_record_line_menu" parent="hr_training_menu_parent" name="Training Records" sequence="2" groups="base.group_erp_manager,hr.group_hr_user"/>
+
+
+        <record model="ir.ui.view" id="view_hr_training_wizard_form">
+            <field name="name">Training Attachment Wizard</field>
+            <field name="model">hr.training.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Training Attachment Wizard">
+                	
+            		<group>
+            			<field name="attachment_ids" widget="many2many_binary"/>
+            		</group>
+            		<footer>
+		            <button name="get_data" string="OK" type="object"  class="oe_highlight"/>
+		            or
+		            <button string="Cancel" class="oe_link" special="cancel"/>
+		          </footer>
+                	
+            	</form>
+        	</field>
+    	</record>
+
+        <record id="action_hr_training_form_wizard" model="ir.actions.act_window">
+			<field name="name">Training Attachment Wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.wizard</field>
+			<field name="view_mode">form</field>
+			<field name="view_id" ref="view_hr_training_wizard_form" />
+            <field name="context">{}</field>
+            <field name="target">new</field>
+		</record>		
+		
+		<record id="view_hr_employee_form_inherited" model="ir.ui.view">
+			<field name="name">hr.employee.form.inherited</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr.view_employee_form" />
+			<field name="arch" type="xml">
+									
+				<xpath expr="//page[@name='personal_information']" position="after">	
+					<page string="Training" groups="hr.group_hr_user">
+						<field name="record_line" >
+							<tree string="Training Courses" editable="bottom">
+								<field name="record_id" readonly="1" style="width:40%"/>							
+								<field name="course" readonly="1" style="width:40%"/>
+								<field name="type" readonly="1" style="width:40%"/>
+								<field name="responsible" readonly="1" style="width:40%"/>								
+								<field name="date_start" readonly="1" style="width:40%"/>
+								<field name="date_end" readonly="1" style="width:40%"/>								
+								<field name="total_time" readonly="1" style="width:20%"/>
+								<field name="place" readonly="1" style="width:40%"/>
+								<field name="amt" readonly="1" style="width:40%"/>
+                                <field name="result" readonly="1" style="width:40%"/>
+                                <field name="remark" readonly="1" style="width:40%"/>
+                                <field name="adminCheck" invisible="1"/>
+                                <field name="attachment_ids" widget="many2many_binary" class="oe_edit_only" attrs="{'readonly': [('adminCheck', '=', False)]}"/>
+                                <button string="Add" name="%(action_hr_training_form_wizard)d" type="action" />
+                            </tree>
+						</field>
+					</page>
+				</xpath>				
+				
+			</field>
+		</record>
+	
+	</data>		
+</odoo>

@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        
+		<record id="view_qc_checker_wizard_form" model="ir.ui.view">
+	        <field name="name">qc.checker.wizard.form</field>
+	        <field name="model">qc.checker.wizard</field>
+	        <field name="arch" type="xml">
+	            <form string="QC Checking">  
+                    <div>
+                        <group>
+                            <field name="job_order_id" invisible="1"/>
+                            <field name="branch_id" invisible="1"/>
+                            <field name="qc_checker_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]" required="1"/>     
+                        </group>
+                        <footer>
+                            <button string="Pass" name="action_qc_check" type="object" class="btn-primary"/>
+                            <button string="Cancel" class="btn-default" special="cancel"/>
+	                    </footer>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+    	<record id="action_view_qc_checker_wizard" model="ir.actions.act_window">
+			<field name="name">QC Checking..</field>
+			<field name="res_model">qc.checker.wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+		</record>        
+
+        <record id="view_job_order_form_tree" model="ir.ui.view">
+            <field name="name">job.order.tree</field>
+            <field name="model">job.order</field>
+            <field name="arch" type="xml">
+                <tree string="Job Order"  create="0">
+                    <field name="name"/>
+                    <field name="request_id"/>
+                    <field name="customer"/>
+                    <field name="quotation_id"/>
+                    <field name="received_date"/>
+                    <field name="promised_date"/>
+                    <field name="issued_date"/>
+                    <field name="pic"/>
+                    <field name="mileage"/>
+                    <field name="job_instruction"/>
+                    <field name="company_id"/>
+                    <field name="state" widget="badge"
+                        decoration-danger="state == 'cancel'" 
+                        decoration-muted="state == 'draft'" decoration-primary="state == 'qc_check'" decoration-success="state == 'job_close'"
+                        decoration-warning="state == 'job_start' " 
+                    />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_order_pivot" model="ir.ui.view">
+            <field name="name">job.order.pivot</field>
+            <field name="model">job.order</field>
+            <field name="arch" type="xml">
+                <pivot string="Job Order Analysis" sample="1">
+                    <field name="fleet_id" type="col"/>
+                    <field name="promised_date" interval="month" type="row"/>
+                    <field name="estimated_time" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_job_order_graph" model="ir.ui.view">
+            <field name="name">job.order.graph</field>
+            <field name="model">job.order</field>
+            <field name="arch" type="xml">
+                <graph string="Job Order Analysis" type="line" sample="1">
+                    <field name="branch_id"/>
+                    <field name="estimated_time" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="view_job_order_form_form" model="ir.ui.view">
+            <field name="name">job.order.form</field>
+            <field name="model">job.order</field>
+            <field name="arch" type="xml">
+                <form string="Job Order"  duplicate="0" create="0">
+                    <header>
+                        <button name="action_job_start" class="oe_highlight btn-muted" type="object" string="Job Start" states="draft"/>
+                        <button name="action_qc_check_wizard" class="oe_highlight btn-primary" type="object" string="QC Check" states="job_start"/>
+                        <button name="action_job_closed" class="oe_highlight btn-success" type="object" string="Manual Job Closed" states="qc_check"/>
+                        <button name="action_cancel" class="oe_highlight btn-danger" type="object" string="Cancel" confirm="Are you sure want to cancel the job order?" attrs="{'invisible': [('state', '=', 'cancel')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,job_start,qc_check,job_close" attrs="{'invisible': [('state', '=', 'cancel')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="qc_check,job_close,cancel" attrs="{'invisible': [('state', '!=', 'cancel')]}"/>
+                    </header>
+                    <sheet>
+                        <field name="job_state" invisible="1"/>
+                        <field name="is_invoiced" invisible="1"/>
+                        <widget name="web_ribbon"  title="Pending"  attrs="{'invisible': [('job_state', '!=', 'draft')]}"/>
+                        <widget name="web_ribbon"  title="Received"  attrs="{'invisible': [('job_state', '!=', 'job_start')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-info" title="Processing"  attrs="{'invisible': [('job_state', '!=', 'progress')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-warning" title="WIP"  attrs="{'invisible': [('job_state', '!=', 'work_in_progress')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-info" title="Waiting QC"  attrs="{'invisible': [('job_state', '!=', 'finish')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-primary" title="QC Pass"  attrs="{'invisible': [('state', '!=', 'qc_check')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-danger" title="Cancelled"  attrs="{'invisible': [('job_state', '!=', 'cancel')]}"/>
+                        <widget name="web_ribbon" bg_color="bg-success" title="Job Finished"  attrs="{'invisible': [('job_state', '!=', 'job_close')]}"/>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        
+                        <group>
+                            <group name="left">  
+                                <field name="received_date" attrs="{'readonly':[('state','!=','draft')],'required':[('state','=','draft')]}"/>
+                                <field name="issued_date"  attrs="{'readonly':[('state','!=','qc_check')]}"/>
+                                <field name="mileage" readonly="1" />
+                                <field name="job_instruction" attrs="{'readonly':[('state','=','job_close')]}"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="branch_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  readonly="1" force_save="1"/>
+                            </group>
+                            <group name="right">  
+                                <field name="fleet_id"   options="{'no_quick_create': true, 'no_create_edit':true}" /> 
+                                <field name="promised_date" readonly="1" /> 
+                                <field name="pic" readonly="1"  options="{'no_quick_create': true, 'no_create_edit':true}" />  
+                                <field name="qc_checker_id" readonly="1" force_save="1" attrs="{'invisible':[('state','in',['draft','job_start'])]}"/>
+                                <field name="estimated_time" readonly="1" widget="float_time"/>                            
+                                <field name="quotation_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />    
+                                                                                        
+                            </group>                            
+                        </group>
+
+                        <notebook>
+                            <page name="rate_line" string="Rates">
+                                <field name="job_rate_line" attrs="{'readonly':[('state','in',('job_close','cancel'))]}">
+                                    <tree editable="bottom">
+                                        <field name="branch_id" invisible="1"/>
+                                        <field name="job_code" readonly="1"/>
+                                        <field name="job_desc" readonly="1"/>
+                                        <field name="job_type_id" readonly="1"/>
+                                        <field name="rate"  domain="[('company_id','=',parent.company_id)]"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="start_time"/>
+                                        <field name="end_time"/>
+                                        <field name="duration" widget="repair_timer"/>   
+                                        <field name="pic1"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]"/>
+                                        <field name="pic2"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]"/>
+                                        <field name="pic3"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]"/>
+                                        <field name="pic4"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]"/>
+                                        <field name="pic5"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('res_branch_id','=',branch_id)]"/>
+                                        <field name="amount" readonly="1"/>
+                                        <button name="action_show_details" type="object" title="Show Details" icon="fa-list"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="view_job_order_search_view" model="ir.ui.view">
+            <field name="name">job.order.search</field>
+            <field name="model">job.order</field>
+            <field name="arch" type="xml">   
+                <search string="Job Order">
+                    <field name="name" string="Reference No."/>
+                    <field name="customer" string="Customer"/>
+                    <field name="quotation_id" string="Quotation"/>
+                    <field name="request_id" string="Customer Request No"/>
+                    <field name="fleet_id" string="Fleet"/>
+                </search>  
+            </field>
+        </record>  
+
+
+        <record id="action_job_order_form_view" model="ir.actions.act_window">
+            <field name="name">Job Order</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.order</field>
+            <field name="view_mode">tree,form,pivot,graph</field>
+            
+        </record>
+
+        <record id="view_job_rate_form_tree" model="ir.ui.view">
+            <field name="name">job.rate.tree</field>
+            <field name="model">job.rate</field>
+            <field name="arch" type="xml">
+                <tree string="Job Rate">
+                    <field name="name"/>
+                    <field name="pic1"/>
+                    <field name="pic2"/>
+                    <field name="pic3"/>
+                    <field name="pic4"/>
+                    <field name="pic5"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_rate_form_form" model="ir.ui.view">
+            <field name="name">job.rate.form</field>
+            <field name="model">job.rate</field>
+            <field name="arch" type="xml">
+                <form string="Job Rate"  duplicate="0">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group>  
+                                <field name="pic1"/>
+                                <field name="pic2"/>
+                                <field name="pic3"/>
+                                <field name="pic4"/>
+                                <field name="pic5"/>
+                            </group>   
+                            <div class="oe_title">
+                                <h3>
+                                    <label for="company_id" string="Company"/>
+                                    <field name="company_id" force_save="1"/>
+                                </h3>    
+                            </div>                  
+                        </group>
+                        <notebook>
+                            <page name="pic_rate" string="PICs' Rate">
+                                <field name="rate_pic" readonly="1">
+                                    <tree editable="bottom">
+                                        <field name="pic_id"   options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="rate_amt"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_job_rate_form_view" model="ir.actions.act_window">
+            <field name="name">Job Rate</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.rate</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+
+
+        <menuitem id="menu_job_order_form" action="action_job_order_form_view" name="Job Order" sequence="3" parent="menu_repair_external_operation"/>
+        <menuitem id="menu_job_rate" action="action_job_rate_form_view" name="Job Rate" sequence="3" parent="menu_repair_external_configuration"/>
+        
+        
+        <record id="view_job_rate_line_form_form" model="ir.ui.view">
+            <field name="name">job.rate.form</field>
+            <field name="model">job.rate.line</field>
+            <field name="arch" type="xml">
+                <form string="Job Details"  duplicate="0">
+                    
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left">  
+                                <field name="job_desc" readonly="1"/>
+                                <field name="job_type_id"   options="{'no_quick_create': true, 'no_create_edit':true}" readonly="1"/>
+                                <field name="rate"   options="{'no_quick_create': true, 'no_create_edit':true}" readonly="1"/>
+                                <field name="amount" readonly="1"/>
+                            </group>
+                                                       
+                        </group>
+
+                        <notebook>
+                            <page name="rate_detail_line" string="Rate Details">
+                                <field name="job_rate_detail">
+                                    <tree editable="bottom">
+                                        <field name="pic_id" attrs="{'readonly':[('state','!=','ready')]}" domain="[('id','in',pic_ids)]" options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="pic"  attrs="{'readonly':[('state','!=','ready')]}" domain="[('id','in',pic_name_ids)]"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="desc" invisible="1"/>
+                                        <field name="pic_name_ids" invisible="1"/>
+                                        <field name="pic_ids" invisible="1"/>
+                                        <field name="description"  attrs="{'readonly':[('state','not in',['ready','progress'])]}"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="date_start"  attrs="{'readonly':[('state','!=','ready')]}"  />
+                                        <field name="date_end"/>
+                                        <field name="state"  widget="badge" decoration-warning="state == 'progress'" decoration-success="state == 'done'" decoration-info="state not in ('progress', 'done', 'cancel')"/>
+                                        <field name="duration" widget="repair_timer"/>
+                                        <field name="is_user_working" invisible="1"/>
+                                        <field name="working_state" invisible="1"/>
+                                        <button name="button_start" type="object" string="Start" class="btn-success"
+                                        attrs="{'invisible': ['|','|', ('working_state', '=', 'blocked'), ('state', 'in', ('done', 'cancel')), ('is_user_working', '!=', False)]}"/>
+                                        <button name="button_pending" type="object" string="Pause" class="btn-warning"
+                                        attrs="{'invisible': ['|', ('working_state', '=', 'blocked'), ('is_user_working', '=', False)]}"/>
+                                        <button name="button_finish" type="object" string="Done" class="btn-success"
+                                        attrs="{'invisible': ['|', ('working_state', '=', 'blocked'), ('is_user_working', '=', False)]}"/>
+
+                                    </tree>
+                                </field>
+                            </page>
+                          
+                        </notebook>
+                        
+                    </sheet>
+                    
+                </form>
+            </field>
+        </record>
+
+        <record id="action_job_rate_detail_form_view" model="ir.actions.act_window">
+            <field name="name">Job Rate Details</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.rate.line</field>
+            <field name="view_mode">form</field>
+            
+        </record>
+
+        <record id="view_job_rate_detail_form_tree" model="ir.ui.view">
+            <field name="name">job.rate.detail.tree</field>
+            <field name="model">job.rate.detail</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="quotation_id"/>
+                    <field name="received_date"/>
+                    <field name="pic_id"/>
+                    <field name="pic"/>
+                    <field name="fleet_id"/>
+                    <field name="desc" invisible="1"/>
+                    <field name="description"/>
+                    <field name="date_start"/>
+                    <field name="date_end"/>
+                    <field name="state"  widget="badge" decoration-warning="state == 'progress'" decoration-success="state == 'done'" decoration-info="state not in ('progress', 'done', 'cancel')"/>
+                    <field name="duration" widget="repair_timer"/>
+                    <field name="branch_id"/>
+                    <field name="is_user_working" invisible="1"/>
+                    <field name="working_state" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_rate_detail_search_view" model="ir.ui.view">
+            <field name="name">job.rate.detail.search</field>
+            <field name="model">job.rate.detail</field>
+            <field name="arch" type="xml">   
+                <search string="Job Rate Detail">
+                    <field name="pic"/>
+                    <field name="quotation_id" string="Quotation"/>
+                    <field name="fleet_id" string="Fleet"/>
+                </search>  
+            </field>
+        </record>  
+
+        <record id="view_job_rate_detail_pivot" model="ir.ui.view">
+            <field name="name">job.rate.detail.pivot</field>
+            <field name="model">job.rate.detail</field>
+            <field name="arch" type="xml">
+                <pivot string="Job Rate Detail Analysis" sample="1">
+                    <field name="pic" type="col"/>
+                    <field name="date_start" interval="month" type="row"/>
+                    <field name="duration" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_job_rate_detail_graph" model="ir.ui.view">
+            <field name="name">job.rate.detail.graph</field>
+            <field name="model">job.rate.detail</field>
+            <field name="arch" type="xml">
+                <graph string="Job Rate Detail Analysis" type="line" sample="1">
+                    <field name="pic"/>
+                    <field name="duration" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="view_job_pic_form_tree" model="ir.ui.view">
+            <field name="name">job.pic.tree</field>
+            <field name="model">job.pic</field>
+            <field name="arch" type="xml">
+                <tree string="Job PIC">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_rate_pic_form_tree" model="ir.ui.view">
+            <field name="name">job.rate.pic.tree</field>
+            <field name="model">job.rate.pic</field>
+            <field name="arch" type="xml">
+                <tree string="Job Rate PIC">
+                    <field name="pic_id"/>
+                    <field name="rate_amt"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_job_pic_form_view" model="ir.actions.act_window">
+            <field name="name">Job Pic</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.pic</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+        <record id="job_rate_detail_view_kanban" model="ir.ui.view">
+            <field name="name">job.rate.detail.kanban</field>
+            <field name="model">job.rate.detail</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile" create="false" delete="false">
+                    <field name="id"/>
+                    <field name="description"/>
+                    <field name="state"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click o_hr_kanban_record">
+                                <field name="description"/>
+
+                                <div class="oe_kanban_details">
+                                    <div class="o_kanban_record_top">
+                                        <div class="o_kanban_record_headings">
+                                            <strong class="o_kanban_record_title">
+                                                <field name="pic"/>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <div class="o_kanban_record_bottom">
+                                        <div class="oe_kanban_bottom_left text-muted">
+                                            <span><field name="date_start"/></span>
+                                            
+                                        </div>
+                                        <div class="oe_kanban_bottom_right">
+                                            
+                                            <!-- <li t-if="record.description.raw_value" ><field name="description" /></li> -->
+                                            <t t-if="record.state.raw_value"><span t-attf-class="badge #{ ['ready'].indexOf(record.state.raw_value) &gt; -1 ? 'bg-200' : ['progress'].indexOf(record.state.raw_value) &gt; -1 ? 'bg-warning text-dark' : ['done'].indexOf(record.state.raw_value) &gt; -1 ? 'bg-success' : 'bg-primary'}"><t t-esc="record.state.value"/></span></t>
+                                            <!-- <li t-if="record.state.raw_value=='progress'" style="color:orange;"><field name="state"/></li>
+                                            <li t-if="record.state.raw_value=='ready'" style="color:blue;"><field name="state"/></li> -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="action_job_rate_detail_form_view" model="ir.actions.act_window">
+            <field name="name">Job Rate Detail</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">job.rate.detail</field>
+            <field name="view_mode">tree,kanban,pivot,graph</field>
+            
+        </record>
+        <menuitem id="menu_job_rate_detail" action="action_job_rate_detail_form_view" name="Job Rate Detail" sequence="3" parent="menu_repair_external_operation"/>
+        <menuitem id="menu_job_pic" action="action_job_pic_form_view" name="Job Pic" sequence="4" parent="menu_repair_external_configuration"/>
+
+
+        <record id="repair_view_picking_form_stock" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.repair</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <!-- <xpath expr="//sheet//group//group[2]//field[@name='origin']" position="before">  
+                    <field name="need_manual_validation_for_repair"/>          
+                </xpath> -->
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="quotation_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//header//button[@name='button_validate'][1]" position="replace">
+                    <!-- <button name="button_validate" attrs="{'invisible': ['|','|', ('state', 'in', ['waiting','confirmed']), ('show_validate', '=', False),'&amp;',('need_manual_validation_for_repair', '=', False),('quotation_id','!=',False)]}" string="Validate" type="object" class="oe_highlight" groups="stock.group_stock_user" data-hotkey="v"/> -->
+                    <button name="button_validate" attrs="{'invisible': ['|','|', ('state', 'in', ['waiting','confirmed']), ('show_validate', '=', False),('quotation_id','!=',False)]}" string="Validate" type="object" class="oe_highlight" groups="stock.group_stock_user" data-hotkey="v"/>
+                </xpath>
+                <xpath expr="//header//button[@name='button_validate'][2]" position="replace">
+                    <!-- <button name="button_validate" attrs="{'invisible': ['|','|', ('state', 'not in', ('waiting', 'confirmed')), ('show_validate', '=', False),'&amp;',('need_manual_validation_for_repair', '=', False),('quotation_id','!=',False)]}" string="Validate" type="object" groups="stock.group_stock_user" class="o_btn_validate" data-hotkey="v"/> -->
+                    <button name="button_validate" attrs="{'invisible': ['|','|', ('state', 'not in', ('waiting', 'confirmed')), ('show_validate', '=', False),('quotation_id','!=',False)]}" string="Validate" type="object" groups="stock.group_stock_user" class="o_btn_validate" data-hotkey="v"/>
+                </xpath>
+                <xpath expr="//header//button[@name='button_scrap']" position="replace">
+                    <!-- <button name="button_scrap" type="object" string="Scrap" attrs="{'invisible': ['|','|','&amp;',('need_manual_validation_for_repair', '=', False),('quotation_id','!=',False), '&amp;', ('picking_type_code', '=', 'incoming'), ('state', '!=', 'done'), '&amp;', ('picking_type_code', '=', 'outgoing'), ('state', '=', 'done')]}" data-hotkey="y"/> -->
+                    <button name="button_scrap" type="object" string="Scrap" attrs="{'invisible': ['|','|',('quotation_id','!=',False), '&amp;', ('picking_type_code', '=', 'incoming'), ('state', '!=', 'done'), '&amp;', ('picking_type_code', '=', 'outgoing'), ('state', '=', 'done')]}" data-hotkey="y"/>
+                </xpath>
+                <xpath expr="//header//button[@name='action_cancel']" position="replace">
+                    <!-- <button name="action_cancel" attrs="{'invisible': ['|','&amp;',('need_manual_validation_for_repair', '=', False),('quotation_id','!=',False),('state', 'not in', ('assigned', 'confirmed', 'draft', 'waiting'))]}" string="Cancel" groups="base.group_user" type="object" data-hotkey="z"/> -->
+                    <button name="action_cancel" attrs="{'invisible': ['|',('quotation_id','!=',False),('state', 'not in', ('assigned', 'confirmed', 'draft', 'waiting'))]}" string="Cancel" groups="base.group_user" type="object" data-hotkey="z"/>
+                </xpath>
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='product_id']" position="before">
+                    <field name="is_printed" optional="hide" attrs="{'column_invisible': [('parent.quotation_id', '=', False)]}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

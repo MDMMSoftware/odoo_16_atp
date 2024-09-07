@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_sale_order_form_inherit_sale_part_id" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.sale</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="after">
+                    <field name="custom_part" readonly="1"/>
+                </xpath> 						
+            </field>
+        </record>   
+
+        <!-- Pricelist Detail  -->
+
+        <record id="product_pricelist_detail_view_tree" model="ir.ui.view">
+            <field name="name">product.pricelist.item.tree</field>
+            <field name="model">product.pricelist.item</field>
+            <field name="arch" type="xml">
+                <tree string="Products Price Details" create="0" edit="0">
+                    <field name="product_tmpl_id" string="Item Code"/>
+                    <field name="name" string="Description"/>
+                    <field name="min_quantity" />
+                    <field name="fixed_price"/>
+                    <field name="currency_id" optional="hide"/>
+                    <field name="pricelist_id" optional="hide"/>
+                    <field name="custom_category_id" optional="hide"/>
+                    <field name="group_class_id" optional="hide"/>
+                    <field name="custom_brand_id" optional="hide"/>
+                    <field name="custom_model_no_id" optional="hide"/>
+                    <field name="custom_part" optional="hide"/>
+                    <field name="default_code" string="Internal Reference" optional="hide"/>
+                    <field name="date_start"/>
+                    <field name="date_end"/>
+                </tree>
+            </field>
+        </record> 
+
+        <record id="product_pricelist_item_search_view" model="ir.ui.view">
+            <field name="name">product.pricelist.item.search</field>
+            <field name="model">product.pricelist.item</field>
+            <field name="arch" type="xml">
+                <search string="Pricelist Details">
+                    <field name="product_tmpl_id" string="Product" filter_domain="['|', ('default_code', 'ilike', self), ('product_tmpl_id', 'ilike', self)]"/>
+                    <field name="pricelist_id" string="Pricelist"/>  
+                    <field name="currency_id" string="Currency"/>  
+                    <field name="custom_category_id" string="Category" />
+                    <field name="group_class_id" string="Group / Class"/>
+                    <field name="custom_brand_id" string="Brand"/>
+                    <field name="custom_model_no_id" string="Model"/>
+                    <field name="custom_part" string="Part ID"/>    
+                    <field name="default_code" string="Internal Reference"/>                 
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter string="Pricelist" name="group_pricelist_id" context="{'group_by':'pricelist_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>          
+
+        <record id="product_pricelist_detail_action" model="ir.actions.act_window">
+            <field name="name">Pricelists Details</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.pricelist.item</field>
+            <field name="view_mode">tree</field>
+            <field name="context">{'search_default_group_pricelist_id': 1}</field>
+            <field name="search_view_id" ref="product_pricelist_item_search_view"/>
+            <field name="view_id" ref="product_pricelist_detail_view_tree"/> 
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new pricelist item
+                </p>
+            </field>
+        </record>      
+
+        <menuitem id="menu_product_pricelist_details_main" name="Pricelists Details" parent="sale.product_menu_catalog" action="product_pricelist_detail_action" groups="product.group_product_pricelist" sequence="40"/>             
+     
+    </data>
+</odoo>

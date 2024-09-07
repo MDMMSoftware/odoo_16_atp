@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="tree_view_hr_education_type"   model="ir.ui.view">
+			<field name="name">hr.education.type</field>
+			<field name="model">hr.education.type</field>
+			<field name="arch" type="xml">
+				<tree string="Hr Education Type"  editable="bottom">
+					<field name="name" required="1"/>
+				</tree>
+			</field>
+		</record>		
+		<record id="action_education_type" model="ir.actions.act_window">
+			<field name="name">Education Type</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.education.type</field>
+			<field name="view_mode">tree</field>
+			<field name="view_id" ref="tree_view_hr_education_type"/>
+		</record>
+		<!-- ************* hr-education-type************* -->
+         		<record id="tree_view_hr_education_degree" model="ir.ui.view">
+			<field name="name">hr.education.degree</field>
+			<field name="model">hr.education.degree</field>
+			<field name="arch" type="xml">
+				<tree string="Hr Education Degree" editable="bottom">
+					<field name="name" required="1"/>
+				</tree>
+			</field>
+		</record>
+		<record id="action_education_degree" model="ir.actions.act_window">
+			<field name="name">Education Degree</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.education.degree</field>
+			<field name="view_mode">tree</field>
+			<field name="view_id" ref="tree_view_hr_education_degree"/>
+		</record>
+		<!-- ************* hr-education-degree************* -->
+		<record id="tree_view_hr_education_major" model="ir.ui.view">
+			<field name="name">hr.education.major</field>
+			<field name="model">hr.education.major</field>
+			<field name="arch" type="xml">
+				<tree string="Hr Education Major" editable="bottom">
+					<field name="name" required="1"/>
+				</tree>
+			</field>
+		</record>
+		<record id="action_education_major" model="ir.actions.act_window">
+			<field name="name">Edcuation Major</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.education.major</field>
+			<field name="view_mode">tree</field>
+			<field name="view_id" ref="tree_view_hr_education_major"/>
+		</record>
+		<!-- ************* hr-education_major************ -->
+
+		<record id="tree_view_hr_education_college" model="ir.ui.view">
+			<field name="name">hr.education.college</field>
+			<field name="model">hr.education.college</field>
+			<field name="arch" type="xml">
+				<tree string="Hr Education College" editable="bottom">
+					<field name="name" required="1"/>
+				</tree>
+			</field>
+		</record>
+
+		<record id="action_education_college" model="ir.actions.act_window">
+			<field name="name">Education College</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.education.college</field>
+			<field name="view_mode">tree</field>
+			<field name="view_id" ref="tree_view_hr_education_college"/>
+		</record>
+		<menuitem id="menu_education" name="Education"  sequence="3"  parent="hr.menu_human_resources_configuration"/>
+		<menuitem id="menu_hr_education_type" name=" Type"  parent="menu_education" action="action_education_type"/>
+		<menuitem id="menu_hr_education_ိdegree" name=" Degree"  parent="menu_education" action="action_education_degree"/>
+		<menuitem id="menu_hr_education_ိmajor" name=" Major" parent="menu_education" action="action_education_major"/>
+		<menuitem id="menu_hr_education_college" name=" College" parent="menu_education" action="action_education_college"/>
+
+	</data>
+</odoo>

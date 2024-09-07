@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="action_repair_dashboard" model="ir.actions.client">
+            <field name="name">Repair Dashboard</field>
+            <field name="tag">owl.repair_dashboard</field>
+        </record>
+        <menuitem name="Repair Dashboard" id="parent_menu_repair_dashboard" sequence="30">
+            <menuitem name="Repair Dashboard" id="menu_repair_dashboard" sequence="10" action="action_repair_dashboard"/>
+        </menuitem>
+    </data>
+</odoo>

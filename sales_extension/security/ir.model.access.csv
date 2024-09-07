@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_credit_limit_approve,credit.limit.approver.salemanager,model_credit_limit_approve,sales_team.group_sale_manager,1,1,1,1
+access_sale_order_sales_readonly,sale.order readonly,model_sale_order,group_sale_readonly,1,0,0,0
+access_sale_order_sales_line_readonly,sale.order.line readonly,model_sale_order_line,group_sale_readonly,1,0,0,0

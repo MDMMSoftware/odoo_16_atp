@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+	    <menuitem id="menu_gps" name="GPS Tracker" groups="gps_tracker.group_gps_tracker_user"  web_icon="gps_tracker,static/description/icon.png"/>
+		
+		<record id="view_gps_view_form" model="ir.ui.view">
+			<field name="name">GPS Tracker Form</field>
+			<field name="model">gps.daily.history</field>
+			<field name="arch" type="xml">
+				<form string="GPS Tracker" version="7.0">
+					
+					<sheet>
+						<group>
+							<field name="date" />
+                            <field name="fleet" />
+                            <!-- <field name="project_code_id" />
+                            <field name="project_name" /> -->
+                            <field name="gps" />
+                            <field name="fuel" />
+							<!-- <field name="service_meter"/> -->
+                            <field name="gps_engine_hr" sum="Total Engine Hr." />
+                            <field name="gps_fuel_filled" sum="Total Fuel Fillings" />
+                            <field name="gps_fuel_usage" sum="Total Fuel Usage" />
+                            <field name="gps_trip" sum="Total Trip" />
+                            <field name="gps_fuel_drain" sum="Total Fuel Drain" />
+                            <field name="gps_status" />
+							<field name="platform" />
+						</group>
+					</sheet>
+					<div class="o_attachment_preview"/>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+				</form>
+			</field>
+		</record>
+
+		<record id="view_gps_view_tree" model="ir.ui.view">
+			<field name="name">GPS Tracker Form</field>
+			<field name="model">gps.daily.history</field>
+			<field name="arch" type="xml">
+				<tree string="GPS Tracker" create="0">
+					<field name="date" />
+                    <field name="fleet" />
+                    <!-- <field name="project_code_id" />
+                    <field name="project_name" /> -->
+                    <field name="gps" />
+                    <field name="fuel" />
+					<!-- <field name="service_meter"/> -->
+                    <field name="gps_engine_hr"  sum="Total Engine Hr."/>
+                    <field name="gps_fuel_filled" sum="Total Fuel Fillings" />
+                    <field name="gps_fuel_usage" sum="Total Fuel Usage" />
+                    <field name="gps_trip" sum="Total Trip" />
+                    <field name="gps_fuel_drain" sum="Total Fuel Drain" />
+                    <field name="gps_status" />
+                    <field name="platform" />
+					<!-- <field name="wizard_date" invisible="1"/> -->
+				</tree>
+			</field>
+		</record>
+
+
+		<record id="action_gps_view" model="ir.actions.act_window">
+            <field name="name">GPS Tracker</field>
+            <field name="res_model">gps.daily.history</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+		<menuitem id="menu_gps_view" name="GPS Tracker"
+			action="action_gps_view" parent="menu_gps" sequence="1" />
+
+
+		<record id="view_gps_import_form" model="ir.ui.view">
+			<field name="name">GPS Import Form</field>
+			<field name="model">import.gps.data</field>
+			<field name="arch" type="xml">
+				<form string="GPS Import" version="7.0">
+					<header>
+						<button name="import_data" string="GPS Import" type="object" attrs="{'invisible': [('state','=','completed')]}"
+							class="oe_highlight" />
+						<field name="state" widget="statusbar" statusbar_visible="draft,completed,error" />
+					</header>
+					<sheet>
+						<group>
+							<field name="name" />
+							<field name="import_date" />
+							<field name="import_file" filename="import_fname" />
+							<field name="import_fname" invisible="1" class="oe_inline oe_right" />
+							<field name="note" />
+							
+						</group>
+					</sheet>
+					
+				</form>
+			</field>
+		</record>
+
+		<record id="view_gps_import_tree" model="ir.ui.view">
+			<field name="name">GPS Import Tree</field>
+			<field name="model">import.gps.data</field>
+			<field name="arch" type="xml">
+				<tree string="GPS Import">
+					<field name="import_date" />
+					<field name="name" />
+					<field name="import_fname" />
+					<field name="note" />
+					<field name="state" />
+				</tree>
+			</field>
+		</record>
+
+		<record id="action_gps_import" model="ir.actions.act_window">
+			<field name="name">GPS Import Import</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">import.gps.data</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_gps_import_tree" />
+		</record>
+
+		<record id="view_gps_daily_history_search" model="ir.ui.view">
+            <field name="name">gps.daily.history.search</field>
+            <field name="model">gps.daily.history</field>
+            <field name="arch" type="xml">
+                <search string="All Vehicles">
+                    <field string="Fleet" name="fleet"/>
+                </search>
+            </field>
+        </record>
+
+		<menuitem id="menu_gps_import" groups="gps_tracker.group_gps_tracker_data_entry" name="GPS Import" action="action_gps_import" parent="menu_gps"/>
+
+		<menuitem id="menu_gps_report" name="Reporting" parent="menu_gps"/>
+
+		<record id="view_gps_daily_report_form" model="ir.ui.view">
+			<field name="name">GPS Daily Compare Report</field>
+			<field name="model">daily.gps.report</field>
+			<field name="arch" type="xml">
+				<form string="GPS Daily Compare Report">
+					<group>
+						<field name="date" />
+						<field name="end_date" />
+					</group>
+					<footer>
+						<!-- <button string="Generate PDF" name="action_submit" type="object" class="btn-primary"/> -->
+						<button string="Generate EXCEL" name="action_submit_excel" type="object" class="btn-primary"/>
+						<button string="Cancel" class="btn-default" special="cancel"/>
+					</footer>
+				</form>
+			</field>
+		</record>
+
+		<record id="action_gps_daily_report" model="ir.actions.act_window">
+			<field name="name">GPS Daily Compare Report</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">daily.gps.report</field>
+			<field name="view_mode">form</field>
+			<field name="view_id" ref="view_gps_daily_report_form"/>
+			<field name="target">new</field>
+		</record>
+
+		<menuitem id="menu_gps_daily_report" name="Daily GPS Compare" parent="menu_gps_report" action="action_gps_daily_report"/>
+
+		<record id="view_drain_view_form" model="ir.ui.view">
+			<field name="name">Drain Info Form</field>
+			<field name="model">drain.info</field>
+			<field name="arch" type="xml">
+				<form string="Drain Info" version="7.0">
+					
+					<sheet>
+						<group>
+							<field name="ref" />
+                            <field name="date" />
+                            <field name="time_widget" widget="float_time"/>
+                            <field name="vehicle_no" />
+							<field name="type" widget="radio" required="1" options="{'horizontal':true}" />
+                            <field name="fuel_drain" attrs="{'invisible':[('type','=','other')],'required':[('type','!=','other')]}"/>
+                            <field name="remark" attrs="{'required':[('type','=','other')]}"/>
+						</group>
+					</sheet>
+					<div class="o_attachment_preview"/>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+				</form>
+			</field>
+		</record>
+
+		<record id="view_drain_view_tree" model="ir.ui.view">
+			<field name="name">Drain Info Tree</field>
+			<field name="model">drain.info</field>
+			<field name="arch" type="xml">
+				<tree string="Drain Info">
+					<field name="ref" />
+					<field name="date" />
+					<field name="time_widget" widget="float_time"/>
+					<field name="vehicle_no" />
+					<field name="fuel_drain"/>
+					<field name="remark"/>
+				</tree>
+			</field>
+		</record> 
+
+
+		<record id="action_drain_view" model="ir.actions.act_window">
+            <field name="name">Drained Data Information</field>
+            <field name="res_model">drain.info</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>	
+
+
+		<menuitem id="menu_drain_view" name="Drained Data Information"
+			action="action_drain_view" parent="menu_gps" sequence="11" />
+	
+	
+	</data>
+</odoo>

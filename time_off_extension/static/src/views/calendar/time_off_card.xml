@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <templates xml:space="preserve">
+        <t t-name="time_off_extension.TimeOffCardInherit"
+        t-inherit="hr_holidays.TimeOffCard"
+        t-inherit-mode="extension">
+        <xpath expr="//strong[hasclass('o_timeoff_name')]" position="after">
+            <strong class="o_timeoff_name">(<t t-esc="data.burmese_name"/>)</strong>
+
+        </xpath>
+        </t>
+    </templates>

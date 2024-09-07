@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_accident_user,employee_accident_user,model_employee_accident,base.group_user,1,0,0,0
+access_employee_accident_admin,employee_accident_admin,model_employee_accident,hr.group_hr_manager,1,1,1,1
+
+access_hr_employee_warning,hr_employee_warning,model_hr_employee_warning,hr.group_hr_manager,1,1,1,1
+access_hr_employee_warning_user,hr_employee_warning_user,model_hr_employee_warning,base.group_user,1,0,0,0
+
+access_hr_salary_deduction,hr_salary_deduction,model_hr_salary_deduction,base.group_user,1,1,1,1
+access_hr_salary_deduction_line,hr_salary_deduction_line,model_hr_salary_deduction_line,base.group_user,1,1,1,1
+access_deduction_type,deduction_type,model_deduction_type,base.group_user,1,1,1,1
+access_hr_employee_accident_type,hr_employee_accident_type,model_hr_employee_accident_type,base.group_user,1,1,1,1
+access_hr_warning_type,hr_warning_type,model_hr_warning_type,base.group_user,1,1,1,1
+
+

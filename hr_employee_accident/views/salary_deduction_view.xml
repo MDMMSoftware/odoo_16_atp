@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+        <record id="hr_salary_deduction_tree_view" model="ir.ui.view">
+            <field name="name">hr.salary.deduction.tree.view</field>
+            <field name="model">hr.salary.deduction</field>
+            <field name="arch" type="xml">
+                <tree string="Salary Deduction" create="false">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="hr_salary_deduction_form" model="ir.ui.view">
+            <field name="name">Salary Deduction Form</field>
+            <field name="model">hr.salary.deduction</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <field name="employee_id" readonly="1"/>
+                            <field name="total_deduction_amt" readonly="1"/>
+                            <field name="accident_id" readonly="1" attrs="{'invisible':[('accident_id','=',False)]}"/>
+                            <field name="warning_id" readonly="1" attrs="{'invisible':[('warning_id','=',False)]}"/>
+                            <field name="deduction_date" readonly="1" attrs="{'invisible':[('warning_id','!=',False)]}"/>
+                        </group>
+                        <notebook>
+                            <page name="deduction_line" string="Deduction Line">
+                                <field name="deduction_lines">
+                                    <tree editable="bottom" create="1">
+                                        <field name="employee_id" readonly="1" force_save="1"/>
+                                        <field name="opening_amt" readonly="1" force_save="1"/>
+
+                                        <field name="deduction_amt" attrs="{'readonly':[('state','!=','draft')]}"/>
+
+                                        <field name="total_deduction_amt" force_save="1" invisible="1"/>
+                                        <field name="deduction_month" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                        <field name="deduction_year" attrs="{'readonly':['|',('state','!=','draft'),('deduction_type_name','=','Warning')]}"/>
+                                        <field name="description" attrs="{'invisible':[('deduction_type_name','!=','Warning')]}"/>
+                                        <field name="deduction_type_name" invisible="1" force_save="1" widget="badge"/>
+                                        <field name="deduction_type_id" invisible="1"/>
+                                        <field name="state" widget="badge" decoration-success="state=='approve'"/>
+                                        <button string="Approve" type="object" attrs="{'invisible':[('state','!=','draft')]}" name="action_approve" class="oe_highlight"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+
+        </record>
+
+        <record id="hr_salary_deduction_line_form" model="ir.ui.view">
+            <field name="name">Salary Deduction Line Form</field>
+            <field name="model">hr.salary.deduction.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="state" widget="statusbar"/>
+                        <button string="Approve" type="object" attrs="{'invisible':[('state','!=','draft')]}" name="action_approve" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        
+                        
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="deduction_type_id"/>
+                            <field name="deduction_amt" attrs="{'readonly':[('state','!=','draft')]}"/>
+
+                            <field name="total_deduction_amt" force_save="1" invisible="1"/>
+                            <field name="deduction_month" attrs="{'readonly':[('state','!=','draft')]}"/>
+                            <field name="deduction_year" attrs="{'readonly':['|',('state','!=','draft'),('deduction_type_name','=','Warning')]}"/>
+                            <field name="description" />
+                            <field name="deduction_type_name" invisible="1" force_save="1" widget="badge"/>
+                            
+                            
+                        </group>
+                        
+                    </sheet>
+                </form>
+            </field>
+
+        </record>
+        <record id="hr_salary_deduction_line_tree" model="ir.ui.view">
+            <field name="name">Salary Deduction Line Tree</field>
+            <field name="model">hr.salary.deduction.line</field>
+            <field name="arch" type="xml">
+                <tree string="Salary Deduction Lines">
+                    <field name="employee_id" readonly="1" force_save="1"/>
+                    <field name="deduction_type_id"/>  
+                    <field name="deduction_amt" attrs="{'readonly':[('state','!=','draft')]}"/>
+                    <field name="total_deduction_amt" force_save="1" invisible="1"/>
+                    <field name="deduction_month" attrs="{'readonly':[('state','!=','draft')]}"/>
+                    <field name="deduction_year" attrs="{'readonly':['|',('state','!=','draft'),('deduction_type_name','=','Warning')]}"/>
+                    <field name="description" attrs="{'invisible':[('deduction_type_name','!=','Warning')]}"/>
+                    <field name="deduction_type_name" invisible="1" force_save="1" widget="badge"/>
+                         
+                    <field name="state"/>      
+                </tree>
+                
+            </field>
+
+        </record>
+
+        <record id="hr_salary_deduction_line_view_action" model="ir.actions.act_window">
+            <field name="name">Salary Deduction Lines</field>
+            <field name="res_model">hr.salary.deduction.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <record id="hr_salary_deduction_view_action" model="ir.actions.act_window">
+            <field name="name">Salary Deduction</field>
+            <field name="res_model">hr.salary.deduction</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="salary_deduction_type_view_action" model="ir.actions.act_window">
+            <field name="name">Salary Deduction Type</field>     
+            <field name="res_model">deduction.type</field>   
+            <field name="view_mode">tree</field>
+            <!-- <field -->
+        </record>
+
+        <record id="salary_deduction_type_tree_view" model="ir.ui.view">
+            <field name="name">deduction.type.tree</field>
+            <field name="model">deduction.type</field>
+            <field name="arch" type="xml">
+                <tree string="Salary Deduction Type" editable="bottom">
+                    <field name="name" />  
+                    <field name="code" />              
+                </tree>
+            </field>
+        </record>
+
+        <!-- <menuitem
+            id="salary_deduction_type_menu"
+            name="Salary Deduction Type"
+            parent="maintenance.menu_maintenance_configuration"
+            action="salary_deduction_type_view_action"
+            sequence="100"/> -->
+
+    </data>
+</odoo>

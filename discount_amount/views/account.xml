@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_move_discount_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.discount.form.inherit.fleet</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='payment_reference']" position="after">
+                    <field name="global_discount"/>
+                </xpath>
+                
+                <xpath expr="//page[@id='invoice_tab']//field[@name='discount']" position="replace">
+                    <field name="is_tax_line" optional="hide" readonly="1"/>
+                    <field name="discount_type" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount_amt" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="add_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="add_amt" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="account_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    
+                </xpath>
+                <xpath expr="//field[@name='narration']" position="before">
+                    <field name="discount_type" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
+                    <field name="discount" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
+                    <field name="discount_account_id" attrs="{'invisible': [('is_expense', '=', True)]}"/>
+                </xpath>
+                <xpath expr="//field[@name='tax_totals']" position="replace">
+                    <field name="tax_totals" widget="account-tax-totals-field" nolabel="1" colspan="2" invisible="1"
+                                                   attrs="{'readonly': ['|', ('state', '!=', 'draft'), '&amp;', ('move_type', 'not in', ('in_invoice', 'in_refund', 'in_receipt')), ('quick_edit_mode', '=', False)]}"/>
+                    <field name="amount_untaxed"/>
+                    <field name="discount_amt" invisible="1"/>
+                    <field name="discount_amt_currency"/>
+                    <field name="amount_tax" attrs="{'invisible': [('amount_tax','&lt;=',0.0)]}"/>
+                    <field name="amount_total"/>
+                    <field name="amount_add"/>
+
+                </xpath>
+                              
+            </field>   
+        </record>
+    </data>
+</odoo>

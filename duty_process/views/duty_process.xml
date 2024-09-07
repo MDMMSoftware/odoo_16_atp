@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        
+
+        <record id="view_duty_process_tree" model="ir.ui.view">
+            <field name="name">duty.process.tree</field>
+            <field name="model">duty.process</field>
+            <field name="arch" type="xml">
+                <tree string="Duty Process">
+                    <field name="name"/>
+                    <field name="machine_id"/>
+                    <field name="machine_owner_id"/>
+                    <field name="period_from" />   
+                    <field name="period_to" />
+                    <field name="run_hr" />
+                    <field name="walk_hr" />
+                    <field name="general_hr" />
+                    <field name="total_hr" />
+                    <field name="total_use_fuel" />
+                    <field name="duty_amt" />
+                    <field name="fuel_amt" />
+                    <field name="total_amt"/>
+                    <field name="state" widget="badge"
+                        decoration-muted=" state == 'draft' "
+                        decoration-success="state == 'done' " 
+                        decoration-info=" state == 'close' "
+                    />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_duty_process_search" model="ir.ui.view">
+            <field name="name">duty.process.search</field>
+            <field name="model">duty.process</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="machine_id"/>
+                    <field name="machine_owner_id"/>
+                    <field name="name"/>             
+                    <group expand="0" string="Group By">
+                        <filter name="machine_id" string="Machine" domain="" context="{'group_by':'machine_id'}"/>
+                        <filter name="machine_owner_id" string="Owner" domain="" context="{'group_by':'machine_owner_id'}"/>
+                        
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_duty_process_line_search" model="ir.ui.view">
+            <field name="name">duty.process.line.search</field>
+            <field name="model">duty.process.line</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="machine_id"/>
+                    <field name="job_code_id"/>
+                    <field name="project_id"/>             
+                    <group expand="0" string="Group By">
+                        <filter name="machine_id" string="Machine" domain="" context="{'group_by':'machine_id'}"/>
+                        <filter name="job_code_id" string="Job" domain="" context="{'group_by':'job_code_id'}"/>
+                        <filter name="project_id" string="Project" domain="" context="{'group_by':'project_id'}"/>
+                        
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_initial_fuel_entry_form" model="ir.ui.view">
+            <field name="name">duty.initial.entry.wizard</field>
+            <field name="model">duty.initial.entry</field>
+            <field name="arch" type="xml">
+                <form>                
+                    <div>
+                        <group>
+                            <group>      
+                                <field name="qty"/> 
+                                <field name="duty_id" invisible="1"/>
+                                <field name="duty_line_id" invisible="1" />   
+                            </group>
+                        </group>
+                    </div>
+                    <footer>
+                        <button string="Register &amp; Done" name="action_done" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+             </field>
+        </record>
+
+        <record id="view_fuel_adjust_form" model="ir.ui.view">
+            <field name="name">duty.adjust.transfer.wizard</field>
+            <field name="model">duty.adjust.transfer</field>
+            <field name="arch" type="xml">
+                <form>                
+                    <div>
+                        <group>
+                            <group>      
+                                <field name="transfer_type" widget="radio"/>
+                                <field name="qty"/> 
+                                <field name="duty_id" invisible="1"/>
+                                <field name="duty_line_id" invisible="1" />   
+                                <field name="picking_ids" attrs="{'invisible': [('transfer_type', '=', 'add')]}"/>
+                                <field name="done_qty"  attrs="{'invisible': [('transfer_type', '=', 'add')]}"/>
+                            </group>
+                        </group>
+                    </div>
+                    <footer>
+                        <button string="Register &amp; Done" name="action_done" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+             </field>
+        </record>
+
+        <record id="duty_process_line_tree_view" model="ir.ui.view">
+            <field name="name">duty.process.line.tree</field>
+            <field name="model">duty.process.line</field>
+            <field name="arch" type="xml">
+                <tree string="Duty Process Line" default_order="date asc,line_no asc" decoration-danger="over_consumption == True">
+                    <header>
+                        <button string="Adjust" name="action_adjust" type="object" class="oe_highlight"/>
+                        <button string="Return Adjust" name="action_return_adjust" type="object" class="oe_highlight"/>
+                        <button string="Post Duty" name="post_duty_entry" type="object" class="oe_highlight"/>
+                    </header>
+                    <field name="line_no"/>
+                    <field name="posted_status" widget="badge" optional="hide"
+                        decoration-muted="posted_status == 'd_fuel' or posted_status == 'd_duty' or posted_status == 'd_duty&amp;d_fuel'"
+                        decoration-success="posted_status == 'p_fuel' or posted_status == 'p_duty' or posted_status == 'p_duty&amp;p_fuel'" 
+                        decoration-info="posted_status == 'd_duty&amp;p_fuel' or posted_status == 'p_duty&amp;d_fuel'"
+                    />
+                    <field name="date"/>
+                    <field name="machine_id"/>
+                    <field name="attachment_id"/>
+                    <field name="division_id"/>
+                    <field name="project_id"/>
+                    <field name="warehouse_id"/>
+                    <field name="location_id"/>
+                    <field name="onhand_qty" />
+                    <field name="morg_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="morg_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="aftn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="aftn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="evn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="evn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="run_hr" sum="Running Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="walk_hr" sum="Walking Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="general_hr" sum="General Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="total_hr" sum="Total Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="service_meter" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}" />
+                    <field name="sm_formula" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="initial_fuel" force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="fill_fuel"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="fill_fuel_mark"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="use_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="balance_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="increase_fuel_mark" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    
+                    <field name="mark_per_liter"  force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="total_use_fuel" sum="Total Use Fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="fuel_consumption" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="rate_per_duty" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                    <field name="rate_per_hour"/>
+                    <field name="fuel_price" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                    <field name="duty_amt" sum="Duty Amount"/>
+                    <field name="fuel_amt" sum="Fuel Amount"/>
+                    <field name="total_amt" sum="Total Amount"/>
+                    <field name="ways"/>
+                    <field name="completion_feet" />
+                    <field name="completion_sud" />
+                    <field name="job_code_id" class="oe_transport_distance" />
+                    <field name="duty_status_id"/>
+                    <field name="remark" />
+                    <field name="duty_import_person" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="site_supervisor" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="owner_id" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="transport_distance" class="oe_transport_distance" options="{'no_create': True}" />
+
+                    <field name="duty_id" invisible="1"/>
+                    <field name="report_remark_id" />
+                    <field name="over_consumption" invisible="1"/>
+                    <field name="accounting_status" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="view_duty_process_line_form" model="ir.ui.view">
+            <field name="name">duty.process.form</field>
+            <field name="model">duty.process.line</field>
+            <field name="arch" type="xml">
+                <form string="Duty Process Line" edit="0">
+                    <sheet>
+                        <group>
+                            <group name="left">
+                                <field name="duty_id"/>
+                                <field name="line_no"/>
+                                <field name="posted_status" widget="badge" optional="hide"
+                                    decoration-muted="posted_status == 'd_fuel' or posted_status == 'd_duty' or posted_status == 'd_duty&amp;d_fuel'"
+                                    decoration-success="posted_status == 'p_fuel' or posted_status == 'p_duty' or posted_status == 'p_duty&amp;p_fuel'" 
+                                    decoration-info="posted_status == 'd_duty&amp;p_fuel' or posted_status == 'p_duty&amp;d_fuel'"
+                                />
+                                <field name="date"/>
+                                <field name="machine_id"/>
+                                <field name="attachment_id"/>
+                                <field name="division_id"/>
+                                <field name="project_id"/>
+                                <field name="warehouse_id"/>
+                                <field name="location_id"/>
+                                <field name="onhand_qty" />
+                                <field name="morg_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="morg_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="aftn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="aftn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="evn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="evn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="run_hr" sum="Running Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="walk_hr" sum="Walking Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="general_hr" sum="General Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="total_hr" sum="Total Hour" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="service_meter" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}" />
+                                <field name="sm_formula" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="initial_fuel" force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="fill_fuel"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="fill_fuel_mark"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="use_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="balance_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="increase_fuel_mark" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>  
+                                
+                            </group>
+                            <group name="right">   
+                                <field name="mark_per_liter"  force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="total_use_fuel" sum="Total Use Fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="fuel_consumption" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="rate_per_duty" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}"/>
+                                <field name="rate_per_hour"/>
+                                <field name="fuel_price" attrs="{'column_invisible': [('parent.fuel_section', '=', False)]}"/>
+                                <field name="duty_amt" sum="Duty Amount"/>
+                                <field name="fuel_amt" sum="Fuel Amount"/>
+                                <field name="total_amt" sum="Total Amount"/>
+                                <field name="ways"/>
+                                <field name="completion_feet" />
+                                <field name="completion_sud" />
+                                <field name="job_code_id" class="oe_transport_distance" />
+                                <field name="duty_status_id"/>
+                                <field name="remark" />
+                                <field name="duty_import_person" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="site_supervisor" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="owner_id" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="transport_distance" class="oe_transport_distance" options="{'no_create': True}" />
+
+                                <field name="duty_id" invisible="1"/>
+                                <field name="report_remark_id" />
+                                <field name="over_consumption" invisible="1"/>
+                                <field name="accounting_status" invisible="1"/>
+                            </group>                            
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_duty_process_form" model="ir.ui.view">
+            <field name="name">duty.process.form</field>
+            <field name="model">duty.process</field>
+            <field name="arch" type="xml">
+                <form string="Duty Process">
+                    <header>
+                        <button name="action_open" type="object" class="oe_highlight" string="Process" attrs="{'invisible':[('state','!=','draft')]}" />
+                        <button name="action_close" type="object" class="oe_highlight  btn-danger" string="Finish" attrs="{'invisible':[('state','!=','done')]}" /> 
+                        <field name="state" widget="statusbar" statusbar_visible="draft,done,close"/>                        
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_duty_line" class="oe_stat_button" icon="fa-book"  type="object" string="Duty Transaction"/> 
+                            <button name="action_open_pickings" class="oe_stat_button" icon="fa-book"  type="object" string="Transfers"/>
+                            <button name="action_open_adjustments" class="oe_stat_button" icon="fa-book"  type="object" string="Adjustments"/>
+                            <button name="action_open_bills" class="oe_stat_button" icon="fa-book"  type="object" string="Bills"/>   
+                            <button name="action_open_internal_bills" class="oe_stat_button" icon="fa-book"  type="object" string="Journal Entries"/>   
+                        </div>
+                        <widget name="web_ribbon" title="Draft"  attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <widget name="web_ribbon" title="Processing"  attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <widget name="web_ribbon" title="Closed" bg_color="bg-danger"  attrs="{'invisible': [('state', '!=', 'close')]}"/>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left" string="Machine Detail">  
+                                <field name="machine_id" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="machine_owner_id" />
+                                <field name="price_type"/>
+                                <field name="duty_journal" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="warehouse_id" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <div class="o_row o_td_label">
+                                    <label for="machine_onhand_fuel" string="Remaining Stock" />
+                                </div>
+                                <div class="o_row">
+                                    <field name="machine_onhand_fuel" force_save="1"/>-
+                                    <field name="fuel_uom"/>
+                                </div>
+                            </group>
+                            <group name="right" string="Fuel Detail">   
+                                <field name="fuel_product_id" attrs="{'readonly':[('state','!=','draft')]}" />
+                                <field name="company_id" invisible="1"/>
+                                <field name="fuel_journal" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <div class="o_row o_td_label">
+                                    <label for="period_from" string="Period From"  />
+                                </div>
+                                <div class="o_row">
+                                    <field name="period_from" attrs="{'readonly':[('state','!=','draft')]}" />
+                                    <label for="period_to" string="To"  />
+                                    <field name="period_to" attrs="{'readonly':[('state','!=','draft')]}" />
+                                </div>
+                                <field name="department_id" domain="[('company_id','=',company_id)]" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create_edit':True,'no_create':True}"  required="0"/>
+                            </group>                            
+                        </group>
+                        <notebook>
+                            <page string="Duty Line">
+                                <group>
+                                    <field name="initial_sm" readonly="0"/>
+                                    <field name="initial_fuel_mark" attrs="{'readonly':[('state','=','close')]}" />
+                                    <!-- <field name="initial_rate_per_duty"/> -->
+                                    <field name="fuel_price" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                    <field name="initial_mark_per_liter" attrs="{'readonly':[('state','=','close')]}"/>
+                                    <field name="duty_import_person" invisible="1"/>
+                                    <field name="site_supervisor" invisible="1"/>
+                                    <field name="owner_id" invisible="1"/>
+                                    <div class="o_row o_td_label">
+                                        <label for="duty_section" string="Duty Section" />
+                                    </div>
+                                    <div class="o_row">
+                                        <field name="duty_section"/>
+                                        <label for="fuel_section" string="Fuel Section" />
+                                        <field name="fuel_section" />
+                                    </div>
+                                    <field name="edit_initial_fuel"/>
+                                </group>
+                                <field name="duty_line" nolabel="1" context="{'default_duty_id':active_id,'default_service_meter':initial_sm,'default_fuel_price':fuel_price,'default_date':period_from,'default_duty_import_person':duty_import_person,'default_site_supervisor':site_supervisor,'default_owner_id':owner_id}" attrs="{'readonly': [('state', '!=', 'done')]}">
+                                    <tree editable="bottom" default_order="date asc,line_no asc" decoration-danger="over_consumption == True" delete="0">
+                                        <field name="line_no"/>
+                                        <field name="posted_status" widget="badge" readonly="1" force_save="1"
+                                            decoration-muted="posted_status == 'd_fuel' or posted_status == 'd_duty' or posted_status == 'd_duty&amp;d_fuel'"
+                                            decoration-success="posted_status == 'p_fuel' or posted_status == 'p_duty' or posted_status == 'p_duty&amp;p_fuel'" 
+                                            decoration-info="posted_status == 'd_duty&amp;p_fuel' or posted_status == 'p_duty&amp;d_fuel'"
+                                        />
+                                        <field name="date" attrs="{'readonly':['|',('posted_status','!=',False),('exist_picking', '=', True)]}" />
+                                        <field name="location_id" options="{'no_create_edit':True,'no_create':True}" attrs="{'readonly':['|',('posted_status','!=',False),('exist_picking', '=', True)]}"/>
+                                        <field name="project_id"   domain="[('company_id','=',parent.company_id)]" options="{'no_create_edit':True,'no_create':True}"  required="1" attrs="{'readonly':[('posted_status','!=',False)]}"/>
+                                        <field name="division_id"  domain="[('company_id','=',parent.company_id)]"  options="{'no_create_edit':True,'no_create':True}" required="0" attrs="{'readonly':[('posted_status','!=',False)]}"/>
+                                        <field name="attachment_id" options="{'no_create_edit':True,'no_create':True}" attrs="{'readonly':[('posted_status','!=',False)]}"/>
+                                        <field name="onhand_qty"/>
+                                        <field name="morg_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ] }"/>
+                                        <field name="morg_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <field name="aftn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <field name="aftn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <field name="evn_start" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <field name="evn_end" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <field name="run_hr" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}" sum="Running Hour" />
+                                        <field name="walk_hr" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}" sum="Walking Hour"/>
+                                        <field name="general_hr" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}" sum="General Hour"/>
+                                        <field name="total_hr" widget="float_time" attrs="{'column_invisible': [('parent.duty_section', '=', False)]}" readonly="1" sum="Total Hour"/>
+                                        <field name="service_meter" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}" />
+                                        <field name="sm_formula" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False]) ]}"/>
+                                        <button name="action_enter_initial_entry" class="oe_stat_button" icon="fa-cart-arrow-down" type="object" attrs="{'column_invisible': [('parent.edit_initial_fuel', '=', False)]}"/>
+                                        <field name ="exist_picking" invisible="1"/>
+                                        <field name="initial_fuel" force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_duty','p_duty',False])] }" readonly="1"/>
+                                        <field name="fill_fuel"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)],'readonly': [('exist_picking', '=', True)]}"/>
+                                        <button name="action_adjust_transfer" class="oe_stat_button" icon="fa-truck" type="object" attrs="{'invisible': [('exist_picking', '=', False)]}"/>
+                                        <field name="fill_fuel_mark"  attrs="{'column_invisible': [('parent.fuel_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_duty','p_duty',False])] }"/>
+                                        <field name="use_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_duty','p_duty',False])] }"/>
+                                        <field name="balance_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] }"/>
+                                        <field name="increase_fuel_mark" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] }"/>
+                                        
+                                        <field name="mark_per_liter"  force_save="1" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] }"/>
+                                        <field name="total_use_fuel" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] }" sum="Total Use Fuel"/>
+                                        <field name="fuel_consumption" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] }"/>
+                                        <field name="rate_per_duty" attrs="{'column_invisible': [('parent.duty_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_duty','p_duty',False])] }"/>
+                                        <field name="rate_per_hour"/>
+                                        <field name="fuel_price" attrs="{'column_invisible': [('parent.fuel_section', '=', False)] , 'readonly': [('posted_status','not in', ['d_duty','p_duty',False])] }"/>
+                                        <field name="duty_amt" sum="Duty Amount"/>
+                                        <field name="fuel_amt" sum="Fuel Amunt"/>
+                                        <field name="total_amt" sum="Total Amount"/>
+                                        <field name="ways" sum="Ways" attrs="{'readonly' : [('posted_status','!=',False)]}"/>
+                                        <field name="completion_feet" sum="Completeion Feet" attrs="{'readonly' : [('posted_status','!=',False)]}"/>
+                                        <field name="completion_sud"  sum="Completion Suds" attrs="{'readonly' : [('posted_status','!=',False)]}"/>
+                                        <field name="job_code_id" class="oe_transport_distance" attrs="{'readonly':[('posted_status','!=',False)]}" />
+                                        <field name="duty_status_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly' : [('posted_status','!=',False)]}"/>
+                                        <field name="remark" attrs="{'readonly':[('posted_status','!=',False)]}"/>
+                                        <field name="duty_import_person"  attrs="{'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False])]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                        <field name="site_supervisor"  attrs="{'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False])]}"  options="{'no_create':True,'no_create_edit': True}"/>
+                                        <field name="owner_id" attrs="{'readonly': [('posted_status','not in', ['d_fuel','p_fuel',False])]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                        <field name="transport_distance" class="oe_transport_distance" options="{'no_create': True}" attrs="{'readonly' : [('posted_status','!=',False)]}"/>
+
+                                        <field name="duty_id" invisible="1" />
+                                        <field name="report_remark_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('posted_status','!=',False)]}"/>
+                                        <field name="over_consumption" invisible="1"/>
+                                        
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+               
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        
+
+
+        <record id="action_duty_process_view" model="ir.actions.act_window">
+            <field name="name">Duty Process</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">duty.process</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+        
+
+        <record id="action_duty_process_line_view" model="ir.actions.act_window">
+            <field name="name">Duty Transaction</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">duty.process.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="duty_process_line_tree_view"/>
+            
+        </record>
+
+
+    
+
+        <menuitem id="menu_duty"  name="Duty Process" groups="duty_process.group_duty_process_readonly" web_icon="duty_process,static/description/duty.png" sequence="80"/>
+        <menuitem id="menu_duty_operation" name="Operation" groups="duty_process.group_duty_process_readonly" sequence="2" parent="menu_duty"/>
+
+        <menuitem id="menu_duty_process" action="action_duty_process_view" groups="duty_process.group_duty_process_readonly" name="Duty Process" sequence="2" parent="menu_duty_operation"/>
+        <menuitem id="menu_duty_transaction" action="action_duty_process_line_view" groups="duty_process.group_duty_process_readonly" name="Duty Transaction" sequence="3" parent="menu_duty_operation"/>
+        
+        <record id="view_machine_location_form" model="ir.ui.view">
+            <field name="name">stock.machine.location.form</field>
+            <field name="model">stock.location</field>
+            <field name="inherit_id" ref="stock.view_location_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='return_location']" position='after'>
+                    <field name="machine_location"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_duty_fuel_filling_no" model="ir.ui.view">
+            <field name="name">duty.fuel.filling.no</field>
+            <field name="model">duty.fuel.filling.no</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="increased_mark" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_duty_fuel_filling_no" model="ir.actions.act_window">
+            <field name="name">Fuel Filling No.</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">duty.fuel.filling.no</field>
+            <field name="view_mode">tree,form</field>            
+        </record>
+
+        <menuitem id="menu_duty_configuration" name="Configuration" sequence="3" parent="menu_duty"/>  
+        <menuitem id="menu_duty_fuel_filling_no" action="action_duty_fuel_filling_no" name="Fuel Filling No." sequence="2" parent="menu_duty_configuration"/>
+
+        <record id="view_duty_process_line_status" model="ir.ui.view">
+            <field name="name">duty.prcess.line.status</field>
+            <field name="model">duty.process.line.status</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_duty_prcoess_line_status" model="ir.actions.act_window">
+            <field name="name">Duty Line Status</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">duty.process.line.status</field>
+            <field name="view_mode">tree,form</field>            
+        </record>        
+
+        <menuitem id="menu_duty_process_line_status" action="action_duty_prcoess_line_status" name="Duty Line Status" sequence="3" parent="menu_duty_configuration"/> 
+
+        <!-- Picking Form to add fleet & owner -->
+
+        <record id="duty_view_picking_form" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.fleet</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group//group[2]//field[@name='origin']" position="before">
+                    <field name="duty_line_id" invisible="1"/>
+                    <field name="fleet_id" attrs="{'readonly':['|',('duty_line_id','!=',False),('state','not in',['draft','waiting','confirmed'])]}" options="{'no_create': True,'no_create_edit': True}"/>
+                    <field name="fleet_owner_id"/>
+                </xpath>
+            </field>
+        </record>           
+
+        <!-- Picking Tree to add fleet & owner -->
+
+        <record id="duty_view_picking_tree" model="ir.ui.view">
+            <field name="name">stock.picking.tree.inherit.fleet</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.vpicktree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree//field[@name='origin']" position="before">
+                    <field name="fleet_id"/>
+                    <field name="fleet_owner_id"/>
+                </xpath>
+            </field>
+        </record>    
+
+        <!-- Picking Search adding fleet & owner -->
+
+        <record id="duty_view_picking_internal_search" model="ir.ui.view">
+            <field name="name">stock.picking.internal.search.inherit.fleet</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//search//field[@name='origin']" position="before">
+                    <field name="fleet_id"/>
+                    <field name="fleet_owner_id"/>
+                </xpath>
+            </field>
+        </record>   
+
+        <!-- Adjustment Form -->     
+
+        <record id="form_view_inv_adjustment_inherit_duty" model="ir.ui.view">
+            <field name="name">stock.inventory.adjustment.form</field>
+            <field name="model">stock.inventory.adjustment</field> 
+            <field name="inherit_id" ref="stock_adjustment.form_view_inv_adjustment"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//sheet//field[@name='company_id']" position="after">
+                    <field name="is_machine_location" invisible="1"/>
+                </xpath>
+                <xpath expr="//notebook//page[@name='adjust_lines']//field[@name='adjustment_line_id']//tree//field[@name='fleet_location_id']" position="attributes">
+                    <attribute name="attrs">{'column_invisible': [('parent.is_machine_location','=',False)], 'required': [('parent.is_machine_location','=',True)]}</attribute>
+                </xpath>  
+            </field>
+        </record>     
+
+
+        <record id="action_export_duty_transaction" model="ir.actions.server">
+            <field name="name">Export Transaction</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="model_duty_process_line" />
+            <field name="binding_model_id" ref="model_duty_process_line" />
+            <field name="binding_view_types">list</field>
+            <field name="state">code</field>
+            <field name="code">action = model.sudo().action_export_duty_transaction()</field>
+        </record>                       
+
+    </data>
+</odoo>

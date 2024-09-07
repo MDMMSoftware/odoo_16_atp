@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_advance_claim_search" model="ir.ui.view">
+            <field name="name">account.move.search</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_account_invoice_filter" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="internal_ref" string="Internal Reference" />
+                    <field name="desc" string="Description" />
+                </xpath>
+            </field>
+        </record>
+        <record id="view_move_expense_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.expense.form.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='invoice_date']" position="after">
+                    <field name="branch_id" options="{'no_create': True}" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')]}"/>
+                    <field name="allow_division_feature" invisible="1"/>
+                    <field name="department_id" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')], 'required':[('allow_division_feature','=',True)]}" domain="[('company_id','=',company_id)]"   options="{'no_create': True}"/>
+                </xpath>    
+                <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='account_id']" position="attributes">
+                    <attribute name="domain">[('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable', 'liability_payable')), ('company_id', '=', parent.company_id), ('is_off_balance', '=', False), '|', ('branch_id', '=', parent.branch_id),('branch_id', '=', False)]</attribute>
+                </xpath>            
+                <xpath expr="//h1" position="after">
+                    <h2>
+                        <field name="desc" attrs="{'readonly': ['|',('x_state', '!=', 'draft'),('state','!=','draft')]}" placeholder="အကြောင်း အရာ"/>
+                    </h2>
+                </xpath>             
+                <xpath expr="//h1//span" position="attributes"> 
+                    <attribute name="attrs">{'invisible': ['|', '|', '|', ('state', '!=', 'draft'), ('name', '!=', '/'), ('quick_edit_mode', '=', True), ('is_expense','=',True)]}</attribute> 
+                </xpath>                
+                <xpath expr="//field[@name='name']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|','|',('is_expense','=',True),('move_type','in',['in_invoice','out_invoice','out_refund','in_refund']),('name', '=', '/')], 'readonly': [('state', '!=', 'draft')]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='invoice_date']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='payment_reference']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
+                </xpath>   
+                <xpath expr="//field[@name='invoice_payment_term_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
+                </xpath>   
+                <xpath expr="//group[@id='header_right_group']//div[@name='journal_div']//field[@name='journal_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
+                </xpath>    
+                <xpath expr="//group[@id='header_right_group']//div[@name='journal_div']//field[@name='currency_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
+                </xpath>  
+                 <xpath expr="//field[@name='ref'][1]" position="replace">
+                    <field name="ref" nolabel="1" attrs="{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')],'invisible':[('move_type', 'not in', ('in_invoice', 'in_receipt', 'in_refund'))]}" />
+
+                </xpath>   
+                
+                <xpath expr="//field[@name='ref'][2]" position="replace">
+                    <field name="ref" readonly="1" force_save="1" attrs="{'invisible':[('move_type', 'in', ('in_invoice', 'in_receipt', 'in_refund', 'out_invoice', 'out_refund'))]}"/>
+                    <field name="internal_ref" attrs="{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}"/>
+                    <field name="term_type" readonly="1" attrs="{'invisible':[('move_type','not in',['out_invoice', 'out_refund'])]}" />
+                </xpath>                 
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="ref"  attrs="{'readonly': True}" placeholder="Draft"/>
+                </xpath>       
+                <xpath expr="//field[@name='partner_id']" position="before">
+                    <label for="partner_id" string="Contact" style="font-weight:bold;" attrs="{'invisible': [('move_type', '!=', 'entry')]}"/>
+                </xpath>                       
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')],'invisible':['&amp;',('is_expense','=',True),('expense_type','=','dir_exp')]}</attribute>
+                </xpath>             
+                <xpath expr="//field[@name='state']" position="attributes">
+                    <attribute name="attrs">{'invisible':[('is_expense','=',True)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','draft'),('expense_type','!=','dir_exp')]}" statusbar_visible="draft,hod_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','hod_approve'),('expense_type','!=','dir_exp')]}" statusbar_visible="draft,hod_approve,check"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','check'),('expense_type','!=','dir_exp')]}" statusbar_visible="hod_approve,check,finance_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','finance_approve'),('expense_type','!=','dir_exp')]}" statusbar_visible="check,finance_approve,director_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','director_approve'),('expense_type','!=','dir_exp')]}" statusbar_visible="finance_approve,director_approve,waiting_payment"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','waiting_payment'),('expense_type','!=','dir_exp')]}" statusbar_visible="director_approve,waiting_payment,paid"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','paid'),('expense_type','!=','dir_exp')]}" statusbar_visible="waiting_payment,paid,refuse"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','refuse'),('expense_type','!=','dir_exp')]}" statusbar_visible="paid,refuse,cancel"/>     
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','cancel'),('expense_type','!=','dir_exp')]}" statusbar_visible="refuse,cancel"/>                                  
+                    <!-- <field name="x_state" widget="statusbar" statusbar_visible="draft,hod_approve,check,finance_approve,director_approve,waiting_payment,paid,refuse,cancel" invisible="context.get('default_expense_type')!='dir_exp'" /> -->
+                    <!-- <field name="x_state" widget="statusbar" statusbar_visible="draft,check,finance_approve,paid,refuse,cancel" invisible="context.get('default_expense_type')!='advance_claim'" /> -->
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','draft'),('expense_type','!=','advance_claim')]}" statusbar_visible="draft,hod_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','check'),('expense_type','!=','advance_claim')]}" statusbar_visible="hod_approve,check,finance_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','finance_approve'),('expense_type','!=','advance_claim')]}" statusbar_visible="check,finance_approve,director_approve"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','paid'),('expense_type','!=','advance_claim')]}" statusbar_visible="waiting_payment,paid,refuse"/>
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','refuse'),('expense_type','!=','advance_claim')]}" statusbar_visible="paid,refuse"/>   
+                    <field name="x_state" widget="statusbar" attrs="{'invisible': ['|',('x_state', '!=','cancel'),('expense_type','!=','advance_claim')]}" statusbar_visible="refuse,cancel"/>                                           
+                </xpath>
+                <xpath expr="//button[@name='action_post']" position="before"> 
+                    <button name="action_print" context="{'filename':'mmm_mdmm_sale_invoice_report'}" string="Invoice Print (MDMM A4)" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|','|',('move_type','!=','out_invoice'),('expense_type','!=',False),('state','!=','posted')]}"/>
+                    <button name="action_print" context="{'filename':'mmm_ptg_sale_invoice_report'}" string="Invoice Print (Half-Legal)" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|','|',('move_type','!=','out_invoice'),('expense_type','!=',False),('state','!=','posted')]}"/>
+                    <button name="action_print" context="{'filename':'mmm_ptg_sale_invoice_report_a4'}" string="Invoice Print (A4)" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|','|',('move_type','!=','out_invoice'),('expense_type','!=',False),('state','!=','posted')]}"/>
+                </xpath>
+                <xpath expr="//button[@name='action_post']" position="after">   
+                    <button name="action_change_status" context="{'to_status': 'hod_approve'}"   string="Submit" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','draft'),('expense_type','not in',['advance_claim','dir_exp'])]}"/> 
+                    <button name="action_change_status" context="{'to_status': 'check'}" string="HOD Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','hod_approve'),('expense_type','!=','dir_exp')]}"/>
+                    <button name="action_change_status" context="{'to_status': 'finance_approve'}" string="Finance Check" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','check'),('expense_type','not in',['advance_claim','dir_exp'])]}"/>
+                    <button name="action_change_status" context="{'to_status': 'director_approve'}" string="Finance Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','finance_approve'),('expense_type','not in',['advance_claim','dir_exp'])]}"/>
+                    <button name="action_change_status" context="{'to_status': 'waiting_payment'}" string="Director Approve" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','director_approve'),('expense_type','!=','dir_exp')]}"/>
+                    <button name="action_change_status" context="{'to_status': 'paid'}" string="Payment" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','waiting_payment'),('expense_type','!=','dir_exp')]}"/>
+                    <button name="action_change_status" context="{'to_status': 'paid'}" string="Paid" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|',('x_state', '!=','waiting_payment'),('expense_type','!=','advance_claim')]}"/>
+                    <button name="action_change_status" context="{'to_status': 'draft'}" string="Reset to Draft" class="oe_highlight btn-warning" type="object" attrs="{'invisible': ['|',('x_state','in',['draft','waiting_payment','refuse','cancel','paid']),('expense_type','not in',['advance_claim','dir_exp'])]}"/> 
+                    <button name="action_change_status" context="{'to_status': 'refuse'}" string="Refused" class="oe_highlight btn-danger" type="object" attrs="{'invisible': ['|',('x_state', 'not in', ['finance_approve','director_approve']),('expense_type','not in',['advance_claim','dir_exp'])]}"/>
+                    <button name="action_change_status" context="{'to_status': 'cancel'}" string="Cancel"  class="oe_highlight btn-danger" type="object" attrs="{'invisible': ['|',('x_state', 'not in', ['waiting_payment','paid']),('expense_type','not in',['advance_claim','dir_exp'])]}"/>     
+                    <button name="action_print" context="{'filename':'mmm_direct_expense_construction'}" string="Print DE" class="oe_highlight" type="object" attrs="{'invisible': ['|',('expense_type','!=','dir_exp'),('x_state','in',['draft','cancel','refuse'])]}"/> 
+                    <button name="action_print" context="{'filename':'mmm_mdmm_sale_invoice_report_mdig'}" string="Print Invoice (MDL)" class="oe_highlight btn-info" type="object" attrs="{'invisible': ['|','|',('state','!=','posted'),('move_type', '!=', 'out_invoice'),('company_id','!=',13)]}"/>                  
+                </xpath>   
+                <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|', '|', ('hide_post_button', '=', True), ('move_type', '==', 'entry'), ('is_expense','=',True)]}</attribute>
+                </xpath>   
+                <xpath expr="//button[@name='button_cancel'][2]" position="attributes">
+                    <attribute name="attrs">{'invisible' : ['|', '|', '|', ('id', '=', False), ('state', '!=', 'draft'), ('move_type', '==', 'entry'), ('is_expense','=',True)]}</attribute>
+                </xpath>  
+                <xpath expr="//button[@name='button_draft']" position="attributes">
+                    <attribute name="attrs">{'invisible' : ['|', ('show_reset_to_draft_button', '=', False), ('is_expense','=',True)]}</attribute>
+                </xpath>                            
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="expense_type" readonly="1"  attrs="{'invisible': [('is_expense', '=', False)]}"/>
+                    <field name="contact_id" attrs="{'readonly':[('x_state','!=','draft')], 'invisible': [('is_expense', '=', False)]}"/>
+                    <field name="is_expense" invisible="1"/>
+                    <field name="need_of_dir_approve" attrs="{'invisible': ['|',('expense_type','!=','dir_exp'),('x_state', 'not in',['finance_approve','director_approve','waiting_payment','paid'])],'readonly': [('x_state', '!=', 'finance_approve')]}"/>
+                    <field name="director_id" attrs="{'invisible': ['|',('expense_type','!=','dir_exp'),('need_of_dir_approve', '=',False)],'required': [('need_of_dir_approve', '=',True),('x_state', '=','finance_approve')],'readonly': [('x_state', '!=', 'finance_approve')]}"/>
+                </xpath>
+                <xpath expr="//span[hasclass('o_form_label')][1]" position="replace">
+                    <span class="o_form_label"><field name="move_type" attrs="{'invisible': ['|',('move_type', '=', 'entry'),('is_expense', '=', True)]}" readonly="1" nolabel="1"/></span>
+                </xpath>
+                <xpath expr="//label[@for='partner_id'][1]" position="attributes">  
+                    <attribute name="attrs">{'invisible': ['|', ('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt')), ('is_expense', '=', True)]}</attribute>
+                </xpath>
+                <xpath expr="//label[@for='partner_id'][1]" position="after">  
+                    <label for="partner_id" string="Partner" style="font-weight:bold;"
+                    attrs="{'invisible': ['|' ,('is_expense','=',False), '&amp;', ('is_expense', '=', True), ('expense_type', '=', 'dir_exp')]}"/>
+                </xpath>
+                <xpath expr="//field[@name='partner_shipping_id']" position="attributes"> 
+                    <attribute name="attrs">{'invisible': ['|',('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt')), ('is_expense','=',True)], 'readonly': [('state', '!=', 'draft')]}</attribute>
+                </xpath>
+                <xpath expr="//label[@for='invoice_date'][1]" position="attributes">  
+                    <attribute name="attrs">{'invisible': ['|', ('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt')) , ('is_expense','=',True)]}</attribute>
+                </xpath>             
+                <xpath expr="//label[@for='invoice_date'][1]" position="after">  
+                    <label for="invoice_date" string="Date" style="font-weight:bold;" attrs="{'invisible':[('is_expense','=', False)]}"/>
+                    <label for="invoice_date" string="Date" style="font-weight:bold;" attrs="{'invisible':[('move_type','!=','entry')]}"/>
+                </xpath>
+                <xpath expr="//div[@name='journal_div']" position="after">
+                    <field name="journal_account" attrs="{'invisible':['|',('expense_type','=','advance_claim'), ('is_expense','=',False)]}"  readonly="1" force_save="1"/>
+                </xpath>
+                <xpath expr="//button[@name='action_register_payment']" position="replace">
+                    <button name="action_register_payment" type="object" string="Register Payment"
+                            groups="account.group_account_user"
+                            attrs="{'invisible': ['|',('move_type','not in',('out_invoice', 'out_refund', 'out_receipt', 'in_invoice', 'in_refund','in_receipt')), ('is_expense','=',True)]}"/>
+                </xpath>
+
+                <xpath expr="//page[@id='invoice_tab']//field[@name='analytic_distribution']" position="replace">
+                    <field name="analytic_distribution" widget="analytic_distribution" optional="hide" groups="base.group_no_one"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='analytic_distribution']" position="replace">
+                    <field name="analytic_distribution" widget="analytic_distribution" optional="hide" groups="base.group_no_one"/>
+                </xpath>                
+
+                <xpath expr="//page[@id='invoice_tab']//field[@name='account_id']" position="after">
+                    <field name="division_id"  domain="[('company_id','=',parent.company_id)]"    attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=',True)]}"   options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='name']" position="after">
+                    <field name="division_id"  domain="[('company_id','=',parent.company_id)]"    attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=',True)]}"   options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>      
+
+
+                <xpath expr="//page[@id='invoice_tab']//field[@name='price_subtotal']" position="after">
+                    <field name="job_code_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="report_remark_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="voucher_type_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>               
+                    <field name="voucher_no" optional="hide"/>  
+                    <field name="voucher_date" optional="hide"/>       
+                    <field name="remark" optional="hide"/>  
+                </xpath>
+
+                <xpath expr="//page[@id='invoice_tab']//field[@name='quantity']" position="attributes">
+                    <attribute name="attrs">{"readonly": ['&amp;',('parent.expense_type', 'in', ['dir_exp', 'advance_claim']),('parent.x_state','!=','draft')]}</attribute>
+                </xpath>
+
+                <xpath expr="//page[@id='invoice_tab']//field[@name='price_unit']" position="attributes">
+                    <attribute name="attrs">{"readonly": ['&amp;',('parent.expense_type', 'in', ['dir_exp', 'advance_claim']),('parent.x_state','!=','draft')]}</attribute>
+                </xpath>
+
+                <xpath expr="//page[@id='aml_tab']//field[@name='tax_tag_ids']" position="after">
+                    <field name="description" optional="hide"/>  
+                    <field name="employee_id" optional="hide" options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="job_code_id" optional="hide" options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="report_remark_id" optional="hide" options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="voucher_type_id" optional="hide" options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="voucher_no" optional="hide"/>    
+                    <field name="voucher_date" optional="hide"/>
+                    <field name="remark" optional="hide"/>  
+                </xpath>  
+
+                <xpath expr="//page[@id='other_tab_entry']//field[@name='company_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('state', '!=', 'draft')]}</attribute> 
+                </xpath>            
+
+            </field>
+                
+        </record>
+
+        <record id="view_move_expense_tree_inherit" model="ir.ui.view">
+            <field name="name">account.move.expense.tree.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree//field[@name='company_id']" position="after">
+                    <field name="department_id"/>
+                </xpath>  
+                <xpath expr="//tree//field[@name='ref']" position="after">
+                    <field name="desc"/>
+                </xpath>                                                 
+            </field>
+        </record>
+
+        <record id="view_move_expense_tree" model="ir.ui.view">
+            <field name="name">account.move.tree</field>
+            <field name="model">account.move</field>
+            <field name="arch" type="xml">
+                <tree string="Journal Entries" sample="1" decoration-info="state == 'draft'" expand="context.get('expand', False)">
+                    <field name="company_currency_id" invisible="1"/>
+                    <field name="made_sequence_hole" invisible="1"/>
+                    <field name="branch_id"/>
+                    <field name="department_id"/>
+                    <field name="date"/>
+                    <field name="name" decoration-danger="made_sequence_hole"/>
+                    <field name="partner_id" optional="show"/>
+                    <field name="ref" optional="show"/>
+                    <field name="journal_id"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                    <field name="amount_total_signed" sum="Total Amount" string="Total" decoration-bf="1"/>
+                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'posted'"/>
+                    <field name="x_state" widget="badge"/>                    
+                    <field name="currency_id" invisible="1"/>
+                    <field name="to_check" optional="hide" widget="boolean_toggle"/>
+                    <field name="is_expense"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_move_line_tree_inherited" model="ir.ui.view">
+            <field name="name">account.move.line.tree.inherited</field>
+            <field name="model">account.move.line</field>
+            <field name="inherit_id" ref="account_accountant.view_move_line_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='analytic_distribution']" position="after">
+                    
+                    <field name="job_code_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="report_remark_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="voucher_type_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                    <field name="voucher_no" optional="hide"/>  
+                    <field name="voucher_date" optional="hide"/>                      
+                    <field name="remark" optional="hide"/>   
+                    <field name="is_journal_acc" invisible="1"/>                                                                     
+                </xpath>
+                <xpath expr="//field[@name='account_id']" position="after">
+                    <field name="division_id" optional="hide"/>
+                </xpath>
+                <xpath expr="//field[@name='amount_currency']" position="replace">
+                    <field name="amount_currency" groups="base.group_multi_currency" optional="hide" readonly="1" attrs="{'invisible':[('is_same_currency', '=', True)]}"/>
+                </xpath>
+                <xpath expr="//field[@name='matching_number']" position="replace">
+                    <field name="matching_number" readonly="1" optional="hide"/>
+                </xpath>
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="description" optional="hide"/>      
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account.action_move_out_refund_type" model="ir.actions.act_window">
+            <field name="domain">[('move_type', '=', 'out_refund'),('expense_type', '=', False)]</field>
+        </record>
+        
+
+
+        <record id="action_move_expense" model="ir.actions.act_window">
+            <field name="name">Expenses (Advance Claim)</field>
+            <field name="res_model">account.move</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_move_expense_tree"/>
+            <field name="domain">[('move_type', '=', 'out_refund'),('is_expense', '=', True),('expense_type','=','advance_claim')]</field>
+            <field name="context">{'default_is_expense': True,'default_move_type': 'out_refund','default_expense_type':'advance_claim','action_xml_id':'advance_expense.action_move_expense'}</field>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a journal entry
+              </p><p>
+                A journal entry consists of several journal items, each of
+                which is either a debit or a credit transaction.
+              </p>
+            </field>
+        </record>
+
+        <record id="action_move_dir_expense" model="ir.actions.act_window">
+            <field name="name">Direct Expenses</field>
+            <field name="res_model">account.move</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_move_expense_tree"/>
+            <field name="domain">[('move_type', '=', 'out_refund'),('is_expense', '=', True),('expense_type','=','dir_exp')]</field>
+            <field name="context">{'default_is_expense': True,'default_move_type': 'out_refund','default_expense_type':'dir_exp','action_xml_id':'advance_expense.action_move_dir_expense'}</field>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a journal entry
+              </p><p>
+                A journal entry consists of several journal items, each of
+                which is either a debit or a credit transaction.
+              </p>
+            </field>
+        </record>    
+
+        <record id="view_job_code" model="ir.ui.view">
+            <field name="name">job.code.tree</field>
+            <field name="model">job.code</field>
+            <field name="arch" type="xml">
+                <tree string="Job Code">
+                    <field name="display_name" string="Job Code" />
+                    <field name="description" string="Description" />
+                    <field name="parent_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_job_code_form" model="ir.ui.view">
+            <field name="name">job.code.form</field>
+            <field name="model">job.code</field>
+            <field name="arch" type="xml">
+                <form string="Job Code">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Job Code"/>
+                            <h1><field name="name" placeholder="e.g. Something ..."/></h1>
+                        </div>
+                        <group>
+                            <group name="left" col="2">
+                                <field name="parent_id" string="Parent Job Code" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                <field name="company_id" string="Company" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
+                            </group>
+                            <group name="right">   
+                                <field name="description" widget="text"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_job_code" model="ir.actions.act_window">
+            <field name="name">Job Code</field>
+            <field name="res_model">job.code</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                Create a job code
+                </p><p>
+                A job code is an entity of journal items.
+                </p>            
+            </field>
+        </record>        
+
+        <record id="view_report_remark" model="ir.ui.view">
+            <field name="name">report.remark.tree</field>
+            <field name="model">report.remark</field>
+            <field name="arch" type="xml">
+                <tree string="Report Remark" editable="top">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_report_remark" model="ir.actions.act_window">
+            <field name="name">Report Remark</field>
+            <field name="res_model">report.remark</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_report_remark"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                Create a Report Remark!
+                </p><p>
+                A report remark is an entity of journal items.
+                </p>            
+            </field>
+        </record>        
+
+        <record id="view_voucher_type" model="ir.ui.view">
+            <field name="name">voucher.type.tree</field>
+            <field name="model">voucher.type</field>
+            <field name="arch" type="xml">
+                <tree string="Voucher Type" editable="top">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_voucher_type" model="ir.actions.act_window">
+            <field name="name">Voucher Type</field>
+            <field name="res_model">voucher.type</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_voucher_type"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                Create a voucher type.
+                </p><p>
+                A voucher type is an entity of journal items.
+                </p>            
+            </field>
+        </record>
+     
+
+        <record id="view_direct_exp_wizard" model="ir.ui.view">
+            <field name="name">Direct Expense Wizard</field>
+            <field name="model">direct.exp.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="amount"/>
+                            </group>
+                            <group>
+                                <field name="account_id"/>
+                                <field name="division_id" options="{'no_create':True,'no_create_edit':True}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_dir_exp_payment" string="Payment" type="object" class="btn-primary" data-hotkey="q"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <menuitem id="menu_account_expense" name="Expenses" parent="menu_advance" sequence="0" groups="advance_expense.group_advance_expense_user,advance_expense.group_advance_expense_readonly"/>
+            <menuitem id="menu_account_expense_action" action="action_move_expense" name="Expenses (Advance Claim)" parent="menu_account_expense" groups="advance_expense.group_advance_expense_user,advance_expense.group_advance_expense_readonly"/>
+            <menuitem id="menu_account_dir_expense_action" action="action_move_dir_expense" name="Direct Expenses" parent="menu_account_expense" groups="advance_expense.group_advance_expense_user,advance_expense.group_advance_expense_readonly"/>
+
+        <menuitem id="menu_account_expense_configurations" name="Configurations" parent="menu_advance" sequence="3" groups="advance_expense.group_advance_expense_manager"/>
+            <menuitem id="first_child_account_expense_configurations" action="action_job_code" name="Job Code" parent="menu_account_expense_configurations"/>
+            <menuitem id="second_child_account_expense_configurations" action="action_report_remark" name="Report Remark" parent="menu_account_expense_configurations"/>
+            <menuitem id="third_child_account_expense_configurations" action="action_voucher_type" name="Voucher Type" parent="menu_account_expense_configurations"/>
+            <menuitem id="menu_account_advance_user" action="action_advance_users" name="Advance User" parent="menu_account_expense_configurations" groups="advance_expense.group_advance_expense_user"/>  
+
+        <record id="view_invoice_tree_inherit_expense" model="ir.ui.view">
+            <field name="name">account.invoice.tree.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_invoice_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree//field[@name='ref']" position="replace">
+                    <field name="name" decoration-bf="1" decoration-danger="made_sequence_hole" optional="hide"/>
+                </xpath>             
+                <xpath expr="//tree//field[@name='name']" position="replace">
+                    <field name="ref"  decoration-bf="1"/>
+                </xpath>                                                 
+            </field>
+        </record>
+
+        <!-- from res_partner.xml -->
+
+        <record id="account.res_partner_action_customer" model="ir.actions.act_window">
+            <field name="context">{}</field>
+            <field name="domain">[('partner_type', '=', 'customer')]</field>
+        </record> 
+
+        <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
+            <field name="context">{}</field>
+            <field name="domain">[('partner_type', '=', 'vendor')]</field>
+        </record>             
+
+        <!-- <record model="ir.ui.view" id="partner_view_advance">
+            <field name="name">partner.view.advance</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='vat']" position="after">
+                    <field name="advance_user"/>
+                </xpath>
+            </field>
+        </record> -->
+
+        <!-- <record model="ir.ui.view" id="partner_view_advance_account">
+            <field name="name">partner.view.advance.account</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account.view_partner_property_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='property_account_payable_id']" position="after">
+                    <field name="property_account_advance_id"/>
+                </xpath>
+            </field>
+        </record> -->
+
+        <!-- Remove the internal user group access rights  of contact menu -->
+        <!-- <record model="ir.ui.menu" id="contacts.menu_contacts">
+            <field name="groups_id" eval="[(3,ref('base.group_user'))]"/>
+        </record> -->
+</odoo>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_picking_form_inherit" model="ir.ui.view">
+        	<field name="name">stock_picking.form.inherit</field>
+        	<field name="model">stock.picking</field>
+        	<field name="inherit_id" ref="stock.view_picking_form"/>
+			<field name="arch" type="xml">
+                <xpath expr="//sheet//group//field[@name='location_dest_id'][2]" position="after">
+					<field name="department_id" attrs="{'readonly': [('state', '!=', 'draft')]}" required="0" domain="[('company_id', '=', company_id)]" options="{'no_create': True,'no_create_edit':True}"/>
+				</xpath>
+				<xpath expr="//field[@name='picking_type_id']" position="attributes">
+					<attribute name="domain">['|', ('department_id', '=', department_id), ('department_id', '=', False)]</attribute>
+				</xpath>
+			</field>
+        </record>
+
+		<record id="view_picking_internal_search_inherit" model="ir.ui.view">
+			<field name="name">picking.internal.search.inherit</field>
+			<field name="model">stock.picking</field>
+			<field name="inherit_id" ref="stock.view_picking_internal_search"/>
+			<field name="arch" type="xml">
+				<xpath expr="//search/group" position="inside">
+					<filter string="Department" name="Department" context="{'group_by':'department_id'}"/>
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_picking_type_form_inherit" model="ir.ui.view">
+        	<field name="name">view_picking.type.form.inherit</field>
+        	<field name="model">stock.picking.type</field>
+        	<field name="inherit_id" ref="stock.view_picking_type_form"/>
+			<field name="arch" type="xml">
+                <xpath expr="//field[@name='company_id']" position="after">
+					<field name="department_id"  domain="[('company_id','=',company_id)]"  options="{'no_create': True}"/>
+				</xpath>
+			</field>
+        </record>
+    </data>
+</odoo>

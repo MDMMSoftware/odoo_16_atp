@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_cashbook_search" model="ir.ui.view">
+            <field name="name">cashbook.search</field>
+            <field name="model">account.cashbook</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="name" />
+                    <field name="cash_type" />
+                    <field name="transfer_type" />
+                    <field name="date" />
+                    <field name="journal_id" />
+                    <field name="account_id" />
+                    <field name="currency_id" />
+                    <field name="branch_ids"/>
+                    <field name="department_id"/>
+                    <group expand="0" string="Group By">
+                        <filter name="account_id" string="Account" domain="" context="{'group_by':'account_id'}"/>
+                        <filter name="cash_type" string="Cash Type" domain="" context="{'group_by':'cash_type'}"/>
+                        <filter name="transfer_type" string="Cash Type" domain="" context="{'group_by':'transfer_type'}"/>
+                        <filter name="journal_id" string="Journal" domain="" context="{'group_by':'journal_id'}"/>
+                        <filter name="state" string="Status" domain="" context="{'group_by':'state'}"/>
+                        <filter name="branch_ids" string="Branch" domain="" context="{'group_by':'branch_ids'}"/>
+                        <filter name="department_id" string="Department" domain="" context="{'group_by':'department_id'}"/>
+                        <filter string="Payment" name="payment_type" domain="[('cash_type','=','pay')]"/>
+                        <filter string="Receive" name="receive_type" domain="[('cash_type','=','receive')]"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_cashbook_form" model="ir.ui.view">
+            <field name="name">account.cashbook.form</field>
+            <field name="model">account.cashbook</field>
+            <field name="arch" type="xml">
+                <form string="Cash Book">
+                    <header>
+                        <button name="submit_cashbook" string ="Submit" type="object" class="oe_highlight btn-info"
+                            attrs="{'invisible':[('state','in',['done','submit','cancel'])]}"/>
+                        <button name="validate_cashbook" string ="Validate" type="object" class="oe_highlight btn-info"
+                            attrs="{'invisible':[('state','in',['draft','done','cancel'])]}"/>
+                        <button name="reset_cashbook" string ="Reset to Draft" type="object" class="oe_highlight btn-warning"
+                            attrs="{'invisible':[('state','not in',['submit'])]}"/>
+                        <button name="cancel_cashbook" string ="Cancel" type="object" class="oe_highlight btn-danger"
+                            attrs="{'invisible':[('state','in',['draft','cancel'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submit,done,cancel"/>
+                    </header>
+                    <sheet>
+                        
+                        <div class="oe_title">
+                            <h1><field name="name" placeholder="e.g. Update order quantity"/></h1>
+                        </div>
+                        <group>
+                            <group>
+
+                               
+                                <field name="cash_type" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="transfer_type" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="transfer_company_id" options="{'no_create_edit':True,'no_create':True}" domain="['|',('company_id','=',company_id),('company_id','=',False)]" attrs="{'readonly':[('state','!=','draft')],'required':[('transfer_type','=','transfer')],'invisible':[('transfer_type','!=','transfer')]}"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="allow_division_feature" invisible="1"/>
+                                <field name="desc" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                
+                            </group>
+                            <group>
+                                <field name="date" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <div class="o_row o_td_label">
+                                    <label for="journal_id" string="Journal" />
+                                </div>
+                                <div class="o_row">
+                                    <field name="journal_id" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                </div>
+                                
+                                <field name="account_id" attrs="{'readonly':[('state','not in',['draft'])]}" options="{'no_create':True,'no_create_edit': True}" force_save="1"/>
+                                <field name="exchange_rate" attrs="{'readonly':[('state','in',['done','cancel','submit'])]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="currency_id" attrs="{'readonly':[('state','in',['done','cancel','submit'])]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="branch_ids" attrs="{'readonly':[('state','!=','draft')]}"/>
+                                <field name="department_id" domain="[('company_id','=',company_id)]" attrs="{'readonly':[('state','!=','draft')]}" required="0" />
+                                <field name="origin" attrs="{'readonly':[('state','in',['done','cancel'])]}"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="cashbook_line" string="Cashbook Line" >
+                                
+                                <field name="line_ids" nolabel="1" attrs="{'readonly':[('state','!=','draft')]}">
+                                    <tree editable="buttom" >
+        
+                                        <field name="name"  />
+                                        <field name="account_id"  force_save="1"/>     
+                                        <field name="division_id" domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)],'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"   options="{'no_create':True,'no_create_edit': True}"/>                                  
+                                        <field name="analytic_distribution"  attrs="{'required': [('parent.allow_division_feature','=',True)]}"  widget="analytic_distribution" groups="base.group_no_one" optional="hide"/>
+                                        <field name="employee_id" options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="amount"  sum="amount"/> 
+                                        <field name="job_code_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="report_remark_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="voucher_type_id" optional="hide"   options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="voucher_date"  optional="hide"/>
+                                        <field name="voucher_no"  optional="hide"/>    
+                                        <field name="remark"  optional="hide"/> 
+
+                                    </tree>
+                                </field>
+                            </page>
+                            <page name="journal_items" string="Journal Items" >
+                                <field name="move_line_ids" nolabel="1" readonly="1">
+                                    <tree>
+                                        <field name="account_id" />
+                                        <field name="name" />
+                                        <field name="amount_currency" invisible="1"/>
+                                        <field name="currency_id" invisible="1"/>
+                                        <field name="division_id" domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)],'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/> 
+                                        <field name="analytic_distribution"  groups="base.group_no_one" optional="hide" widget="analytic_distribution"/>
+                                        <field name="debit" sum="debit"/>
+                                        <field name="credit" sum="credit"/>
+                                        <field name="job_code_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="report_remark_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="voucher_type_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="voucher_no" optional="hide"/>   
+                                        <field name="voucher_date" optional="hide"/> 
+                                        <field name="remark" optional="hide"/>  
+                                    </tree>
+                                </field>
+                            </page>
+                            <page name="reversed_journal_items" string="Reversed Journal Items" >
+                                <field name="reversed_move_line_id" nolabel="1" readonly="1">
+                                    <tree>
+                                        <field name="account_id" />
+                                        <field name="name" />
+                                        <field name="amount_currency" invisible="1"/>
+                                        <field name="currency_id" invisible="1"/>
+                                        <field name="analytic_distribution" widget="analytic_distribution"/>
+                                        <field name="debit" sum="debit"/>
+                                        <field name="credit" sum="credit"/>
+                                    </tree>
+                                </field>
+                            </page>
+                           
+                        </notebook>
+                        <label for="note" string="Notes" />
+                        <field name="note" nolabel="1" />
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+         </record>
+
+        <record id="view_cashbook_tree" model="ir.ui.view">
+            <field name="name">Cash Book Tree</field>
+            <field name="model">account.cashbook</field>
+            <field name="arch" type="xml">
+                <tree string="Cash Book List" decoration-muted="state in ('done','cancel')">
+                    <field name="date" />
+                    <field name="name" />
+                    <field name="account_id" string="From"/>
+                    <field name="amount_total"/>
+                    <field name="branch_ids" optional="show"/>
+                    <field name="department_id" optional="show"/>
+                    <field name="company_id"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_cashbook_payment_action" model="ir.actions.act_window">
+            <field name="name">CashBook Payment</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">account.cashbook</field>
+            <!-- <field name="view_type">form</field> -->
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'default_cash_type':'pay','search_default_payment_type': 1}</field>
+            <field name="view_id" ref="view_cashbook_tree" />
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                Click to create CashBook Payment.
+                </p>
+                <p>
+                </p>
+            </field>
+        </record>
+
+        <record id="view_cashbook_received_action" model="ir.actions.act_window">
+            <field name="name">CashBook Received</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">account.cashbook</field>
+            <!-- <field name="view_type">form</field> -->
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'default_cash_type':'receive','search_default_receive_type': 1}</field>
+            <field name="view_id" ref="view_cashbook_tree" />
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                Click to create CashBook Received.
+                </p>
+                <p>
+                </p>
+            </field>
+        </record>
+
+
+        <record id='transfer_company_form' model='ir.ui.view'>
+            <field name="name">transfer.company.form.inherited</field>
+            <field name="model">transfer.company</field>
+            <field name="arch" type="xml">
+                <form string='Transfer Company'>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" force_save="1" placeholder="e.g. Company Name"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group>
+                                <field name='default_account_id'/>
+                                <field name='branch_name'/>
+                            </group>
+                            <group>
+                                <field name="company_id" required="1"/>
+                                <field name='diff_server'/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="transfer_company_tree" model="ir.ui.view">
+                <field name="name">transfer.company.tree</field>
+                <field name="model">transfer.company</field>
+                <field name="arch" type="xml">
+                    <tree>                   
+                        <field name='name'/>
+                        <field name="default_account_id"/>
+                        <field name='branch_name'/>
+                        <field name='diff_server'/>
+                    </tree>
+                </field>
+        </record>
+
+        
+        <record id="action_transfer_company" model="ir.actions.act_window">
+                <field name="name">Transfer Company</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">transfer.company</field>
+                <field name="view_id" ref="transfer_company_tree"/>
+                <field name="view_mode">tree,form</field>
+        </record>
+
+        
+        <menuitem id="menu_cashbook" name="Cash Book" sequence="1" parent="account.menu_finance_entries"/>
+        <menuitem id="menu_transfer_company" name="Transfer Compnay" sequence="2" parent="account.account_account_menu" action="action_transfer_company"/>
+        <menuitem id="menu_payment" name="Payment" sequence="3" parent="menu_cashbook" action="view_cashbook_payment_action"/>
+
+        <menuitem id="menu_received" name="Receipt" sequence="4" parent="menu_cashbook" action="view_cashbook_received_action"/>
+
+
+
+    </data>
+</odoo>

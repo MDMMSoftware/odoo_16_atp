@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+       
+
+        <record id="view_sale_order_form_inherit_commission" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.sale</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_shipping_id']" position="after">
+                    <field name="is_commission" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>					
+                </xpath>
+
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='discount']" position="before">
+                    <field name="commercial_type"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
+                    <field name="commercial_amt"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
+                </xpath>
+                <xpath expr="//field[@name='tax_totals']" position="replace">
+                    <field name="amount_untaxed"/>
+                    <field name="amount_total"/>
+                    <field name="amount_commercial"/>
+                </xpath>		
+               	
+            </field>
+        </record>   
+                            			
+
+    </data>
+</odoo>

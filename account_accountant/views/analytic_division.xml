@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_analytic_division_tree" model="ir.ui.view">
+            <field name="name">Analytic Division Tree</field>
+            <field name="model">analytic.division</field>
+            <field name="arch" type="xml">
+                <tree string="Analytic Division">
+                    <field name="name"/>
+                    <field name="company_id"/>                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_analytic_division_form" model="ir.ui.view">
+            <field name="name">Analytic Division Form</field>
+            <field name="model">analytic.division</field>
+            <field name="arch" type="xml">
+                <form string="Analytic Division">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" required="1"/>
+                                <field name="company_id" required="1" options="{'no_create_edit': True, 'no_create': True}"/>
+                            </group>
+                            <group>
+                                <field name="analytic_plan_id" required="1" options="{'no_create_edit': True, 'no_create': True}"/> 
+                                <field name="analytic_account_id" readonly="1" force_save="1"/>              
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_view_analytic_division" model="ir.actions.act_window">
+            <field name="name">Analytic Division</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">analytic.division</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_analytic_division_tree"/>
+        </record>
+
+        <menuitem action="action_view_analytic_division" id="menu_analytic_division" parent="account.menu_analytic_accounting" name="Analytic Division" sequence="5" />
+        <record id="view_company_form_inherit_division" model="ir.ui.view">
+            <field name="name">res.company.form.inherit.division</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">        
+                <xpath expr="//field[@name='parent_id']" position="after">
+                    <field name="allow_division_feature"/>
+                    <field name="allow_partner_prefix_feature" />
+                    <field name="allow_partner_domain_feature" />
+                    <field name="company_logo" />
+                </xpath>
+            </field>
+        </record> 
+
+        <record id="view_account_analytic_account_form_division" model="ir.ui.view">
+            <field name="name">analytic.analytic.account.form.division</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='code']" position="after">
+                    <field name="division_id" attrs="{'invisible': [('division_id','=',False)]}" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

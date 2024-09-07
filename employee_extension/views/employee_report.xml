@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- QWeb Reports -->
+        
+        <record id="action_report_employee_cv" model="ir.actions.report">
+            <field name="name">Employee CV</field>
+            <field name="model">hr.employee</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">employee_extension.cv_statement</field>
+            <field name="report_file">employee_extension.cv_statement</field>
+            <field name="binding_type">report</field>
+        </record>
+
+
+    </data>
+</odoo>

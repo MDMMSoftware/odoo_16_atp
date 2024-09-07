@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        
+
+        <record id="view_repair_order_tree" model="ir.ui.view">
+            <field name="name">repair.order.tree</field>
+            <field name="model">repair.order</field>
+            <field name="arch" type="xml">
+                <tree string="Repair Order">
+                    <field name="branch_id" optional="hide" />
+                    <field name="department_id" optional="hide" />
+                    <field name="request_type_id"  />
+                    <field name="start_date"/>
+                    <field name="start_time" widget="float_time"/>
+                    <field name="finish_date"/>
+                    <field name="finish_time" widget="float_time"/>
+                    <field name="repair_request_id"/>
+                    <field name="repair_job_code_id"/>
+                    <field name="name"/>
+                    <field name="partner_id" optional="hide"/>
+                    <field name="company_no"/>  
+                    <field name="order_state"                    
+                        decoration-muted="order_state == 'draft' or order_state == 'done'"
+                        decoration-info="order_state == 'approve'"
+                        decoration-warning="order_state == 'repair'"
+                        decoration-success="order_state == 'close'"
+                        decoration-danger="order_state == 'reject'"
+                        widget="badge" 
+                    />   
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_repair_order_search" model="ir.ui.view">
+            <field name="name">repair.order.search</field>
+            <field name="model">repair.order</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="name" />
+                    <field name="repair_request_id" />
+                    <field name="company_no" />
+                    <field name="repair_job_code_id" />
+                </search>
+            </field>
+        </record>
+
+        <record id="view_repair_order_form" model="ir.ui.view">
+            <field name="name">repair.order.form</field>
+            <field name="model">repair.order</field>
+            <field name="arch" type="xml">
+                <form string="Repair Order">
+                    <header>
+                        <button name="action_approve" type="object" class="oe_highlight btn-primary" string="Approve" attrs="{'invisible':[('state','!=','draft')]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+                        <button name="action_reject" type="object" class="oe_highlight btn-danger" string="Reject" attrs="{'invisible':[('state','not in',['draft','approve','repair'])]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+
+                        <button name="action_repair" type="object" class="oe_highlight btn-info" string="Repair" attrs="{'invisible':[('state','not in',['approve'])]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+                        <button name="action_complete" type="object" class="oe_highlight btn-primary" string="Complete" attrs="{'invisible':[('state','not in',['repair'])]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+                        <button name="action_repaired" type="object" class="oe_highlight btn-success" string="Close" attrs="{'invisible':[('state','not in',['done'])]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+                        <button name="action_reopened_job_order" type="object" class="oe_highlight btn-warning" string="Reverse" attrs="{'invisible':[('state','not in',['close'])]}" groups="repair_internal.group_repair_internal_approver,repair_internal.group_repair_internal_manager"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirm,approve,repair,done,reject,cancel"/>                        
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_so_orders" class="oe_stat_button" icon="fa-book"  type="object" string="Sale Orders"/>
+                        </div> 
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>                 
+                        <group>
+                            <group name="left">  
+                                <field name="repair_job_code_id" options="{'no_quick_create': true, 'no_create_edit':true}" attrs="{'readonly': [('state', 'not in', ['draft','approve'])]}"/>
+                                <field name="repair_request_id"  options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'readonly': [('state', 'not in', ['draft','approve'])]}" readonly="1" force_save="1" domain="[('id', 'in', repair_request_ids)]"/>
+                                <field name="repair_request_ids" invisible="1"/>
+                                <field name="request_date" required="1" attrs="{'readonly': ['|',('state', 'not in', ['draft','approve']),'&amp;',('state','=','approve'),('request_date','!=',False)]}"/>
+                                <field name="request_time" widget="float_time" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                <field name="company_id" invisible="1"/>
+                                <field name="branch_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                <field name="department_id"  options="{'no_quick_create': true, 'no_create_edit':true}" force_save="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"  domain="[('company_id','=',company_id)]" required="0"/>
+                                <field name="region_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            </group>
+                            <group name="right"> 
+                                <div class="o_row o_td_label">
+                                    <label for="start_date" string="Job Start Date"  />
+                                </div>                            
+                                <div class="o_row">
+                                    <field name="start_date" nolabel="1" attrs="{'readonly': [('state', 'in', ['repair','done','reject','cancel'])]}"/> 
+                                    <label for="start_time" string="-" /> 
+                                    <field name="start_time" widget="float_time" nolabel="1" attrs="{'readonly': [('state', 'in', ['repair','done','reject','cancel'])]}"/>                               
+                                </div>
+                                <div class="o_row o_td_label">
+                                    <label for="finish_date" string="Job Finish Date" />
+                                </div>                            
+                                <div class="o_row">
+                                    <field name="finish_date" nolabel="1" attrs="{'readonly': [('state', 'in', ['done','reject','cancel'])]}"/> 
+                                    <label for="finish_time" string="-" /> 
+                                    <field name="finish_time" widget="float_time" nolabel="1" attrs="{'readonly': [('state', 'in', ['done','reject','cancel'])]}"/>                               
+                                </div>                                
+                                <div class="o_row o_td_label">
+                                    <label for="scheduled_date_from" string="Schedule Date" />
+                                </div>
+                                <div class="o_row">
+                                    <field name="scheduled_date_from"  attrs="{'required': [('state', 'in', ['draft','confirm'])],'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <label for="scheduled_date_to" string="-" />
+                                    <field name="scheduled_date_to" attrs="{'required': [('state', 'in', ['draft','confirm'])],'readonly': [('state', 'not in', ['draft'])]}"/>
+                                </div>  
+                                <field name="request_type_id"  options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'required': [('state', 'in', ['draft','confirm'])],'readonly': [('state', 'not in', ['draft'])]}"/> 
+                                <field name="full_region" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                <field name="repair_sequence_prefix_id" options="{'no_create_edit':True, 'no_create':True}" attrs="{'required': [('state', 'in', ['draft','confirm'])],'readonly': [('state', 'not in', ['draft','confirm'])]}"/> 
+                                <field name="repair_object_type" attrs="{'required': [('state', 'in', ['draft','confirm'])],'readonly': ['|',('state', 'not in', ['draft','confirm']),('repair_request_id','!=',False)]}" required="1"/> 
+                                <!-- <field name="repair_so_id" force_save="1"/> -->
+                            </group>                            
+                        </group>
+                        <notebook>
+                            <page string="Machine/Repair Product Detail" >
+                                <group>
+                                    <group>
+                                        <label for="company_no" string="Fleet"  attrs="{'invisible':[('repair_object_type','!=','fleet')]}"/>
+                                        <label for="company_no" string="Repair Product"  attrs="{'invisible':[('repair_object_type','!=','repair_product')]}"/>
+                                        <field name ='company_no' nolabel="1"  attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="owner_name" force_save="1"/> 
+                                        <field name ='mc_serial'  attrs="{'invisible':[('repair_object_type','!=','fleet')]}" force_save="1"/>
+                                        <field name ='engine_serial'   attrs="{'invisible':[('repair_object_type','!=','fleet')]}" force_save="1"/>
+                                        <field name ='engine_models'  attrs="{'invisible':[('repair_object_type','!=','fleet')]}" force_save="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="mc_problem" force_save="1"/>
+                                        <field name="owner_type" force_save="1"/>                                    
+                                        <field name="smu"  attrs="{'invisible':[('repair_object_type','!=','fleet')]}"  force_save="1"/>
+                                        <field name="mc_models"  attrs="{'invisible':[('repair_object_type','!=','fleet')]}" force_save="1"/>  
+                                    </group>
+                                </group>
+                            </page>     
+                           <page string="Customer Details">
+                               <group>
+                                   <group class='right'>
+                                        <field name ='partner_id'  options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('owner_type','!=','internal')]}"/>
+                                        <label for="street" string="Address" />
+                                        <div class="o_address_format">
+                                            <field name="street" placeholder="Street..." class="o_address_street" />
+                                            <field name="street2" placeholder="Street 2..." class="o_address_street" />
+                                            <field name="city" placeholder="City" class="o_address_city" />
+                                            <field name="state_id" class="o_address_state" placeholder="State" options="{'no_open': True, 'no_quick_create': True}" context="{'country_id': country_id, 'default_country_id': country_id, 'zip': zip}" />
+                                            <field name="zip" placeholder="ZIP" class="o_address_zip" />
+                                            <field name="country_id" placeholder="Country" class="o_address_country"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        </div>
+                                        <field name="location_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','not in',['draft','approve'])]}" required="1"/>
+                                        <field name="pricelist_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','not in',['draft','approve'])]}" required="1"/>
+                                    </group>
+                               </group>
+                           </page>
+                           
+
+                           <page string="Parts Requisition" >
+                               <group>
+                                   <group>
+                                       <button name="action_prepare_requisition" type="object" class="oe_highlight" string="Prepare Requisition" attrs="{'invisible':[('state','not in',['approve','repair'])]}" />
+                                   </group>
+                                   <field name="requisition_ids"/>
+                               </group>
+                           </page>
+
+                           <page string="Working Schedule">
+                                <field name="schedule_ids" attrs="{'readonly': [('state','not in',['approve','repair','done'])]}">
+                                    <tree editable="bottom">
+                                        <field name="date"/>
+                                        <field name="product_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  domain="[('repair_ok','=',True)]"/>
+                                        <field name="product_name" readonly="1"/>
+                                        <field name="custom_category_id" readonly="1"/>
+                                        <field name="group_class_id" readonly="1"/>
+                                        <field name="custom_model_no_id" readonly="1"/>
+                                        <field name="service_group_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="gp_leader_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="member_ids" widget="many2many_tags"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                        <field name="job_desc"/>
+                                        <field name="start_time" widget="float_time"/>
+                                        <field name="end_time" widget="float_time"/>
+                                        <field name="duration" widget="float_time"/>
+                                        <field name="amount" sum="Sub Total" readonly="0" force_save="1"/>
+                                        <field name="work_location"/>
+                                        <field name="remark" optional="hide"/>
+                                    </tree>
+                                </field>
+                           </page>
+
+                           <page string="External Repaired Line">
+                                <group>
+                                   <group>
+                                       <button name="action_create_bill" type="object" class="oe_highlight" string="Create Bill" attrs="{'invisible':[('state','not in',['approve','repair'])]}" />
+                                   </group>
+                                    <field name="move_ids">
+                                        <tree >
+                                            <field name="ref"/>
+                                            <field name="partner_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+                                            <field name="date"/>
+                                            <field name="amount_total_signed" sum="Total"/>
+                                            <field name="amount_total_in_currency_signed"/>
+                                            <field name="payment_state"
+                                                widget="badge"
+                                                decoration-danger="payment_state == 'not_paid'"
+                                                decoration-warning="payment_state in ('partial', 'in_payment')"
+                                                decoration-success="payment_state in ('paid', 'reversed')"
+                                                attrs="{'invisible': [('payment_state', 'in', ('invoicing_legacy'))]}"
+                                                optional="show"/>
+                                            <field name="state" widget="badge" decoration-success="state == 'posted'" decoration-info="state == 'draft'" optional="show"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                           </page>
+                           
+                       </notebook>
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_repair_order_view" model="ir.actions.act_window">
+            <field name="name">Repair Order</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">repair.order</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+        <menuitem id="menu_repair_order" action="action_repair_order_view" name="Job Order" sequence="2" parent="menu_repair_operation"/>
+
+        
+            <!-- Customize Sequence     -->
+        <!-- 
+        <record id="view_sequence_mode_form_repair" model="ir.ui.view">
+            <field name="name">sequence.model.form.project</field>
+            <field name="model">sequence.model</field> 
+            <field name="inherit_id" ref="customize_sequence.view_sequence_mode_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//group[1]//field[@name='code']" position="before">
+                    <field name="request_type_id"/>
+                    <field name="repair_sequence_prefix_id" ptions="{'no_create':True,'no_create_edit': True}" />
+                </xpath>
+            </field>
+        </record>    -->
+       
+    </data>
+</odoo>

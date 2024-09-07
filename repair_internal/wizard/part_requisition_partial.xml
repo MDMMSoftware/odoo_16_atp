@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="act_stock_part_requisition" model="ir.actions.act_window">
+        <field name="name">Part Requisition</field>
+        <field name="res_model">part.requisition.partial</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_stock_part_requisition_form" model="ir.ui.view">
+        <field name="name">Stock Requisition Lines</field>
+        <field name="model">part.requisition.partial</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="part_requisition_id" invisible="1" force_save="1"/>
+                
+                <field name="company_id" invisible="1"/>
+                <div class="oe_grey">
+                    <p>This requisition appears to be chained with another operation. Later, if you receive the goods you are requesting now, make sure to <b>reverse</b> the requisition order in order to avoid logistic rules to be applied again (which would create duplicated operations)</p>
+                </div>
+                <field name="product_return_moves">
+                    <tree editable="top" create="0">
+                        <field name="product_id"  domain="[('repair_ok','=',True)]" options="{'no_create': True, 'no_open': True}" force_save="1"/>
+                        <field name="quantity"/>
+                        <field name="uom_id" groups="uom.group_uom"/>
+                    </tree>
+                </field>
+                
+                <footer>
+                    <button name="create_partial_part" string="Prepare Parts" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

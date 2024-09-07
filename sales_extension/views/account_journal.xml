@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_account_journal_form_inherited_sales" model="ir.ui.view">
+            <field name="name">account.journal.form.inherited.sales</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//sheet//field[@name='type']" position="after">
+                    <field name="default_analytic_account_ids" widget="many2many_tags" string="Default Analytic Distribution"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

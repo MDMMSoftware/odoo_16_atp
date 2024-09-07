@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="deduction_type_data_accident" model="deduction.type">
+            <field name="name">Accident</field>
+            <field name="code">ACC</field>
+        </record>
+        <record id="deduction_type_data_warning" model="deduction.type">
+            <field name="name">Warning</field>
+            <field name="code">WARN</field>
+        </record>
+        <record id="deduction_type_data_advance" model="deduction.type">
+            <field name="name">Advance</field>
+            <field name="code">ADV</field>
+        </record>
+        <record id="deduction_type_normal_loan" model="deduction.type">
+            <field name="name">Normal Loan</field>
+            <field name="code">NL</field>
+        </record>
+        <record id="deduction_type_discipline" model="deduction.type">
+            <field name="name">Discipline</field>
+            <field name="code">DC</field>
+        </record>
+        <record id="deduction_type_meter_bill" model="deduction.type">
+            <field name="name">Meter Bill</field>
+            <field name="code">MB</field>
+        </record>
+        <record id="deduction_type_loan2" model="deduction.type">
+            <field name="name">2% Loan</field>
+            <field name="code">LOAN</field>
+        </record>
+        <record id="deduction_type_interest" model="deduction.type">
+            <field name="name">Interest</field>
+            <field name="code">INT</field>
+        </record>
+        <record id="deduction_type_admin_fine" model="deduction.type">
+            <field name="name">Admin Fine</field>
+            <field name="code">AF</field>
+        </record>
+        
+    </data>
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        
+        <!-- Group Rule -->
+
+        <record model="ir.module.category" id="module_category_repair">
+            <field name="name">Repair</field>
+        </record>
+
+        <record id="group_repair_internal_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="repair_internal.module_category_repair"/>
+        </record>
+
+        <record id="group_repair_internal_approver" model="res.groups">
+            <field name="name">Approver</field>
+            <field name="implied_ids" eval="[(4, ref('repair_internal.group_repair_internal_user'))]"/>
+            <field name="category_id" ref="repair_internal.module_category_repair"/>
+        </record>
+
+        <record id="group_repair_internal_manager" model="res.groups">
+            <field name="name">Adminstrator</field>
+            <field name="implied_ids" eval="[(4, ref('repair_internal.group_repair_internal_approver'))]"/>
+            <field name="category_id" ref="repair_internal.module_category_repair"/>
+        </record>
+    </data>
+</odoo>

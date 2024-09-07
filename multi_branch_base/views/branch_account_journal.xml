@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <data>
+        <record id="view_account_journal_form_inherit" model="ir.ui.view">
+        	<field name="name">view.account.journal.form.inherit</field>
+        	<field name="model">account.journal</field>
+        	<field name="inherit_id" ref="account.view_account_journal_form"/>
+			<field name="arch" type="xml">
+                <field name="country_code" position="before">
+                    <field name="branch_id" options="{'no_create': True}"/>
+                </field>
+			</field>
+        </record>
+
+        <record id="view_account_journal_tree_inherit" model="ir.ui.view">
+            <field name="name">view.account.journal.tree</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_tree"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="branch_id"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="product_pricelist_view_inherited_branch" model="ir.ui.view">
+            <field name="name">product.pricelist.form.inherited.branch</field>
+            <field name="model">product.pricelist</field>
+            <field name="inherit_id" ref="product.product_pricelist_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group[1]//group[1]//field[@name='company_id']" position="attributes">
+                    <attribute name="required">1</attribute>
+                </xpath>
+                <xpath expr="//sheet//group[1]//group[1]//field[@name='company_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath>
+            </field>            
+        </record>
+
+    </data>
+</odoo>

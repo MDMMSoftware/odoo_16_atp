@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sequence_model,access_sequence_model,model_sequence_model,,1,1,1,0
+access_sequence_model_line,access_sequence_model_line,model_sequence_model_line,,1,1,1,0

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <menuitem id="hr_attendance.menu_hr_attendance_root" name="Attendances" sequence="205" groups="hr_attendance.group_hr_attendance,hr_attendance.group_hr_attendance_kiosk" web_icon="attendance_extension,static/description/attendance.png"/>
+
+        <record id="view_attendance_tree_inherited" model="ir.ui.view">
+            <field name="name">hr.attendance.tree.inherit</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+            <field name="arch" type="xml"> 
+                <tree position="attributes">
+                    <attribute name="edit">1</attribute>
+                    <attribute name="editable"></attribute>
+                </tree>            
+                <xpath expr="//field[@name='check_out']" position="after">
+                    <field name="latti_in"/>  
+                    <field name="longi_in"/>
+                    <field name="latti_out"/>
+                    <field name="longi_out"/>
+                    <field name="check_in_address"/>
+                    <field name="check_out_address"/>  
+                    <field name="check_in_date"/>
+                    <field name="check_out_date"/> 
+                    <field name="department_id"/>                                    
+                </xpath>
+            </field>       
+        </record>
+
+		<record id="view_attendance_import_tree" model="ir.ui.view">
+			<field name="name">GPS Import Tree</field>
+			<field name="model">attendance.import</field>
+			<field name="arch" type="xml">
+				<tree string="Attendance Import">
+					<field name="import_date" />
+					<field name="name" />
+					<field name="import_fname" />
+					<field name="note" />
+					<field name="state" />
+				</tree>
+			</field>
+		</record>        
+
+		<record id="action_attendance_import" model="ir.actions.act_window">
+			<field name="name">Attendance Import Import</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">attendance.import</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_attendance_import_tree" />
+		</record>        
+
+
+    <menuitem id="hr_attendance.menu_hr_attendance_view_attendances" name="Attendances" parent="hr_attendance.menu_hr_attendance_root" sequence="10" groups="hr_attendance.group_hr_attendance_user">
+        <menuitem id="sub_menu_hr_attendance_view_attendances" name="Attendances" sequence="1" groups="hr_attendance.group_hr_attendance_user" action="hr_attendance.hr_attendance_action"/>     
+        <menuitem id="attendance_import_menu" name="Attenances Import" action="action_attendance_import" groups="hr_attendance.group_hr_attendance_user" sequence="2"/>
+    </menuitem>
+
+
+		<record id="view_attendance_import_form" model="ir.ui.view">
+			<field name="name">Attendance Import Form</field>
+			<field name="model">attendance.import</field>
+			<field name="arch" type="xml">
+				<form string="Attendance Import" version="7.0">
+					<header>
+						<button name="import_data" string="Attendance Import" type="object" attrs="{'invisible': [('state','=','completed')]}"
+							class="oe_highlight" />
+						<field name="state" widget="statusbar" statusbar_visible="draft,completed,error" />
+					</header>
+					<sheet>
+						<group>
+							<field name="name" attrs="{'readonly':[('state','!=','draft')]}"/>
+							<field name="import_date" attrs="{'readonly':[('state','!=','draft')]}"/>
+							<field name="import_file" attrs="{'readonly':[('state','!=','draft')]}" filename="import_fname" />
+							<field name="import_fname" invisible="1" class="oe_inline oe_right" />
+							<field name="note" readonly="1" force_save="1"/>
+						</group>
+					</sheet>
+					
+				</form>
+			</field>
+		</record>
+
+        <record id="hr_attendance_view_form_inherited" model="ir.ui.view">
+            <field name="name">hr.attendance.form.inherit</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//group[1]" position="replace">
+                    <div class="oe_title">
+                        <h1>
+                            <field name="employee_id" nolabel="1" readonly="1" force_save="1" default_focus="1" placeholder="Employee Name"/>
+                        </h1>                      
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id_code" />
+                            <field name="branch_id" />
+                        </group>
+                        <group>
+                            <field name="department_id" placeholder="Department"/>
+                            <field name="job_location_id" readonly="1" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Check In" >
+                            <field name="check_in" readonly="1" force_save="1"  />
+                            <field name="latti_in" readonly="1" force_save="1" />
+                            <field name="longi_in" readonly="1" force_save="1" />
+                            <field name="check_in_address" readonly="1" force_save="1" />
+                            <field name="checkin_location" widget="url" readonly="1" force_save="1"/>
+                        </group>
+                        <group string="Check Out">
+                            <field name="check_out" readonly="1" force_save="1" />
+                            <field name="latti_out" readonly="1" force_save="1" />
+                            <field name="longi_out" readonly="1" force_save="1" />
+                            <field name="check_out_address" readonly="1" force_save="1" />
+                            <field name="checkout_location" widget="url" readonly="1" force_save="1"/>
+                            <field name="auto_checkout" readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>       
+        </record>      
+
+
+        <record id="hr_attendance_view_filter_inherits" model="ir.ui.view">
+            <field name="name">hr_attendance_view_filter</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.hr_attendance_view_filter"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//group" position="after">
+                    <searchpanel>
+                        <field name="department_id" icon="fa-users" enable_counters="1"/>
+                    </searchpanel>
+                </xpath>
+            </field>
+        </record>  
+
+    </data>
+</odoo>

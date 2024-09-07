@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+
+        <record id="view_repair_call_tree" model="ir.ui.view">
+            <field name="name">repair.call.tree</field>
+            <field name="model">repair.call</field>
+            <field name="arch" type="xml">
+                <tree string="Repair Call" create="0">
+                    <field name="name"/>
+                    <field name="call_type"/>
+                    <field name="reception_date"/>
+                    <field name="issued_date"/>
+                    <field name="request_id"/>
+                    <field name="customer_id"/>
+                    <field name="customer_phone"/>
+                    <field name="fleet_id"/>
+                    <field name="fleet_brand_model"/>
+                    <field name="customer_requests"/>
+                    <button name="action_call_customer" type="object" string="Call" class="float-end btn-secondary"/>
+                    <!-- <field name="repaired_jobs"/>
+                    <field name="repaired_parts"/> -->
+                </tree>
+            </field>
+        </record>  
+
+        <record id="view_repair_call_form" model="ir.ui.view">
+            <field name="name">repair.call.form</field>
+            <field name="model">repair.call</field>
+            <field name="arch" type="xml">           
+                <form string="Repair Call" duplicate="0" create="0">
+                    <header>
+                        <button name="action_call" class="oe_highlight" type="object" string="Approve" attrs="{'invisible':[('state','!=','call')]}"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left">  
+                                <field name="request_id"  readonly="1"/>
+                                <field name="customer_id" readonly="1"/>
+                            </group>
+                            <group name="right">   
+                                <field name="quotation_id" readonly="1"/>   
+                                <field name="remark" attrs="{'readonly':[('state','=','call')]}"/>                                                           
+                            </group>                            
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>        
+
+        <record id="action_view_repair_call" model="ir.actions.act_window">
+            <field name="name">Repair Call</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">repair.call</field>
+            <field name="view_mode">tree</field>
+        </record>      
+
+        <menuitem id="menu_crm_repair_external" name="CRM" sequence="3" parent="menu_repair_external"/>  
+        <menuitem id="menu_crm_repair_call" name="Repair Call" sequence="1"  action="action_view_repair_call" parent="menu_crm_repair_external"/>
+
+    </data>
+</odoo>

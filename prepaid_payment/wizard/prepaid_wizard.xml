@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+		
+		<record id="view_prepaid_register_payment" model="ir.ui.view">
+	        <field name="name">prepaid.register.payment</field>
+	        <field name="model">prepaid.register.payment</field>
+	        <field name="arch" type="xml">
+	            <form string="Registered Vendor Prepayments">                
+	                <div>
+	                    <group>
+	                        <group>                            
+	                            <field name="date"/>
+	                            <field name="amount"/>
+	                            <field name="ref"/>
+	                            <field name="prepaid_id" invisible="1"/>
+			                    <field name="move_id" invisible="1"/>
+			                    <field name="user_id" invisible="1"/>	
+	                        </group>
+	                    </group>
+	                </div>
+	                <footer>
+	                    <button string="Register" name="action_register" type="object" class="btn-primary"/>
+	                    <button string="Cancel" class="btn-default" special="cancel"/>
+	                </footer>
+	            </form>
+	         </field>
+    	</record>
+
+    	<record id="action_prepaid_register_payment" model="ir.actions.act_window">
+			<field name="name">Registered Vendor Prepayments</field>
+			<field name="res_model">prepaid.register.payment</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+		</record>
+		
+	</data>
+</odoo>
+
+      

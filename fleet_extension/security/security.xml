@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <!-- <record id = "fleet.ir_rule_fleet_vehicle" model = "ir.rule"> 
+            <field name = "name"> Remove Domain of  Fleet Vehicle Company Rule </field> 
+            <field ref = "fleet.model_fleet_vehicle" name = "model_id" /> 
+            <field name = "domain_force"></field> 
+        </record> -->
+        <delete model="ir.rule" id="fleet.fleet_rule_vehicle_visibility_user"/>
+        <delete model="ir.rule" id="fleet.ir_rule_fleet_vehicle"/>
+        <delete model="ir.rule" id="fleet.fleet_rule_vehicle_visibility_manager"/>
+        
+        <record id="fleet_group_readonly" model="res.groups">
+            <field name="name">Readonly</field>
+            <field name="category_id" ref="base.module_category_human_resources_fleet"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>        
+
+        <record id="fleet.fleet_group_user" model="res.groups">
+            <field name="name">Officer : Manage all vehicles</field>
+            <field name="category_id" ref="base.module_category_human_resources_fleet"/>
+            <field name="implied_ids" eval="[(4, ref('fleet_group_readonly'))]"/>
+        </record>        
+
+
+        <record model="ir.rule" id="fleet_vehicle_company_rule">
+            <field name="name">Fleet Vehicle Company Rule</field>
+            <field name="model_id" ref="fleet.model_fleet_vehicle"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('base.group_user')),(4,ref('fleet_group_readonly')),(4,ref('fleet.fleet_group_user')),(4,ref('fleet.fleet_group_manager'))]"/>
+        </record>
+
+
+    </data>
+</odoo>

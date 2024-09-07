@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Top menu item -->
+        <menuitem name="Purchase"
+            id="purchase.menu_purchase_root"
+            groups="purchase.group_purchase_manager,purchase.group_purchase_user,access_right.group_purchase_user_own_doc,access_right.group_purchase_readonly"
+            web_icon="purchase_extension,static/description/purchase.png"
+            sequence="135"/>
+
+        <record id="view_purchase_location_form_inherit" model="ir.ui.view">
+        	<field name="name">purchase.location.form.inherit</field>
+        	<field name="model">purchase.order</field>
+        	<field name="inherit_id" ref="purchase.purchase_order_form"/>
+			<field name="arch" type="xml">
+
+                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="domain">[('id','in',vendor_ids)]</attribute>
+                </xpath> -->
+                <xpath expr="//field[@name='picking_type_id']" position="after">
+					<field name="location_id" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}"/>
+                    <field name="purchase_team_id"/>
+				</xpath>
+                <xpath expr="//field[@name='partner_ref']" position="after">
+					<field name="internal_ref" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}" />
+				</xpath>				
+			</field>
+        </record>
+
+        <record id="purchase_order_form_inherit_project" model="ir.ui.view">
+            <field name="name">purchase.order.form.inherit.project</field>
+            <field name="model">purchase.order</field> 
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='products']//field[@name='order_line']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('state', 'in', ('purchase','done','cancel'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='date_order']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('state','in',('purchase','done','cancel'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='date_order']" position="after">
+                    <field name="allow_division_feature" invisible="1"/>
+                </xpath>
+                <xpath expr="//page[@name='products']//tree//field[@name='name']" position="after">
+                    <field name="product_variant_ids" widget="many2many_tags"/>
+                    <field name="division_id"  domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>
+                <xpath expr="//page[@name='products']//tree//field[@name='product_uom'][2]" position="replace">
+                    <field name="product_uom" string="UoM"
+                        attrs="{
+                            'readonly': [('state', 'in', ('purchase', 'done', 'cancel'))],
+                            'required': [('display_type', '=', False)]
+                        }"
+                        force_save="1" optional="show"/>
+                </xpath>
+                <xpath expr="//page[@name='products']//tree//field[@name='price_subtotal']" position="after">
+					<field name="remark"/>
+                </xpath>                
+                <xpath expr="//notebook//page[@name='products']//tree//field[@name='analytic_distribution']" position="attributes">
+                    <attribute name="optional">show</attribute>
+                </xpath>				
+            </field>
+        </record>
+
+        <record id="purchase_order_kpis_tree_inherit" model="ir.ui.view">
+            <field name="name">purchase.order.inherit.purchase.order.tree.inherit</field>
+            <field name="model">purchase.order</field> 
+            <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='user_id']" position="before">
+                    <field name="branch_id" optional="hide"/>
+                </xpath>
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="date_approve" string="Confimation Date"/>
+                    <field name="date_planned" string="Receipt Date"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

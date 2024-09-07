@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Adding credit status in partner -->
+        <record model="ir.ui.view" id="partner_view_form_extend_credit">
+            <field name="name">partner.view.form.extend.credit</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form" />
+            <field name="arch" type="xml">  
+                <xpath expr="//sheet//group[@name='credit_limits']" position="replace">
+                </xpath>  
+                <xpath expr="//sheet//group[@name='misc']" position="after">
+                    <group string="Credit Limits"
+                            name="credit_limits"
+                            groups="account.group_account_invoice,account.group_account_readonly"
+                            attrs="{'invisible': [('show_credit_limit', '=', False)]}">
+                        <field name="credit"/>
+                        <label for="use_partner_credit_limit"/>
+                        <div class="o_row">
+                            <field name="use_partner_credit_limit"/>
+                            <field name="credit_limit" class="oe_inline" attrs="{'invisible': [('use_partner_credit_limit', '=', False)]}"/>
+                        </div>
+                        <field name="credit_status"  attrs="{'invisible': [('use_partner_credit_limit', '=', False)], 'required':[('use_partner_credit_limit','=',True)]}"/>
+                    </group>                            
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Adding Credit Status in Sales Order -->
+        <record id="view_sale_order_form_inherit_credit" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.credit</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+					<field name="credit_status" readonly="1" force_save="1"  groups="base.group_no_one"/>				
+				</xpath>						
+            </field>
+        </record>   
+
+        <!-- Credit Limit History -->
+        <record id="view_credit_limit_approve_form" model="ir.ui.view">
+	        <field name="name">Credit Limit Approve Form</field>
+	        <field name="model">credit.limit.approve</field>
+	        <field name="arch" type="xml">
+	            <form create="0" edit="0">
+	                <header> 
+                        <button name="action_approve" string="Approve" type="object" groups="sales_team.group_sale_manager" class="oe_highlight btn-success" states="draft" />
+                        <button name="action_reject" string="Reject" type="object" groups="sales_team.group_sale_manager" class="oe_highlight btn-danger" states="draft" />
+                        <button name="action_reset_to_draft" string="Reset To Draft" type="object" groups="sales_team.group_sale_manager" class="oe_highlight btn-muted" states="approve,reject" />
+                        <field name="state" widget="statusbar"  statusbar_visible="draft,approve,reject" />
+                    </header>
+	            	<sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="order_id" readonly="1" force_save="1"/>
+                            </h1>
+                        </div>                    
+	                    <group>
+	                    	<group>
+                                <field name="order_date"/>
+                                <field name="partner_id"/>
+                                <field name="currency_id"/>
+	                    	</group>
+                            <group>
+                                <field name="credit"/>
+                                <field name="credit_limit"/>
+                                <field name="order_amt"/>
+                            </group>
+	                    </group>
+	            	</sheet>
+	            </form>
+	       	</field>
+    	</record>
+
+    	<record id="view_credit_limit_approve_tree" model="ir.ui.view">
+            <field name="name">Credit Limit Approve Tree</field>
+            <field name="model">credit.limit.approve</field>
+            <field name="arch" type="xml">
+            	<tree create='0'>    
+                    <field name="order_id" />        		
+	                <field name="order_date" />
+                    <field name="partner_id"/>
+                    <field name="credit_limit"/>
+                    <field name="order_amt"/>
+                    <field name="state" string="Status"/>
+            	</tree>
+            </field>
+        </record>
+
+        <record id="action_view_credit_limit_approve" model="ir.actions.act_window">          
+            <field name="name">Credit Limit Records</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">credit.limit.approve</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_credit_limit_approve_tree" />
+        </record>
+
+        <menuitem id="menu_credit_limit_approve" name="Credit Limit Records" parent="sale.menu_sale_config" action="action_view_credit_limit_approve" sequence="100" />    
+
+    </data>
+</odoo> 

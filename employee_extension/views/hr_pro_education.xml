@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		
+		<record id="inherit_view_hr_pro_education" model="ir.ui.view">
+			<field name="name">Hr Pro Education View</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr.view_employee_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//page[@name='hr_settings']" position="before"> 
+					<page string="Professional Education" groups="hr.group_hr_user">
+						<field name="hr_pro_education_id"> 
+							<tree string="Professional qualification" editable="bottom">
+								<field name="pro_certificate"/>
+								<field name="org"/>
+								<field name="issue_date"/>
+								<field name="remark"/>
+							</tree>	
+						</field>	
+					</page>			
+				</xpath>
+			</field>
+		</record>
+
+
+		<record id="view_pro_education_tree" model="ir.ui.view">
+            <field name="name">Pro Education Tree View</field>
+            <field name="model">hr.pro.education</field>
+            <field name="arch" type="xml">
+                <tree string="Professional Education" editable="bottom">
+                	<field name="employee_id"/>
+                	<field name="pro_certificate"/>
+					<field name="org"/>
+					<field name="issue_date"/>
+					<field name="remark"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_pro_education" model="ir.actions.act_window">
+            <field name="name">Professional Education</field>
+            <field name="res_model">hr.pro.education</field>
+            <field name="view_id" ref="view_pro_education_tree"/>
+        </record>
+
+		<menuitem id="menu_hr_pro_education" action="action_pro_education" parent="hr.menu_human_resources_configuration" sequence="101" />
+	</data>	
+</odoo>

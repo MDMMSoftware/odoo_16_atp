@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="attendance_employee_view" model="ir.ui.view">
+            <field name="name">hr.employee.form.attendance</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='rank']" position="after">
+                    <field name="att_allow_all_device" string="Attendence Allow in All Device?" />
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

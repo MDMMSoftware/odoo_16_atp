@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <delete model="ir.rule" id="hr_attendance.hr_attendance_rule_employee_company"/>
+    </data>
+</odoo>

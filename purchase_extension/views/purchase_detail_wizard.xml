@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_purchase_detail_report_wizard" model="ir.ui.view">
+            <field name="name">purchase.detail.report.wizrd</field>
+            <field name="model">detail.report.wizard</field> 
+            <field name="inherit_id" ref="reporting_module.form_view_detail_report_wizard"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='department_id']" position="after">
+                    <field name="invoice_user_id"  invisible="context.get('report_type') == 'sale'" string="Purchase Person"  options="{'no_create':True,'no_create_edit': True,'no_open': True}"/>
+                    <field name="purchase_team_id" invisible="context.get('report_type') == 'sale'" options="{'no_create_edit':True, 'no_create':True}"/>
+                </xpath>
+                <xpath expr="//button[@class='btn-default']" position="before">
+                    <button string="Go To Report" invisible="context.get('report_type') == 'sale'" context="{'filename':'mmm_purchase_detail_report'}" name="print_report"  type="object" class="btn-info"/>
+                </xpath>
+                <xpath expr="//field[@name='company_id']" position="before">
+                    <field name="partner_id" domain="[]" invisible="context.get('report_type') == 'sale'" string="Vendor" options="{'no_create':True,'no_create_edit': True,'no_open': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="action_view_purchase_detail_report_wizard" model="ir.actions.act_window">
+            <field name="name">Domain Filter</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">detail.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="reporting_module.form_view_detail_report_wizard" />
+            <field name="context">{'report_type':'purchase'}</field>
+            <field name="target">new</field>
+        </record>    
+            
+        <menuitem id="purchase.purchase_report_main" name="Reporting" parent="purchase.menu_purchase_root" sequence="99" groups="purchase.group_purchase_user"/>  
+        <menuitem id="purchase.purchase_report"  name="Purchase Analysis" parent="purchase.purchase_report_main" sequence="10" groups="purchase.group_purchase_user" action="purchase.action_purchase_order_report_all"/>          
+        <menuitem id="menu_purchase_detail_report_wizard" name="Purchase Details Report" parent="purchase.purchase_report_main" sequence="101" action="action_view_purchase_detail_report_wizard"/>
+
+    </data>
+</odoo>

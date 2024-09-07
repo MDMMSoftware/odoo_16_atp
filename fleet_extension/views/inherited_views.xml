@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_cashbook_form_inherit" model="ir.ui.view">
+            <field name="name">account.cashbook.form.inherit.fleet</field>
+            <field name="model">account.cashbook</field>
+            <field name="inherit_id" ref="account_cashbook.view_cashbook_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook//page[@name='cashbook_line']//field[@name='division_id']" position="after">
+                    <field name="fleet_id" optional="show" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('parent.state','!=','draft')]}"/>
+                </xpath>
+                <xpath expr="//notebook//page[@name='journal_items']//field[@name='division_id']" position="after">
+                    <field name="fleet_id" optional="show" options="{'no_create':True,'no_create_edit': True}"/>
+                </xpath>                
+            </field>
+        </record>
+
+        <record id="view_move_line_tree_inherited" model="ir.ui.view">
+            <field name="name">account.move.line.tree.inherit.fleet</field>
+            <field name="model">account.move.line</field>
+            <field name="inherit_id" ref="account_accountant.view_move_line_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="fleet_id" optional="hide" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="owner_id" optional="hide"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_move_expense_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.expense.form.inherit.fleet</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//page[@id='invoice_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="fleet_id" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="owner_id" optional="hide"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='analytic_distribution']" position="before">
+                    <field name="fleet_id" options="{'no_create':True,'no_create_edit': True}"/>
+                    <field name="owner_id" optional="hide"/>
+                </xpath>                
+            </field>   
+        </record>
+
+        <!-- Purchase -->
+
+        <record id="purchase_order_form_inherit_fleet" model="ir.ui.view">
+            <field name="name">purchase.order.form.inherit.fleet</field>
+            <field name="model">purchase.order</field> 
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='products']//tree//field[@name='analytic_distribution']" position="before">
+                    <field name="fleet_id" optional="show" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Sale -->
+
+        <record id="view_sale_order_form_inherit_fleet" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.fleet</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='analytic_distribution']" position="before">
+                    <field name="fleet_id" optional="show" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>
+                </xpath>
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="after">
+                    <field name="allow_fleet_partner_relationship" invisible="1"/>
+                    <field name="own_fleet_id" attrs="{'invisible':[('allow_fleet_partner_relationship','=',False)]}"/>
+                </xpath>
+            </field>
+        </record> 
+
+        <!-- Requisition -->
+        <record id="requisition_form_view_inherit_fleet" model="ir.ui.view">
+            <field name="name">requisition.form.inherit.fleet</field>
+            <field name="model">requisition</field> 
+            <field name="inherit_id" ref="requisition.requisition_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//notebook//tree//field[@name='qty']" position="before">
+                    <field name="fleet_id"  optional="show" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','!=','draft')]}"/>
+                </xpath>
+            </field>
+        </record>               
+
+        <!-- Adjustment  -->    
+
+        <record id="form_view_inv_adjustment_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.inventory.adjustment.form</field>
+            <field name="model">stock.inventory.adjustment</field> 
+            <field name="inherit_id" ref="stock_adjustment.form_view_inv_adjustment"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook//page[@name='adjust_lines']//field[@name='adjustment_line_id']//tree//field[@name='desc']" position="after">
+                    <field name="fleet_location_id" options="{'no_create':True,'no_create_edit': True}" /> 
+                </xpath>            
+                <xpath expr="//notebook//page[@name='adjust_lines']//field[@name='adjustment_line_id']//tree//field[@name='analytic_distribution']" position="before">
+                    <field name="fleet_id"  optional="show" options="{'no_create':True,'no_create_edit': True}" /> 
+                    <field name="fleet_owner_id" optional="hide" />
+                </xpath>
+            </field>
+        </record>  
+
+        <!-- Picking Form for Stock Move -->
+
+        <record id="fleet_view_picking_form" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.fleet</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='product_id']" position="after">
+                    <field name="fleet_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                </xpath>
+            </field>
+        </record>    
+
+        <!-- Stock move  -->
+
+        <record id="view_move_form_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.move.form.inherit</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='date_deadline']" position="after">
+                        <field name="fleet_id" options="{'no_create': True}"/>
+                        <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>
+
+        <record id="view_move_tree_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.move.tree.inherit</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='state']" position="before">
+                        <field name="fleet_id"/>
+                        <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>
+
+        <!-- stock move line -->
+
+        <record id="view_stock_move_line_form_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.move.line.form.inherit</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='create_uid']" position="after">
+                        <field name="fleet_id" options="{'no_create': True}"/>
+                        <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>
+
+        <record id="view_move_line_tree_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.move.line.tree.inherit</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='qty_done']" position="before">
+                        <field name="fleet_id" options="{'no_create': True}"/>
+                        <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>         
+
+        <!-- Stock Valuation Layer -->
+
+        <record id="stock_location_valuation_layer_tree_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.location.valuation.tree.inherit</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='quantity']" position="before">
+                        <field name="fleet_id" options="{'no_create': True}"/>
+                        <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record> 
+
+        <!-- Stock Valuation Report -->      
+
+        <record id="tree_view_valuation_report_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.tree</field>
+            <field name="model">stock.location.valuation.report</field> 
+            <field name="inherit_id" ref="stock_extension.tree_view_valuation_report"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree//field[@name='desc']" position="before">
+                    <field name="fleet_id" optional="show" options="{'no_create':True,'no_create_edit': True}" /> 
+                    <field name="fleet_location_id" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                </xpath>
+            </field>
+        </record>    
+
+        <record id="form_view_valuation_report_inherit_fleet" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.form</field>
+            <field name="model">stock.location.valuation.report</field> 
+            <field name="inherit_id" ref="stock_extension.form_view_valuation_report"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//group//field[@name='qty_in']" position="before">
+                    <field name="fleet_id" readonly="1" optional="show" options="{'no_create':True,'no_create_edit': True}" /> 
+                    <field name="fleet_location_id" readonly="1" optional="hide" options="{'no_create': True,'no_create_edit': True}"/>
+                </xpath>
+            </field>
+        </record>       
+
+        <!-- Res Partner -->
+
+        <record model="ir.ui.view" id="partner_view_form_extend">
+            <field name="name">partner.view.form.vehicle.extend</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group[1]//group[1]//span[@name='address_name']" position="after"> 
+                    <field name="allow_fleet_partner_relationship" invisible="1"/>
+                </xpath>
+                <xpath expr="//sheet//notebook//page[@name='contact_addresses']" position="after">
+                    <page string="Fleet Vehicles" attrs="{'invisible':[('allow_fleet_partner_relationship','=',False)]}" >
+                        <field name="fleet_ids" nolabel="1"/>
+                    </page>
+                </xpath>  
+            </field>
+        </record>   
+
+        <!-- Res Company -->
+
+        <record id="view_company_form_inherit_fleet" model="ir.ui.view">
+            <field name="name">res.company.form.inherit.fleet</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">        
+                <xpath expr="//field[@name='currency_id']" position="after">
+                    <field name="allow_fleet_partner_relationship"/>
+                    <field name="product_income_type"/>
+                </xpath>
+            </field>
+        </record>    
+
+
+
+        <!-- Account Analytic Account  -->
+
+        <record id="view_account_analytic_account_form_fleet" model="ir.ui.view">
+            <field name="name">analytic.analytic.account.form.fleet</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='code']" position="after">
+                    <field name="fleet_id" attrs="{'invisible': [('fleet_id','=',False)]}" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

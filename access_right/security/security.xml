@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        <record id="group_account_advance_user" model="res.groups">
+            <field name="name">User (For Advance)</field>
+            <field name="category_id" ref="base.module_category_accounting_accounting"/>
+        </record>
+
+        
+        <record id="account.group_account_invoice" model="res.groups">
+            <field name="category_id" ref="base.module_category_accounting_accounting"/>
+            <field name="implied_ids" eval="[(4, ref('group_account_advance_user'))]"/>
+        </record>
+
+        <record id="group_purchase_readonly" model="res.groups">
+            <field name="name">Purchase - Readonly</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="category_id" ref="base.module_category_inventory_purchase"/>
+        </record>        
+
+
+        <record id="group_purchase_user_own_doc" model="res.groups">
+            <field name="name">Purchase User Own Document Only</field>
+            <field name="implied_ids" eval="[(4, ref('group_purchase_readonly'))]"/>
+            <field name="category_id" ref="base.module_category_inventory_purchase"/>
+        </record>
+
+        <record id="purchase.group_purchase_user" model="res.groups">
+            <field name="name">Purchase User All Document Only</field>
+            <field name="implied_ids" eval="[(4, ref('group_purchase_user_own_doc'))]"/>
+            <field name="category_id" ref="base.module_category_inventory_purchase"/>
+        </record>
+
+        <record id="group_stock_readonly" model="res.groups">
+            <field name="name">Read Only</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="category_id" ref="base.module_category_inventory_inventory"/>
+        </record>
+
+        <record id="group_stock_user_own_doc" model="res.groups">
+            <field name="name">Stock User Own Document Only</field>
+            <field name="implied_ids" eval="[(4, ref('group_stock_readonly'))]"/>
+            <field name="category_id" ref="base.module_category_inventory_inventory"/>
+        </record>
+
+        <record id="stock.group_stock_user" model="res.groups">
+            <field name="name">Stock User All Document Only</field>
+            <field name="category_id" ref="base.module_category_inventory_inventory"/>
+            <field name="implied_ids" eval="[(4, ref('group_stock_user_own_doc'))]"/>
+        </record>
+    </data>
+</odoo>

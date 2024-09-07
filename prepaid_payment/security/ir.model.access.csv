@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_payment_prepaid,account.payment.prepaid,model_account_payment_prepaid,,1,1,1,0
+access_prepaid_register_payment,prepaid.register.payment,model_prepaid_register_payment,,1,1,1,0

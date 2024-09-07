@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+	<data>
+		<record id="view_work_experience" model="ir.ui.view">
+			<field name="name">hr.employee.inherit</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr.view_employee_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//form/sheet/notebook/page[@name='personal_information']" position="after">
+					<page string="Working Experience" groups="hr.group_hr_user">
+						<xpath expr="." position="inside">
+							<link rel="stylesheet" href="/work_experience/static/src/css/custom.css"/>
+						</xpath>
+						<field name="work_exp_id">
+							<tree editable="bottom">
+								<field name="name"/>
+								<field name="address" invisible="1"/>
+								<field name="from_date"/>
+								<field name="to_date"/>
+								<field name="l_position"/>
+								<field name="desc"/>
+								<field name="l_salary"/>
+								<field name="currency"/>
+							</tree>	
+						</field>
+					</page>
+				</xpath>	
+			</field>	
+		</record>
+
+		<record id="view_working_exp_tree" model="ir.ui.view">
+            <field name="name">Employee Working Experiences Tree View</field>
+            <field name="model">hr.working.experience</field>
+            <field name="arch" type="xml">
+                <tree string="Employee Working Experiences" editable="bottom">
+                    <field name="employee_id"/>
+                    <field name="name"/>
+                    <field name="address"/>
+                    <field name="from_date"/>
+                    <field name="to_date"/>
+                    <field name="l_position"/>
+                    <field name="l_salary"/>
+                    <field name="currency"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_working_exp" model="ir.actions.act_window">
+            <field name="name">Employee Working Experiences</field>
+            <field name="res_model">hr.working.experience</field>
+            <field name="view_id" ref="view_working_exp_tree"/>
+        </record>
+
+		<menuitem id="menu_hr_working_exp" action="action_working_exp" parent="hr.menu_human_resources_configuration" sequence="100" />
+	</data>	
+</odoo>

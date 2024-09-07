@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="inherit_view_hr_education" model="ir.ui.view">
+			<field name="name">Hr Education Inherit View</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr.view_employee_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//form/sheet/notebook/page[@name='hr_settings']" position="before">
+					<page string="Education" groups="hr.group_hr_user">
+						<field name="hr_education_id"> 
+							<tree string="education" editable="bottom">
+								<field name="ed_type_id"/>
+								<field name="ed_degree_id"/>
+								<field name="ed_major_id"/>
+								<field name="ed_college_id"/>
+								<field name="from_yrs"/>
+								<field name="to_yrs"/>
+								<field name="bol" nolabel="1"/>
+							</tree>	
+						</field>
+						<group string="Other Qualifications">
+							<field name="other_qualif" nolabel="1"/>
+						</group>	
+					</page>	
+					
+				</xpath>	
+
+
+				<xpath expr="//form/sheet/notebook/page[@name='personal_information']/group/group/field[@name='study_field']" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</xpath>
+
+				<xpath expr="//field[@name='study_school']" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</xpath>
+				<xpath expr="//form/sheet/notebook/page[@name='personal_information']/group/group/field[@name='certificate']" position="after">
+					<field name="degree"/>
+				</xpath>
+			</field>	
+		</record>
+
+		<record id="view_education_tree" model="ir.ui.view">
+            <field name="name">Employee Education Tree View</field>
+            <field name="model">hr.education</field>
+            <field name="arch" type="xml">
+                <tree string="Employee Education" editable="bottom">
+                    <field name="employee_id"/>
+                    <field name="ed_type_id"/>
+                    <field name="ed_degree_id"/>
+                    <field name="ed_major_id"/>
+                    <field name="ed_college_id"/>
+                    <field name="from_yrs"/>
+                    <field name="to_yrs"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_education" model="ir.actions.act_window">
+            <field name="name">Employee Education</field>
+            <field name="res_model">hr.education</field>
+            <field name="view_id" ref="view_education_tree"/>
+        </record>
+
+		<menuitem id="menu_hr_education" action="action_education" parent="hr.menu_human_resources_configuration" sequence="100" />
+	</data>	
+</odoo>

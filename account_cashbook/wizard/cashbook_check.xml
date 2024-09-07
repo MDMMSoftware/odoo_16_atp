@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <record id="cashbook_check_xlsx_report_view" model="ir.ui.view">
+       <field name="name">Cashbook Check xlsx Report</field>
+       <field name="model">cashbook.check.xlsx.wizard</field>
+       <field name="arch" type="xml">
+           <form string="Report Options">
+               <separator string="Cashbook Excel xlsx Report"/>
+               <group col="4">
+                   <field name="start_date"/>
+                   <field name="end_date"/>
+                   <field name="server_type" widget="radio"/>
+                   <field name="transfer_company_id" attrs="{'invisible': [('server_type', '=', 'same')]}" widget="many2many_tags"/>
+                   <field name="company_id" attrs="{'invisible': [('server_type', '=', 'diff')]}" widget="many2many_tags"/>
+               </group>
+               <footer>
+                   <button name="print_xlsx" string="PRINT" type="object"
+                             default_focus="1" class="oe_highlight"/>
+                   <button string="Cancel" class="btn btn-default" special="cancel"/>
+               </footer>
+           </form>
+       </field>
+   </record>
+   <record id="action_cashbook_check_xlsx_report" model="ir.actions.act_window">
+       <field name="name">Cashbook Excel xlsx Report</field>
+       <field name="res_model">cashbook.check.xlsx.wizard</field>
+       <field name="type">ir.actions.act_window</field>
+       <field name="view_mode">form</field>
+       <field name="target">new</field>
+   </record>
+   <menuitem id="cashbook_check_xlsx_report" name="Cashbook Check xlsx Report"
+              parent="account_cashbook.menu_cashbook" action="action_cashbook_check_xlsx_report" sequence="5"/>
+</odoo>

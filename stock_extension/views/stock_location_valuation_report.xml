@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <data>
+        <record id="tree_view_valuation_report" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.tree</field>
+            <field name="model">stock.location.valuation.report</field>          
+            <field name="arch" type="xml">
+                <tree>        
+                    <field name="report_type"/>         
+                    <field name='company_id'/>
+                    <field name="branch_id"/>  
+                    <field name="department_id"/>                  
+                    <field name="by_location"/>
+                    <field name="report_date" />
+                    <field name="ref" />
+                    <field name="seq" />
+                    <field name="location_id" />
+                    <field name="location_dest_id" />
+                    <field name="product_code"/>
+                    <field name="product_name" />
+                    <field name="division_id" />
+                    <field name="desc" />
+                    <field name="qty_in" />
+                    <field name="qty_out" />
+                    <field name="balance"/>
+                    <field name="uom_id" />
+                    <field name="unit_cost" />
+                    <field name="total_amt" />                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="form_view_valuation_report" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.form</field>
+            <field name="model">stock.location.valuation.report</field>            
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="report_type" readonly="1" force_save="1"/>
+                                <field name='company_id' readonly="1" force_save="1"/>
+                                <field name="location_id"  readonly="1" force_save="1"/>
+                                <field name="ref"  readonly="1" force_save="1"/>
+                                <field name="product_id"  readonly="1" force_save="1"/>
+                                <field name="product_code"  readonly="1" force_save="1" invisible="1"/>
+                                <field name="report_date"  readonly="1" force_save="1"/>
+                                <field name="qty_in"  readonly="1" force_save="1"/>
+                                <field name="product_uom_category_id" invisible="1" readonly="1" force_save="1"/>
+                                <field name="uom_id"  readonly="1" force_save="1"/>
+                                <field name="unit_cost"  readonly="1" force_save="1"/>
+                            </group>
+                            <group>
+                                <field name="by_location" readonly="1" force_save="1"/>
+                                <field name="branch_id" readonly="1" force_save="1"/>
+                                <field name="department_id" readonly="1" force_save="1"/>
+                                <field name="location_dest_id"  readonly="1" force_save="1"/>
+                                <field name="seq"  readonly="1" force_save="1"/>
+                                <field name="product_name"  readonly="1" force_save="1"/>
+                                <field name="desc"  readonly="1" force_save="1"/>
+                                <field name="division_id" readonly="1" force_save="1"/>
+                                <field name="qty_out"  readonly="1" force_save="1"/>
+                                <field name="balance"  readonly="1" force_save="1"/>
+                                <field name="total_amt"  readonly="1" force_save="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_stock_location_valuation_report_search" model="ir.ui.view">
+            <field name="name">stock.location.valuation.report.search</field>
+            <field name="model">stock.location.valuation.report</field>
+            <field name="arch" type="xml">
+                <search string="Valuation Report">
+                    <field name="product_code" string="Code"/>
+                    <field name="product_name" string="Product Name"/>
+                    <field name="by_location" string="By Location"/>
+                    <field name="location_id" string="From"/>
+                    <field name="location_dest_id" string="To"/>
+                    <field name="seq" string="Source Seq."/>
+                    <field name="ref" string="Ref."/>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_valuation_report" model="ir.actions.act_window">
+            <field name="name">Stock Location Valuation Report</field>
+            <field name="res_model">stock.location.valuation.report</field>          
+            <field name="view_id" ref="tree_view_valuation_report" />  
+            <field name="view_mode">tree,form</field>   
+        </record>
+        
+        <menuitem id="menu_valuation_report" name="Stock Location Valuation Report" parent="stock.menu_warehouse_report" action="action_valuation_report" sequence="105" />
+
+    </data>
+</odoo>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <record id="product_product_repair_tree_view" model="ir.ui.view">
+            <field name="name">product.product.repair.tree</field>
+            <field name="model">product.product</field>
+            <field name="arch" type="xml">
+                <tree string="Product Variants" multi_edit="1" duplicate="false" sample="1">
+                    <field name="default_code" optional="hide" readonly="1"/>
+                    <field name="name" readonly="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_customer_request_form_tree" model="ir.ui.view">
+            <field name="name">customer.request.form.tree</field>
+            <field name="model">customer.request.form</field>
+            <field name="arch" type="xml">
+                <tree string="Customer Request" decoration-danger="is_late_issued">
+                    <field name="is_late_issued" invisible="1"/>
+                    <field name="branch_id"/>
+                    <field name="name"/>
+                    <field name="reception_date"/>
+                    <field name="promise_date" optional="hide"/>
+                    <field name="issued_date" optional="hide"/>
+                    <field name="customer" optional="hide"/>
+                    <field name="fleet_id"/>
+                    <field name="description" optional="hide"/>
+                    <field name="estimate_time" optional="hide"/>
+                    <field name="state"  widget="badge" decoration-muted="state == 'draft'" decoration-success="state == 'approve'" decoration-danger="state == 'reject'"/>
+                    <field name="quotation_state"  widget="badge" decoration-muted="quotation_state == 'draft'"  decoration-success="quotation_state == 'confirm'"/>
+                    <field name="order_state"  widget="badge" 
+                        decoration-danger="order_state in ('work_in_progress','cancel')" 
+                        decoration-muted="order_state == 'draft'" decoration-info="order_state in ('job_start','work_in_progress')" decoration-success="order_state == 'job_close'"
+                        decoration-primary="order_state == 'qc_check' " decoration-warning="order_state == 'progress'" />
+                    <field name="part_state" widget="badge" decoration-warning="part_state == 'draft' " decoration-success="part_state == 'done' "/>
+                    <field name="invoice_state"  widget="badge" decoration-muted="invoice_state == 'draft'" decoration-info="invoice_state == 'waiting'" decoration-danger="invoice_state == 'cancel'" decoration-success="invoice_state == 'posted'"/>
+                    <field name="compute_repair_status" invisible="1"/>
+                    <field name="payment_state"  widget="badge" 
+                        decoration-success="payment_state == 'paid'" decoration-muted="payment_state in ('in_payment','partial','not_paid','reversed','invoicing_legacy')" />                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_customer_request_form_form" model="ir.ui.view">
+            <field name="name">customer.request.form.form</field>
+            <field name="model">customer.request.form</field>
+            <field name="arch" type="xml">           
+                <form string="Customer Request" duplicate="0">
+                    <header>
+                        <button name="action_approve" class="oe_highlight" type="object" string="Approve" states="draft"/>
+                        <button name="action_reject" class="oe_highlight btn-danger" type="object" string="Reject" confirm="Are you sure want to reject the customer request??"  attrs="{'invisible': [('state', '=', 'reject')]}"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_request_quotation" class="oe_stat_button" icon="fa-book"  type="object" string="Quotations"/>  
+                                                        
+                        </div>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group name="left">  
+                                <field name="customer"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly': [('state', '=', 'approve')]}"/>
+                                <field name="phone"  attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="branch_id"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly': [('state', '=', 'approve')]}"/>
+                                <label for="estimate_time"/>
+                                <div> 
+                                    <field name="estimate_time" widget="float_time" class="oe_inline" nolabel="1"/>
+                                    <span class="o_form_label oe_inline">Hr</span>
+                                </div>                                 
+                                <!-- <field name="received_date" attrs="{'readonly': [('state', '=', 'approve')]}"/> -->
+                                <field name="mileage" force_save="1" readonly="0"  required="1"/>
+                                <field name="request_type" widget="radio" required="1" options="{'horizontal': true}"/>
+                                <field name="repair_service_type_id" required="1"  options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly':[('state','!=','draft')]}" /> 
+                                <field name="company_id" invisible="1"/>
+                            </group>
+                            <group name="right">   
+                                <field name="fleet_id"   options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'readonly': [('state', '=', 'approve')]}"/>
+                                <field name="brand_id"  />
+                                <field name="model_id"  />
+                                <field name="vin_sn"    />
+                                <field name="reception_date" required="1" attrs="{'readonly': [('state', '=', 'approve')]}"/> 
+                                <field name="promise_date" attrs="{'readonly': [('state', '=', 'approve')]}"/>    
+                                <field name="pic"  options="{'no_quick_create': true, 'no_create_edit':true}"   attrs="{'readonly': [('state', '!=', 'draft')]}"/>                               
+                                <field name="description"/>                                                                 
+                            </group>                            
+                        </group>
+
+                        <div>
+                            <label for="customer_request" name="customer_request" string="Customer Request"/>
+                            <field name="customer_request" attrs="{'readonly': [('state', '=', 'approve')]}"/>
+                        </div>
+
+                        <br/>
+
+                        <div>
+                            <label for="popular_job" name="popular_job" string="Popular Jobs"/>
+                            <field name="popular_job"   options="{'no_quick_create': true, 'no_create_edit':true}"  attrs="{'readonly': [('state', '=', 'approve')]}" context="{'tree_view_ref':'repair_external.product_product_repair_tree_view'}"/>
+                            <!-- <field name="popular_job" attrs="{'readonly': [('state', '=', 'approve')]}"/> -->
+                        </div>
+
+                        
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_customer_request_search_view" model="ir.ui.view">
+            <field name="name">customer.request.form.search</field>
+            <field name="model">customer.request.form</field>
+            <field name="arch" type="xml">   
+                <search string="Customer Request">
+                    <field name="name" string="Request No."/>
+                    <field name="customer" string="Customer"/>
+                    <field name="fleet_id" string="Fleet"/>
+                </search>  
+            </field>
+        </record>   
+        <record id="view_order_customer_request_pivot" model="ir.ui.view">
+            <field name="name">customer.request.pivot</field>
+            <field name="model">customer.request.form</field>
+            <field name="arch" type="xml">
+                <pivot string="Customer Request Analysis" sample="1">
+                    <field name="reception_date" interval="month" type="row"/>
+                    <field name="estimate_time" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_order_customer_request_graph" model="ir.ui.view">
+            <field name="name">customer.request.graph</field>
+            <field name="model">customer.request.form</field>
+            <field name="arch" type="xml">
+                <graph string="Customer Request Analysis" type="line" sample="1">
+                    <field name="branch_id"/>
+                    <field name="estimate_time" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+
+        <record id="action_customer_request_form_view" model="ir.actions.act_window">
+            <field name="name">Customer Request</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">customer.request.form</field>
+            <field name="view_mode">tree,form,pivot,graph</field>
+            
+        </record>
+
+        <menuitem id="menu_repair_external"  name="Repair Externals" web_icon="repair_external,static/description/icon.png" groups="repair_external.group_repair_external_readonly" sequence="80"/>
+        <menuitem id="menu_repair_external_dashboard" name="Dashboard" sequence="1" parent="menu_repair_external"/>
+        <menuitem id="menu_repair_external_operation" name="Operation" sequence="2" parent="menu_repair_external"/>
+        
+        <menuitem id="menu_customer_request_form" action="action_customer_request_form_view" name="Customer Request" sequence="2" parent="menu_repair_external_operation"/>
+
+        <record id="view_repair_service_type_tree" model="ir.ui.view">
+            <field name="name">repair.service.type.tree</field>
+            <field name="model">repair.service.type</field>
+            <field name="arch" type="xml">
+                <tree string="Repair Service Type">
+                    <field name="name"/>
+                    <field name="is_default"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_repair_service_type_form" model="ir.ui.view">
+            <field name="name">repair.service.type.form</field>
+            <field name="model">repair.service.type</field>
+            <field name="arch" type="xml">
+                <form string="Job Description"  duplicate="0">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" required="1" force_save="1"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group>  
+                                <field name="is_default"/>
+                                <field name="company_id" required="1"/>
+                            </group>                         
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_repair_service_type_view" model="ir.actions.act_window">
+            <field name="name">Repair Service Type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">repair.service.type</field>
+            <field name="view_mode">tree,form</field>
+        </record>        
+        
+
+    </data>
+</odoo>

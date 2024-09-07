@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_sequence_mode_form" model="ir.ui.view">
+            <field name="name">sequence.model.form</field>
+            <field name="model">sequence.model</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="parent_type" widget="radio" string="Parent Type" options="{'horizontal':true}"/>
+                            <group>
+                                <field name="company_id" attrs="{'invisible':[('parent_type','=','branch')],'required':[('parent_type','=','company')]}"  options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="branch_id"  attrs="{'invisible':[('parent_type','=','company')],'required':[('parent_type','=','branch')]}" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="transfer_type"/>
+                                <field name="fleet_service"/>
+                                <field name="model_id" options="{'no_create':True,'no_create_edit': True}"/>
+                                <field name="ir_action_id" options="{'no_create':True,'no_create_edit': True}"/>
+                            </group>
+                            <group>
+                                
+                                <field name="code"/>
+                                <field name="prefix"/>
+                                <field name="padding"/>
+                                <field name="padding_str" invisible="1"/>
+                            </group>
+                        </group>
+                        <field name="sequence_line_ids">
+                            <tree editable="bottom">
+                                <field name="start_date" />
+                                <field name="end_date" />
+                                <field name="sequence"/>                  
+                            </tree>
+                        </field> 
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_sequence_model_tree" model="ir.ui.view">
+            <field name="name">sequence.model.tree</field>
+            <field name="model">sequence.model</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="company_id"/>
+                    <field name="code"/>
+                   <field name="model_id"/>
+                   <field name="prefix"/>
+                   <field name="padding"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_sequence_model_action" model="ir.actions.act_window">
+            <field name="name">Customize Sequence Model</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">sequence.model</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_sequence_model_tree" />
+        </record>
+
+        <menuitem id="menu_sequence_model" groups="base.group_system" name="Customize Sequence Model" sequence="500" parent="base.menu_custom" action="view_sequence_model_action"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_company_form_inherit_tax" model="ir.ui.view">
+            <field name="name">res.company.form.inherit.tax</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">        
+                <xpath expr="//field[@name='currency_id']" position="after">
+                    <field name="tax_feature"/>
+                </xpath>
+            </field>
+        </record>     
+
+        <record id="view_move_form_inherit_tax" model="ir.ui.view">
+            <field name="name">account.move.form.inherit.tax</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//page[@id='invoice_tab']//field[@name='tax_ids']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>   
+                <xpath expr="//page[@id='aml_tab']//field[@name='tax_ids']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>     
+                <xpath expr="//page[@id='aml_tab']//field[@name='tax_ids']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath> 
+                <xpath expr="//page[@id='aml_tab']//field[@name='tax_tag_ids']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>   
+                <xpath expr="//page[@id='invoice_tab']//field[@name='product_id']" position="before">
+                    <field name="is_tax_line" readonly="1" optional="hide"/>
+                </xpath>                                                                        
+                <xpath expr="//page[@id='invoice_tab']//field[@name='product_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('is_tax_line','=',True)]}</attribute>
+                </xpath>
+                <xpath expr="//page[@id='invoice_tab']//field[@name='account_id']" position="attributes">
+                    <attribute name="attrs">{'required': [('display_type', 'not in', ('line_note', 'line_section'))], 'readonly':[('is_tax_line', '=', True)]}</attribute>
+                </xpath>  
+                <xpath expr="//page[@id='invoice_tab']//field[@name='quantity']" position="attributes">
+                    <attribute name="attrs">{"readonly": ['|',('is_tax_line','=',True),'&amp;',('parent.expense_type', 'in', ['dir_exp', 'advance_claim']),('parent.x_state','!=','draft')]}</attribute>
+                </xpath>       
+                <xpath expr="//page[@id='invoice_tab']//field[@name='product_uom_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('is_tax_line','=',True)]}</attribute>
+                </xpath>     
+                <xpath expr="//page[@id='invoice_tab']//field[@name='price_unit']" position="attributes">
+                    <attribute name="attrs">{"readonly": ['|',('is_tax_line','=',True),'&amp;',('parent.expense_type', 'in', ['dir_exp', 'advance_claim']),('parent.x_state','!=','draft')]}</attribute>   
+                </xpath>  
+                <xpath expr="//field[@name='narration']" position="before">
+                    <div class="o_row o_td_label">
+                        <label for="tax_id" string="Taxes"/>
+                    </div>                            
+                    <div class="o_row">
+                        <field name="tax_id" readonly="1" force_save="1"/>
+                        <button name="action_compute_tax" type="object" string="Compute Tax" help="Recompute all taxes" class="btn-link mb-1 px-0" icon="fa-refresh" confirm="This can affect the total amount of the sales order!!" attrs="{'invisible': [('state','!=','draft')]}"/>                              
+                    </div>   
+                </xpath>                                                                 
+            </field>   
+        </record>
+
+    </data>
+</odoo>

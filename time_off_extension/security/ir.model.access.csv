@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_leave_prepare,hr_leave_prepare,model_hr_leave_prepare,base.group_user,1,0,0,0
+access_hr_leave_prepare_user,hr_leave_prepare_user,model_hr_leave_prepare,group_time_off_employee_user,1,1,1,1
+access_hr_leave_prepare_timeoff,hr.leave.prepare.timeoff,model_hr_leave_prepare_timeoff,base.group_user,1,1,1,1
+access_hr_leave,hr.leave user,model_hr_leave,base.group_user,1,0,0,0
+hr_holidays.access_hr_holidays_employee_request,hr.holidays.employee.request,model_hr_leave,base.group_user,1,0,0,0
+access_hr_leave_employee_user,hr.leave employee user,model_hr_leave,group_time_off_employee_user,1,0,0,0
+hr_holidays.access_hr_holidays_user_request,hr.holidays.user.request,model_hr_leave,hr_holidays.group_hr_holidays_user,1,0,0,0
+access_timeoff_warning_wizard,timeoff.warning.wizard,model_timeoff_warning_wizard,base.group_user,1,1,1,1
+access_dutycover_timeoff_warning_wizard,dutycover.timeoff.warning.wizard,model_dutycover_timeoff_warning_wizard,base.group_user,1,1,1,1
+access_time_off_prepare_attachment,hr.leave.prepare.attachment,model_hr_leave_prepare_attachment,base.group_user,1,1,1,1
+access_time_off_attachment,hr.leave.attachment,model_hr_leave_attachment,base.group_user,1,1,1,1
+hr_holidays.access_hr_holidays_employee_allocation,hr.holidays.employee.allocation,model_hr_leave_allocation,base.group_user,1,0,0,0

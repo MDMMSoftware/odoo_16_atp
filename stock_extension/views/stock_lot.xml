@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_production_lot_form_inherit" model="ir.ui.view">
+            <field name="name">stock.lot.form.inherit</field>
+            <field name="model">stock.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_form"/>    
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='product_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('analytic_account_id','!=',False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='name']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('analytic_account_id','!=',False)]}</attribute>
+                </xpath>
+
+                <xpath expr="(//field[@name='company_id'])[2]" position="attributes">
+                    <attribute name="attrs">{'readonly':[('analytic_account_id','!=',False)]}</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='ref']" position="after">
+                    <field name="can_be_unit" invisible="1" />
+                    <field name="analytic_plan_id" attrs="{
+                    'required':[('can_be_unit','!=',False)],
+                    'invisible':[('can_be_unit','=',False)],
+                    'readonly':[('analytic_account_id','!=',False)]}"
+                    options="{'no_quick_create': True, 'no_create_edit' : True}"
+                    />  
+                    <field name="analytic_account_id" readonly="1"/>         
+                </xpath>
+            </field>
+        </record>
+        <record id="view_production_lot_tree_inherit" model="ir.ui.view">
+            <field name="name">stock.lot.tree.inherit.qty</field>
+            <field name="model">stock.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_tree"/>    
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='company_id']" position="after">
+                   <field name="product_qty" />
+                </xpath>
+            </field>
+        </record>
+    
+    
+    </data>
+</odoo>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_multi_director_approve" model="ir.actions.server">
+            <field name="name">Director Approve</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="model_director_report" />
+            <field name="binding_model_id" ref="model_director_report" />
+            <field name="binding_view_types">list</field>
+            <field name="state">code</field>
+            <field name="code">action = model.sudo().action_multi_director_approve()</field>
+        </record>
+        
+        <record id="tree_view_director_report" model="ir.ui.view">
+            <field name="name">director.report.tree</field>
+            <field name="model">director.report</field>
+            <field name="arch" type="xml">
+                <tree>          
+                    <field name="module_id"/>      
+                    <field name="type"/>
+                    <field name="date"/>
+                    <field name="seq_no"/>
+                    <field name="journal"/>                              
+                    <field name="partner"/>
+                    <field name="contact"/>
+                    <field name="company"/>
+                    <field name="desc"/>
+                    <field name="amount"/>
+                    <field name="currency"/>
+                    <field name="state"/>    
+                    <button name="action_open_model" type="object" string="To Check Detail"/>               
+                </tree>
+            </field>
+        </record>
+        <record id="view_director_report_search" model="ir.ui.view">
+            <field name="name">director.report.search</field>
+            <field name="model">director.report</field>
+            <field name="arch" type="xml">
+                <search string="Filter">
+                    <field name="type"/>
+                    <field name="date"/>
+                    <field name="seq_no"/>
+                    <field name="journal"/>                              
+                    <field name="partner"/>
+                    <field name="contact"/>
+                    <field name="company"/>
+                    <field name="desc"/>
+                    <field name="amount"/>
+                    <field name="currency"/>
+                    <field name="state"/>               
+                    <group expand="0" string="Group By">
+                        <filter name="group_status" string="Status" icon="terp-partner" context="{'group_by':'state'}"/>
+                        <filter name="group_type" string="Advance Type" icon="terp-partner" context="{'group_by':'type'}"/>
+                        <filter name="journal_id" string="Journal" domain="" context="{'group_by':'journal'}"/>
+                        <filter name="partner_id" string="Partner" domain="" context="{'group_by':'partner'}"/>
+                        <filter name="employee_id" string="Employee" domain="" context="{'group_by':'contact'}"/>
+                        <filter name="company_id" string="Company" domain="" context="{'group_by':'company'}"/>
+                        <filter name="currency_id" string="Currency" domain="" context="{'group_by':'currency'}"/>
+                        <filter name="date" string="Advance Date" domain="" context="{'group_by':'date'}"/>
+                       
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_director_report" model="ir.actions.act_window">
+            <field name="name">Director Report</field>
+            <field name="res_model">director.report</field>
+            <field name="view_id" ref="tree_view_director_report" />
+            <field name="context">{'search_default_group_state': 1}</field>
+            <field name="view_mode">tree</field>   
+        </record>
+
+
+
+    </data>
+</odoo>

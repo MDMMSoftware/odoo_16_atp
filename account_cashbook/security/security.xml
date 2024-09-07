@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        <record model="ir.rule" id="account_cashbook_branch_rule">
+            <field name="name">Account Cashbook multi-branch</field>
+            <field name="model_id" ref="model_account_cashbook"/>
+            <field name="domain_force">['|',('branch_ids','=',False),('branch_ids', 'in', user.branch_ids.ids)]</field>
+        </record>
+
+        <record model="ir.rule" id="account_cashbook_line_branch_rule">
+            <field name="name">Account Cashbook Line multi-branch</field>
+            <field name="model_id" ref="model_account_cashbook_line"/>
+            <field name="domain_force">['|',('branch_ids','=',False),('branch_ids', 'in', user.branch_ids.ids)]</field>
+        </record>
+
+        
+
+    </data>
+</odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<!-- Wizard Form Leave Report-->
+        <record id="leave_export_form_inherited" model="ir.ui.view">
+			<field name="name">Leave Export Wizard</field>
+			<field name="model">attendance.export.wizard</field>
+            <field name="inherit_id" ref="attendance_extension.view_form_attendance_export_wizard"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='from_date']" position="after">
+                    <field name="from_date" string="Date" attrs="{'required': [('export_type','=','leave')], 'invisible': [('export_type','!=','leave')]}"/>
+                </xpath>                            
+                <xpath expr="//field[@name='report_type']" position="attributes">
+                    <attribute name="attrs">{'invisible':[('export_type','=','leave')]}</attribute>
+                </xpath>
+                <!-- <xpath expr="//field[@name='horizontal_report']" position="attributes">
+                    <attribute name="attrs">{'invisible':[('export_type','=','leave')]}</attribute>
+                </xpath>      -->
+                <xpath expr="//button[@name='export_attendance_data']" position="attributes">
+                    <attribute name="attrs">{'invisible':[('export_type','=','leave')]}</attribute>
+                </xpath>  
+                <xpath expr="//button[@name='export_attendance_data']" position="after">
+                    <button context="{'filename':'mmm_leave_report'}" attrs="{'invisible':[('export_type','!=','leave')]}" string="Generate" type="object" class="btn-info" name="generate_leave_report_data"/>
+                </xpath>                
+			</field>
+		</record>
+
+		<!--- Wizard Action For Daily Income Report -->
+		<record id="leave_export_wizard" model="ir.actions.act_window">
+			<field name="name">Leave Report</field>
+			<field name="res_model">attendance.export.wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+            <field name="view_id" ref="leave_export_form_inherited"/>
+            <field name="context">{'default_export_type': 'leave'}</field>
+			<field name="target">new</field>
+		</record>        
+
+		<menuitem id="menu_leave_export_wizard_parent" name="Birt Reports" parent="hr_holidays.menu_hr_holidays_report"  sequence="3" />  
+		<menuitem id="menu_leave_export_wizard" name="Leave Report" parent="menu_leave_export_wizard_parent" action="leave_export_wizard" sequence="1" />      
+
+	</data>
+</odoo>

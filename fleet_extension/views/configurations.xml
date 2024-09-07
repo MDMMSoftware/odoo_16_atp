@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_fleet_owner_tree" model="ir.ui.view">
+            <field name="name">Fleet Owner Tree</field>
+            <field name="model">fleet.owner</field>
+            <field name="arch" type="xml">
+                <tree editable="top" string="Fleet Owner">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_view_fleet_owner" model="ir.actions.act_window">
+            <field name="name">Fleet Owner</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">fleet.owner</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_fleet_owner_tree"/>
+        </record>   
+
+        <record id="view_fleet_engine_model_tree" model="ir.ui.view">
+            <field name="name">Engine Model Tree</field>
+            <field name="model">fleet.engine.model</field>
+            <field name="arch" type="xml">
+                <tree editable="top" string="Engine Model">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_view_fleet_engine_model" model="ir.actions.act_window">
+            <field name="name">Engine Model</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">fleet.engine.model</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_fleet_engine_model_tree"/>
+        </record>       
+
+        <record id="view_fleet_vehicle_location_tree" model="ir.ui.view">
+            <field name="name">Fleet Vehicle Location Tree</field>
+            <field name="model">fleet.vehicle.location</field>
+            <field name="arch" type="xml">
+                <tree editable="top" string="Fleet Owner">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_view_fleet_vehicle_location" model="ir.actions.act_window">
+            <field name="name">Fleet Vehicle Location</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">fleet.vehicle.location</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_fleet_vehicle_location_tree"/>
+        </record>     
+
+        <menuitem name="Ownership" parent="fleet.fleet_configuration" id="fleet_ownership_configuration" sequence="15" groups="base.group_no_one"/>
+        <menuitem action="action_view_fleet_owner" parent="fleet_ownership_configuration" name="Owner" id="fleet_vehicle_ownership_owner_menu" sequence="1" groups="base.group_no_one"/>
+
+        <menuitem action="action_view_fleet_engine_model" parent="fleet.fleet_models_configuration" id="fleet_vehicle_engine_model_category_menu" sequence="10"/>
+
+        <menuitem name="Information" parent="fleet.fleet_configuration" id="fleet_information_configuration" sequence="20" groups="fleet.fleet_group_manager"/>
+        <menuitem action="action_view_fleet_vehicle_location" parent="fleet_extension.fleet_information_configuration" id="fleet_vehicle_location_menu" sequence="1"/>
+
+    </data>
+</odoo>

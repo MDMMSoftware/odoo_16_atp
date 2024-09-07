@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <odoo>    
+        <menuitem id="maintenance.menu_maintenance_title" name="Maintenance" web_icon="maintenance_extension,static/description/icon.png" sequence="160"/>
+
+
+        <record id="maintenance.hr_equipment_todo_request_action_from_dashboard" model="ir.actions.act_window">
+            <field name="context">{}</field>
+            <field name="domain">[]</field>
+
+        </record>
+
+
+            <record id="hr_equipment_request_view_kanban_inheirt" model="ir.ui.view">
+                <field name="name">equipment.request.kanban.inherit</field>
+                <field name="model">maintenance.request</field>
+                <field name="priority">32</field>
+                <field name="inherit_id" ref="maintenance.hr_equipment_request_view_kanban" />
+                <field name="arch" type="xml">
+                    <xpath expr="//div[@class='o_kanban_record_bottom'][1]" position="after">
+                        <div class="o_kanban_record_bottom">
+                            <div class="oe_kanban_bottom_left">
+                                <field name="approval_state" widget="badge" decoration-info="approval_state=='submit'" decoration-primary="approval_state=='approve'" decoration-success="approval_state=='done'" decoration-danger="approval_state=='reject'"/>
+                            </div>
+                        </div>
+                    </xpath>
+                </field>
+
+            </record>
+        <record id="hr_equipment_request_view_form_inheirt" model="ir.ui.view">
+            <field name="name">maintenance.request.form.inherit</field>
+            <field name="model">maintenance.request</field>
+            <field name="priority">32</field>
+            <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//div[1]" position="before">
+                    <widget name="web_ribbon" title="Approved" bg_color="bg-primary" attrs="{'invisible': [('approval_state', '!=', 'approve')]}"/>
+                    <widget name="web_ribbon" title="Rejected" bg_color="bg-danger" attrs="{'invisible': [('approval_state', '!=', 'reject')]}"/>
+                    <widget name="web_ribbon" title="Done" bg_color="bg-success" attrs="{'invisible': [('approval_state', '!=', 'done')]}"/>
+
+                </xpath>
+
+                <xpath expr="//button[@name='archive_equipment_request']" position="replace">
+                    <button string="Submit" groups="maintenance_extension.group_maintenance_request_user" class="oe_highlight" name="action_submit" type="object" attrs="{'invisible': [('approval_state', '!=', 'draft')]}"/>
+                    <button string="Approve" groups="maintenance.group_equipment_manager" class="oe_highlight" name="action_approve" type="object" attrs="{'invisible': [('approval_state', 'in',('draft','reject','approve','done'))]}"/>
+                    <button string="Reject" groups="maintenance.group_equipment_manager" class="btn-danger oe_highlight" name="action_reject" type="object" attrs="{'invisible': [('approval_state', 'in', ('draft','reject','approve','done'))]}"/>
+                    <button string="Done" groups="maintenance.group_equipment_manager" class="btn-success oe_highlight" name="action_done" type="object" attrs="{'invisible': [('approval_state', '!=', 'approve')]}"/>
+                </xpath>
+                <xpath expr="//field[@name='name']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('approval_state','in',('approve','reject','submit'))]}</attribute>
+                </xpath>
+
+                <xpath expr="//button[@name='reset_equipment_request']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='description']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='equipment_id']" position="replace">
+                    <field name="approval_state" invisible="1"/>
+                    <field name="equipment_type" attrs="{'readonly':[('approval_state','!=','draft')]}" required="1" string="Equiment Type" widget="radio" options="{'horizontal': True}"/>
+                    <field name="equipment_id" invisible="1" context="{'default_company_id':company_id, 'default_category_id':category_id}"/>
+                    <field name="maintenance_fleet_ids" string="Fleets" widget="many2many_tags" attrs="{'readonly':[('approval_state','!=','draft')],'required':[('equipment_type','=','fleet')],'invisible':[('equipment_type','!=','fleet')]}"/>
+                    <field name="maintenance_equipment_ids" string="Equiments" widget="many2many_tags" attrs="{'readonly':[('approval_state','!=','draft')],'required':[('equipment_type','=','equipment')],'invisible':[('equipment_type','!=','equipment')]}"/>
+
+                </xpath>
+                <xpath expr="//field[@name='employee_id'][1]" position="replace">
+                    <field name="employee_id" readonly="1" attrs="{'readonly':[('approval_state','!=','draft')]}" string="Employee" widget="many2one_avatar_employee" options="{'no_create_edit': True, 'no_open': True, 'relation': 'hr.employee.public'}" groups="!hr.group_hr_user"/>
+                </xpath>
+                <xpath expr="//field[@name='employee_id'][2]" position="replace">
+                    <field name="employee_id" readonly="1" attrs="{'readonly':[('approval_state','!=','draft')]}" string="Employee" widget="many2one_avatar_employee" options="{'no_create_edit': True, 'no_open': True, 'relation': 'hr.employee'}"/>
+                </xpath>
+                <xpath expr="//field[@name='request_date']" position="replace">
+                    <field name="request_date" attrs="{'readonly':[('approval_state','!=','draft')]}"/>
+                </xpath>
+                <xpath expr="//field[@name='maintenance_type']" position="attributes">
+                    <attribute name="widget" value=""/>
+                    <attribute name="options">{'no_quick_create': True, 'no_create_edit' : True}</attribute>
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+
+                </xpath>
+                <xpath expr="//field[@name='maintenance_team_id']" position="attributes">
+                    <attribute name="options">{'no_quick_create': True, 'no_create_edit' : True}</attribute>
+
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='maintenance_team_id']" position="after">
+                    <field name="team_members_ids" invisible="1"/>
+                    <field name="assign_technician" domain="[('id','in',team_members_ids)]" attrs="{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}"/>
+                </xpath>
+
+                <xpath expr="//field[@name='user_id']" position="attributes">
+                    <attribute name="options">{'no_quick_create': True, 'no_create_edit' : True}</attribute>
+
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='schedule_date']" position="attributes">
+
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='duration']" position="attributes">
+                    <attribute name="required">1</attribute>
+
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='priority']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='email_cc']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="(//field[@name='company_id'])[2]" position="attributes">
+                    <attribute name="required">1</attribute>
+                    <attribute name="attrs">{'required':[('approval_state','!=','draft')],'readonly':[('approval_state','in',('approve','reject','done','draft'))]}</attribute>
+                </xpath>
+                <xpath expr="//sheet//group[2]" position="after">
+                    <group>
+                        <field name="description" required="1" attrs="{'readonly':[('approval_state','!=','draft')]}" placeholder="Internal Notes"/>
+                    </group>
+                    <notebook>
+                        <page string="Working Schedule">
+                            <field name="schedule_ids" attrs="{'readonly':[('approval_state','in',('submit','reject','done','draft'))]}">
+                                <tree editable="bottom">
+                                    <field name="team_member_emp_ids" invisible="1" />
+
+                                    <field name="date"/>
+                                    <field name="team_id"/>
+                                    <field name="gp_leader_id" domain="[('id','in',team_member_emp_ids)]"/>
+                                    <field name="member_ids" widget="many2many_tags" domain="[('id','in',team_member_emp_ids)]"/>
+                                    <field name="job_desc"/>
+                                    <field name="start_time" widget="float_time"/>
+                                    <field name="end_time" widget="float_time"/>
+                                    <field name="duration" widget="float_time"/>
+                                    <field name="amount" sum="Sub Total" readonly="0" force_save="1" optional="hide"/>
+                                    <field name="work_location"/>
+                                    <field name="remark" optional="hide"/>
+                                    
+                                </tree>
+                            </field>
+                        </page>
+
+                    </notebook>
+
+                </xpath>
+
+                
+                
+                
+                
+                
+                
+            </field>
+        </record>
+
+        <record id="hr_equipment_request_view_search_inherit" model="ir.ui.view">
+            <field name="name">equipment.request.search.inherit</field>
+            <field name="model">maintenance.request</field>
+            <field name="priority">32</field>
+            <field name="inherit_id" ref="maintenance.hr_equipment_request_view_search" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="assign_technician" />
+                </xpath>
+            </field>
+        </record>
+        <record id="maintenance_type_view_action" model="ir.actions.act_window">
+            <field name="name">Maintenance Type</field>     
+            <field name="res_model">maintenance.type</field>   
+            <field name="view_mode">tree</field>
+        </record>
+
+        <record id="maintenance_type_tree_view" model="ir.ui.view">
+            <field name="name">maintenance.type.tree</field>
+            <field name="model">maintenance.type</field>
+            <field name="arch" type="xml">
+                <tree string="Maintenance Type" editable="bottom">
+                    <field name="name" />                
+                </tree>
+            </field>
+        </record>
+
+        <menuitem
+            id="maintenance_type_menu"
+            name="Maintenance Type"
+            parent="maintenance.menu_maintenance_configuration"
+            groups="maintenance.group_equipment_manager"
+            action="maintenance_type_view_action"
+            sequence="100"/>
+
+    </odoo>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_department_form_inheit" model="ir.ui.view">
+            <field name="name">hr.department.form.inherit</field>
+            <field name="model">hr.department</field>
+            <field name="inherit_id" ref="hr.view_department_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='manager_id']" position="after">
+                    <field name="department_type" widget="radio" readonly="0"/>
+                    <field name="department_approve_user_id" attrs="{'invisible':[('department_type','!=','department')]}" widget="many2many_tags"  readonly="0" options="{'no_create_edit':True,'no_create':True}"/>
+                </xpath>
+                <xpath expr="//field[@name='parent_id']" position="replace">
+                    <field name="parent_id"  options="{'no_create_edit':True,'no_create':True}" string="Business"  attrs="{'invisible': [('department_type', '!=', 'division')],   'required':[('department_type','in',['division','department'])]}"/>
+                    <field name="parent_id"  options="{'no_create_edit':True,'no_create':True}" string="Division"  attrs="{'invisible': [('department_type', '!=', 'department')], 'required':[('department_type','in',['division','department'])]}"/>
+                </xpath>
+                <xpath expr="//field[@name='manager_id']" position="replace">
+                    <field name="manager_id" options="{'no_create_edit':True,'no_crate':True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_department_tree_inheit" model="ir.ui.view">
+            <field name="name">hr.department.tree.inherit</field>
+            <field name="model">hr.department</field>
+            <field name="inherit_id" ref="hr.view_department_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="js_class">import_button_in_tree</attribute>
+                </xpath>
+                <xpath expr="//field[@name='display_name']" position="replace">
+                    <field name="name" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_department_filter_inherit_ext" model="ir.ui.view">
+            <field name="name">hr.department.search.inheirt</field>
+            <field name="model">hr.department</field>
+            <field name="inherit_id" ref="hr.view_department_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                    <filter name="unit_group" string="Business Unit" domain="[]" context="{'group_by': 'parent_id'}"/>
+                    <filter name="parents" string="Only Business-Units" domain="[('department_type','=','business')]" />
+                    <filter name="division" string="Only Divisions" domain="[('department_type','=','division')]" />
+                    <filter name="departments" string="Only Departments" domain="[('department_type','=','department')]" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="hr.hr_department_tree_action" model="ir.actions.act_window">
+            <!-- <field name="context" eval="{'search_default_departments':1}"/> -->
+            <field name="domain">[('department_type','=','department')]</field>
+            <field name="context">{'dep_type':'department'}</field>
+        </record>
+
+        <record id="hr.hr_department_kanban_action" model="ir.actions.act_window">
+            <!-- <field name="context" eval="{'search_default_departments':1}"/> -->
+            <field name="domain">[('department_type','=','department')]</field>
+            <field name="context">{'dep_type':'department'}</field>
+        </record>
+
+
+
+        <record id="hr_unit_tree_action" model="ir.actions.act_window">
+            <field name="name">Business Units</field>
+            <field name="res_model">hr.department</field>
+            <field name="view_mode">tree,form,kanban</field>
+            <field name="search_view_id" ref="view_department_filter_inherit_ext"/>
+            <field name="context">{'dep_type':'business'}</field>
+            <!-- <field name="context" eval="{'search_default_parents':1,'default_department_type':'business'}"/> -->
+            <field name="domain">[('department_type','=','business')]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new business unit.
+                </p><p>
+                    Odoo's department structure is used to manage all documents
+                    related to employees by departments: expenses, timesheets,
+                    leaves, recruitments, etc.
+                </p>
+            </field>
+        </record>
+
+        <record id="hr_division_tree_action" model="ir.actions.act_window">
+            <field name="name">Divisions</field>
+            <field name="res_model">hr.department</field>
+            <field name="view_mode">tree,form,kanban</field>
+            <field name="search_view_id" ref="view_department_filter_inherit_ext"/>
+            <!-- <field name="context" eval="{'search_default_parents':1,'default_department_type':'division'}"/> -->
+            <field name="context">{'dep_type':'division'}</field>
+            <field name="domain">[('department_type','=','division')]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new Division.
+                </p><p>
+                    Odoo's department structure is used to manage all documents
+                    related to employees by departments: expenses, timesheets,
+                    leaves, recruitments, etc.
+                </p>
+            </field>
+        </record>
+
+        <menuitem
+                id="menu_unit_tree"
+                action="hr_unit_tree_action"
+                parent="hr.menu_config_employee"
+                sequence="1"
+                groups="hr.group_hr_user"/>
+
+        <menuitem
+                id="menu_division_tree"
+                action="hr_division_tree_action"
+                parent="hr.menu_config_employee"
+                sequence="2"
+                groups="hr.group_hr_user"/>
+    </data>
+</odoo>

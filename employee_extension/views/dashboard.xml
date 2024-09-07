@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="tree_view_topleave" model="ir.ui.view">
+            <field name="name">Current Top Ten Leave Taken</field>
+            <field name="model">top.leave.dashboard.report</field>
+            <field name="arch" type="xml">
+                <tree string="Current Month's Top Ten Leave Taken">
+                    <field name="employee_id"/>
+                    <field name="department_id"/>
+                    <field name="total"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_topleave_dashboard" model="ir.actions.act_window">
+            <field name="name">Current Top Ten Leave Taken</field>
+            <field name="res_model">top.leave.dashboard.report</field>
+            <field name="view_id" ref="tree_view_topleave" />
+            <field name="view_mode">tree</field>   
+        </record>
+
+        <record id="graph_view_manpower" model="ir.ui.view">
+            <field name="name">ManPower</field>
+            <field name="model">manpower.dashboard.report</field>
+            <field name="arch" type="xml">
+                <graph type="pie">
+                    <field name="department_id"/>
+                   <!--  <field name="female"/> -->
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_manpower_dashboard" model="ir.actions.act_window">
+            <field name="name">ManPower</field>
+            <field name="res_model">manpower.dashboard.report</field>
+            <field name="view_id" ref="graph_view_manpower" />
+            <field name="view_mode">graph</field>   
+        </record>
+
+
+        <record id="graph_view_gender" model="ir.ui.view">
+            <field name="name">Gender Report</field>
+            <field name="model">gender.dashboard.report</field>
+            <field name="arch" type="xml">
+                <graph string="Gender" type="pie">
+                    <field name="gender"/>
+                   <!--  <field name="female"/> -->
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_gender_dashboard" model="ir.actions.act_window">
+            <field name="name">Gender Report</field>
+            <field name="res_model">gender.dashboard.report</field>
+            <field name="view_id" ref="graph_view_gender" />
+            <field name="view_mode">graph</field>   
+        </record>
+
+        <menuitem id="main_menu_dashboard_repot" name="Reporting" parent="hr.menu_hr_root" sequence="100"/>
+       <menuitem id="menu_gender_dashboard_repot" name="Gender Report" parent="main_menu_dashboard_repot"
+            action="action_gender_dashboard" sequence="1"/>
+        <menuitem id="menu_manpower_dashboard_repot" name="ManPower" parent="main_menu_dashboard_repot"
+            action="action_manpower_dashboard" sequence="2"/>
+        <menuitem id="menu_topleave_dashboard_repot" name="Top Ten Leave Taken" parent="main_menu_dashboard_repot"
+            action="action_topleave_dashboard" sequence="3"/>
+    </data>
+</odoo>

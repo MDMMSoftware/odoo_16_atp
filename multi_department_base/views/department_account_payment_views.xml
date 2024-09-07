@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+		<record id="view_account_payment_tree_inherit" model="ir.ui.view">
+            <field name="name">view.payment.tree</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_tree"/>
+            <field name="arch" type="xml">
+                <field name="partner_id" position="after">
+                    <field name="department_id" optional="show"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_account_payment_search_inherit" model="ir.ui.view">
+			<field name="name">.view.account.payment.search.inherit</field>
+			<field name="model">account.payment</field>
+			<field name="inherit_id" ref="account.view_account_payment_search"/>
+			<field name="arch" type="xml">
+				<xpath expr="//search" position="inside">
+					<filter string="Department" name="Department" context="{'group_by':'department_id'}"/>
+				</xpath>
+			</field>
+		</record>
+    </data>
+</odoo>

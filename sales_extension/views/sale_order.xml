@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Top Menu Root to override icon -->
+        <menuitem id="sale.sale_menu_root"
+            name="Sales"
+            web_icon="sales_extension,static/description/sales.png"
+            sequence="30"/>
+
+        <!-- Adding Sales Readonly to the Orders menu -->
+
+        <menuitem id="sale.menu_sale_quotations"
+            action="sale.action_quotations_with_onboarding"
+            groups="sales_team.group_sale_salesman,group_sale_readonly"
+            parent="sale.sale_order_menu"
+            sequence="10"/>   
+
+        <menuitem id="sale.menu_sale_order"
+            name="Orders"
+            action="sale.action_orders"
+            groups="sales_team.group_sale_salesman,group_sale_readonly"
+            parent="sale.sale_order_menu"
+            sequence="20"/>     
+
+        <menuitem id="sale.menu_sale_invoicing"
+            name="To Invoice"
+            groups="sales_team.group_sale_salesman,group_sale_readonly"
+            parent="sale.sale_menu_root"
+            sequence="20">
+
+            <menuitem id="sale.menu_sale_order_invoice"
+                action="sale.action_orders_to_invoice"
+                sequence="10"/>
+
+            <menuitem id="sale.menu_sale_order_upselling"
+                action="sale.action_orders_upselling"
+                sequence="20"/>
+
+        </menuitem>                   
+         
+
+        <record id="view_quotation_tree_inherited" model="ir.ui.view">
+            <field name="name">sale.order.tree.inherited</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
+            <field name="arch" type="xml">  
+                <xpath expr="//field[@name='create_date']" position="before">
+                    <field name="date_order" string="Quotation Date" widget="date"/>
+                </xpath> 
+            </field>
+        </record>         
+
+        <record id="view_sale_order_form_inherit_sale" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.sale</field>
+            <field name="model">sale.order</field> 
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='product_uom_qty']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('can_be_unit', '!=', False)]}</attribute>
+
+                </xpath>
+                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="domain">[]</attribute>
+
+                </xpath> -->
+
+                <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('state', 'not in', ('draft','sent'))]}</attribute>
+                </xpath>
+
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="after">
+                    <field name="available_lot_ids" invisible="1" />
+                    <field name="serial_no_id" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    <field name="product_variant_ids" widget="many2many_tags"/>
+                    <field name="can_be_unit" invisible="1" />
+                    <field name="division_id" domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)],'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/> 
+                </xpath>
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='state']" position="before">
+					<field name="remark"/>
+                </xpath>
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="before">
+                    
+                    <field name="sale_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
+                    <field name="term_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
+                    <field name="allow_division_feature" invisible="1"/>
+                </xpath>			
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="after">
+                    <field name="other_contact_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>
+                </xpath>
+                <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_shipping_id']" position="after">
+				    <field name="warehouse_id" invisible="1"/>  <!-- needed for js logic -->
+                    <field name="warehouse_id" options="{'no_create': True}" groups="stock.group_stock_multi_warehouses" force_save="1"/>
+					<field name="location_id" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>	
+                    <field name="internal_ref" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>					
+                </xpath>
+                <xpath expr="//page[@name='other_information']//field[@name='warehouse_id'][2]" position="replace">
+                </xpath>
+                <xpath expr="//page[@name='other_information']//field[@name='tag_ids']" position="after">
+                    <field name="quotation_ref" readonly="1" />
+                </xpath>
+                <xpath expr="//sheet//group[@name='order_details']//div[@class='o_td_label'][1]" position="replace">
+                    <div class="o_td_label" attrs="{'invisible': [('state', 'in', ['sale', 'done', 'cancel'])]}">
+                        <label for="date_order" string="Quotation Date"/>
+                    </div>
+                </xpath> 
+                <xpath expr="//sheet//group[@name='order_details']//field[@name='date_order'][1]" position="replace">
+                    <field name="date_order" nolabel="1" attrs="{'invisible': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
+                </xpath>    
+                <xpath expr="//notebook//page[@name='order_lines']//tree//field[@name='analytic_distribution']" position="attributes">
+                    <attribute name="optional">show</attribute>
+                </xpath>      						
+            </field>
+        </record>   
+
+        <record id="view_partner_form_inherit_sales" model="ir.ui.view">
+            <field name="name">res.partner.form.inherit.sales</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='branch_id']" position="after">
+                    <field name="is_other_contact" />
+                </xpath> 
+            </field>
+        </record>  
+
+        <record id="view_move_expense_form_inherit_sales" model="ir.ui.view">
+            <field name="name">account.move.sale.form.inherit</field>
+            <field name="model">account.move</field>   
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//field[@name='partner_id']" position="after">
+                    <field name="other_contact_id"  options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly':[('state','!=','draft')],'invisible':[('move_type','!=','out_invoice')]}"/>
+                </xpath>                
+            </field>
+        </record>   
+
+        <!-- Picking Form  -->
+
+        <record id="sale_view_picking_form" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.sale</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet//group//field[@name='branch_id']" position="after">
+					<field name="internal_ref" attrs="{'readonly':[('state','not in',['draft','waiting','confirmed'])]}"/>
+				</xpath>
+            </field>
+        </record>                              			
+
+    </data>
+</odoo>

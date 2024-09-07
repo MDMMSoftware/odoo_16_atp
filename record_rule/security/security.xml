@@ -1,0 +1,482 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        <!-- <record model="ir.rule" id="purchase_order_com_rule">
+            <field name="name">Purchase Order Company Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record model="ir.rule" id="purchase_order_line_com_rule">
+            <field name="name">Purchase Order Line Company Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record> -->
+        <record model="ir.rule" id="purchase_order_com_rule_own_doc">
+            <field name="name">Purchase Order Company Own Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_purchase_user_own_doc'))]"/>
+        </record>
+
+        <record model="ir.rule" id="purchase_order_line_com_rule_own_doc">
+            <field name="name">Purchase Order Line Company Own Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_purchase_user_own_doc'))]"/>
+        </record>
+        <record model="ir.rule" id="purchase_order_com_rule_all_doc">
+            <field name="name">Purchase Order Company All Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('purchase.group_purchase_user')),(4,ref('access_right.group_purchase_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="purchase_order_line_com_rule_all_doc">
+            <field name="name">Purchase Order Line Company All Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('purchase.group_purchase_user')),(4,ref('access_right.group_purchase_readonly'))]"/>
+        </record>
+        <record model="ir.rule" id="purchase_order_com_rule_manager">
+            <field name="name">Purchase Order Company Manager Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('purchase.group_purchase_manager'))]"/>
+        </record>
+
+        <record model="ir.rule" id="purchase_order_line_com_rule_manager">
+            <field name="name">Purchase Order Line Company Manager Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('purchase.group_purchase_manager'))]"/>
+        </record>
+
+
+        <record id="product_com_rule" model="ir.rule">
+            <field name="name" >Product Company Branch</field>
+            <field name="model_id" ref="product.model_product_template"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <!-- <record model="ir.rule" id="sale_order_com_rule">
+            <field name="name">Sales Order Company Branch</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record model="ir.rule" id="sale_order_line_com_rule">
+            <field name="name">Sales Order Line Company Branch</field>
+            <field name="model_id" ref="sale.model_sale_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record> -->
+
+
+        <record model="ir.rule" id="sale_order_com_rule_own_doc">
+            <field name="name">Sales Order Company Own Branch</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_line_com_rule_own_doc">
+            <field name="name">Sales Order Line Company Own Branch</field>
+            <field name="model_id" ref="sale.model_sale_order_line"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_salesman'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_com_rule_all_doc">
+            <field name="name">Sales Order Company All Branch</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_salesman_all_leads')),(4,ref('sales_extension.group_sale_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_line_com_rule_all_doc">
+            <field name="name">Sales Order Line Company All Branch</field>
+            <field name="model_id" ref="sale.model_sale_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_salesman_all_leads')),(4,ref('sales_extension.group_sale_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_com_rule_manager">
+            <field name="name">Sales Order Company Manager Branch</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_manager'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_line_com_rule_manager">
+            <field name="name">Sales Order Line Company Manager Branch</field>
+            <field name="model_id" ref="sale.model_sale_order_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('sales_team.group_sale_manager'))]"/>
+        </record>
+
+
+        <record id="account_com_rule" model="ir.rule">
+            <field name="name">Account Company Branch</field>
+            <field name="model_id" ref="account.model_account_account"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record id="journal_com_rule" model="ir.rule">
+            <field name="name">Journal Company Branch</field>
+            <field name="model_id" ref="account.model_account_journal"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+
+        <record id="account_move_com_rule_own_doc" model="ir.rule">
+            <field name="name">Branch Account Own Entry</field>
+            <field name="model_id" ref="account.model_account_move"/> 
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record id="account_move_line_com_rule_own_doc" model="ir.rule">
+            <field name="name">Entry Own lines</field>
+            <field name="model_id" ref="account.model_account_move_line"/> 
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record id="account_move_com_rule_all_doc" model="ir.rule">
+            <field name="name">Branch Account All Entry</field>
+            <field name="model_id" ref="account.model_account_move"/> 
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver')),(4,ref('advance_expense.group_advance_expense_manager'))]"/>
+        </record>
+
+        <record id="account_move_line_com_rule_all_doc" model="ir.rule">
+            <field name="name">All Entry lines</field>
+            <field name="model_id" ref="account.model_account_move_line"/> 
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver')),(4,ref('advance_expense.group_advance_expense_manager'))]"/>
+        </record>
+
+        <delete model="ir.rule" id="sale.account_invoice_line_rule_see_all"/>
+        <delete model="ir.rule" id="sale.account_invoice_line_rule_see_personal"/>
+        <delete model="ir.rule" id="purchase.purchase_user_account_move_line_rule"/>
+        <delete model="ir.rule" id="account.account_invoice_line_rule_portal"/>
+       
+
+        <!-- <record model="ir.rule" id="account_payment_com_rule">
+            <field name="name">Account payment branch rule</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record> -->
+
+        <record model="ir.rule" id="stock_picking_com_rule">
+            <field name="name">stock_picking Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.picking')]" model="ir.model"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="stock_picking_user_com_rule">
+            <field name="name">stock_picking User Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.picking')]" model="ir.model"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record>
+
+        <!-- <record model="ir.rule" id="stock_picking_type_com_rule">
+            <field name="name">Stock Operation Type Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.picking.type')]" model="ir.model"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager'))]"/>
+        </record>
+
+        <record model="ir.rule" id="stock_picking_type_user_com_rule">
+            <field name="name">stock_picking_type User Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.picking.type')]" model="ir.model"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record> -->
+        
+
+        <record model="ir.rule" id="stock_warehouse_com_rule">
+            <field name="name">Warehouse Company Branch</field>
+            <field name="model_id" ref="stock.model_stock_warehouse"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+         <record model="ir.rule" id="stock_move_com_rule">
+             <field name="name">stock_move Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.move')]" model="ir.model"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+         </record>
+
+        <record model="ir.rule" id="stock_move_user_com_rule">
+            <field name="name">stock_move User Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.move')]" model="ir.model"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record>
+
+         <record model="ir.rule" id="stock_move_line_com_rule">
+            <field name="name">stock_move_line Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.move.line')]" model="ir.model"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+         </record>
+
+        <record model="ir.rule" id="stock_move_line_user_com_rule">
+            <field name="name">stock_move_line User Company Branch</field>
+            <field name="model_id" search="[('model','=','stock.move.line')]" model="ir.model"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record>
+
+        <record model="ir.rule" id="stock_valuation_layer_com_rule">
+            <field name="name">Stock Valuation Layer Multibranch</field>
+            <field name="model_id" search="[('model','=','stock.valuation.layer')]" model="ir.model"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+        </record>
+
+
+        
+
+        <record id="invoice_analysis_com_rule" model="ir.rule">
+            <field name="name">Invoice Analysis Company Branch</field>
+            <field name="model_id" ref="account.model_account_invoice_report"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record model="ir.rule" id="sale_order_report_com_rule">
+            <field name="name">Sales Order Analysis Company Branch</field>
+            <field name="model_id" ref="sale.model_sale_report"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record id="purchase_order_report_com_rule" model="ir.rule">
+            <field name="name">Purchase Order Report Company Branch</field>
+            <field name="model_id" ref="purchase.model_purchase_report"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record id="requisition_com_rule" model="ir.rule">
+            <field name="name">Requisition Company Branch</field>
+            <field name="model_id" ref="requisition.model_requisition"/>
+            <field name="domain_force">['|',('from_branch','in',user.branch_ids.ids),('from_branch','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','in',company_ids),('company_id','=',False)]</field>
+            <field name="groups" eval="[(4,ref('requisition.group_requisition_readonly')),(4,ref('requisition.group_requisition_approver')),(4,ref('requisition.group_requisition_manager'))]"/>        
+        </record>
+
+        <record id="requisition_com_user_rule" model="ir.rule">
+            <field name="name">Requisition Own Documents</field>
+            <field name="model_id" ref="requisition.model_requisition"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('requisition.group_requisition_user'))]"/>
+        </record>
+
+        <record id="advance_prepaid_com_rule_own_doc" model="ir.rule">
+            <field name="name">Advance Own Documents</field>
+            <field name="model_id" ref="advance_expense.model_advance_prepaid"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record id="advance_prepaid_com_rule" model="ir.rule">
+            <field name="name">Advance Prepaid Company Branch</field>
+            <field name="model_id" ref="advance_expense.model_advance_prepaid"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver')),(4,ref('advance_expense.group_advance_expense_readonly'))]"/>
+        </record>
+
+        <record id="advance_prepaid_com_rule_admin" model="ir.rule">
+            <field name="name">Advance Prepaid Company Branch</field>
+            <field name="model_id" ref="advance_expense.model_advance_prepaid"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_manager'))]"/>
+        </record>
+
+
+
+        <record id="duty_company_rule" model="ir.rule">
+            <field name="name">duty company multi-company</field>
+            <field ref="duty_process.model_duty_process" name="model_id"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record>
+
+
+        <record id="repair_request_com_rule" model="ir.rule">
+            <field name="name">Repair Request Company Branch</field>
+            <field name="model_id" ref="repair_internal.model_repair_request"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <record id="repair_order_com_rule" model="ir.rule">
+            <field name="name">Repair Order Company Branch</field>
+            <field name="model_id" ref="repair_internal.model_repair_order"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+        
+
+
+        <record id="part_requisition_com_rule" model="ir.rule">
+            <field name="name">Part Requisition Company Branch</field>
+            <field name="model_id" ref="repair_internal.model_part_requisition"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>
+
+        <!-- <record id="cashbook_com_rule" model="ir.rule">
+            <field name="name">Cashbook Company Branch</field>
+            <field name="model_id" ref="account_cashbook.model_account_cashbook"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record> -->
+
+        <record id="stock_inventory_adjustment_rule" model="ir.rule">
+            <field name="name">Inventory Adjustment Company Branch</field>
+            <field name="model_id" ref="stock_adjustment.model_stock_inventory_adjustment"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="stock_inventory_adjustment_user_rule">
+            <field name="name">Inventory Adjustment User Company Branch</field>
+            <field name="model_id" ref="stock_adjustment.model_stock_inventory_adjustment"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record>
+
+        <record id="stock_inventory_adjustment_line_rule" model="ir.rule">
+            <field name="name">Inventory Adjustment Line Company Branch</field>
+            <field name="model_id" ref="stock_adjustment.model_stock_inventory_adjustment_line"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+        </record>
+
+        <record model="ir.rule" id="stock_inventory_adjustment_line_user_rule">
+            <field name="name">Inventory Adjustment Line User Company Branch</field>
+            <field name="model_id" ref="stock_adjustment.model_stock_inventory_adjustment_line"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('access_right.group_stock_user_own_doc'))]"/>
+        </record>
+
+        <record id="stock_location_valuation_report_com_rule" model="ir.rule">
+            <field name="name">Stock Location Valuation Report Company Branch</field>
+            <field name="model_id" ref="stock_extension.model_stock_location_valuation_report"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('stock.group_stock_user')),(4,ref('stock.group_stock_manager')),(4,ref('access_right.group_stock_readonly'))]"/>
+        </record>
+
+        <record id="account_analytic_account_com_rule" model="ir.rule">
+            <field name="name">Account Analytic Account Company Branch</field>
+            <field name="model_id" ref="analytic.model_account_analytic_account"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>    
+
+        <delete model="ir.rule" id="record_rule.account_analytic_account_com_rule"/>
+
+        <record id="transfer_company_com_rule" model="ir.rule">
+            <field name="name">Transfer Company - Company Branch</field>
+            <field name="model_id" ref="account_cashbook.model_transfer_company"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>    
+
+        <record id="res_department_company_rule" model="ir.rule">
+            <field name="name">res department multi-company</field>
+            <field ref="multi_department_base.model_res_department" name="model_id"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id', 'in', company_ids)]</field>
+        </record> 
+
+        <record model="ir.rule" id="sale_order_com_rule_repair_doc">
+            <field name="name">Sales Order Company Repair</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="domain_force">['|',('company_id','=',False),('company_id','in',company_ids),'|','|',('repair_request_id','!=',False),('job_order_id','!=',False),('requisition_id','!=',False)]</field>
+            <field name="groups" eval="[(4,ref('repair_internal.group_repair_internal_user')),(4,ref('repair_internal.group_repair_internal_approver')),(4,ref('repair_internal.group_repair_internal_manager'))]"/>
+        </record>
+
+        <record model="ir.rule" id="sale_order_line_com_rule_repair_doc">
+            <field name="name">Sales Order Line Company Repair</field>
+            <field name="model_id" ref="sale.model_sale_order_line"/>
+            <field name="domain_force">['|','|',('order_id.repair_request_id','!=',False),('order_id.job_order_id','!=',False),('order_id.requisition_id','!=',False)]</field>
+            <field name="groups" eval="[(4,ref('repair_internal.group_repair_internal_user')),(4,ref('repair_internal.group_repair_internal_approver')),(4,ref('repair_internal.group_repair_internal_manager'))]"/>
+        </record>          
+
+
+        <record id="cashbook_com_rule_own_doc" model="ir.rule">
+            <field name="name">Branch Cashbook Entry</field>
+            <field name="model_id" ref="account_cashbook.model_account_cashbook"/> 
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record id="cashbook_line_com_rule_own_doc" model="ir.rule">
+            <field name="name">Entry Cashbook lines</field>
+            <field name="model_id" ref="account_cashbook.model_account_cashbook_line"/> 
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record id="cashbook_com_rule_all_doc" model="ir.rule">
+            <field name="name">Branch Cashbook</field>
+            <field name="model_id" ref="account_cashbook.model_account_cashbook"/> 
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver'))]"/>
+        </record>
+
+        <record id="cashbook_line_com_rule_all_doc" model="ir.rule">
+            <field name="name">All Cashbook lines</field>
+            <field name="model_id" ref="account_cashbook.model_account_cashbook_line"/> 
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver'))]"/>
+        </record>
+
+        <record model="ir.rule" id="account_payment_own_com_rule">
+            <field name="name">Account payment own branch rule</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record model="ir.rule" id="account_payment_all_com_rule">
+            <field name="name">Account payment All branch rule</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver'))]"/>
+        </record>
+        <delete model="ir.rule" search="[('id','=',ref('account.account_move_rule_group_readonly'))]"/>
+        <delete model="ir.rule" search="[('id','=',ref('account.account_move_line_rule_group_readonly'))]"/>
+
+        <record id="account_move_rule_group_readonly" model="ir.rule">
+            <field name="name">Readonly Move</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4, ref('account.group_account_readonly'))]"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="account_move_line_rule_group_readonly" model="ir.rule">
+            <field name="name">Readonly Move Line</field>
+            <field name="model_id" ref="account.model_account_move_line"/>
+            <field name="domain_force">['|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4, ref('account.group_account_readonly'))]"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record model="ir.rule" id="account_prepaid_payment_own_com_rule">
+            <field name="name">Account prepaid payment own branch rule</field>
+            <field name="model_id" ref="prepaid_payment.model_account_payment_prepaid"/>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
+        </record>
+
+        <record model="ir.rule" id="account_prepaid_payment_all_com_rule">
+            <field name="name">Account prepaid payment All branch rule</field>
+            <field name="model_id" ref="prepaid_payment.model_account_payment_prepaid"/>
+            <field name="domain_force">['|',('branch_ids','in',user.branch_ids.ids),('branch_ids','=',False),'|',('department_id','in',user.department_ids.ids),('department_id','=',False),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_approver'))]"/>
+        </record>
+    </data>
+</odoo>

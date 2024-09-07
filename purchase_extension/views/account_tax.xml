@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_purchase_order_form_inherit_tax" model="ir.ui.view">
+            <field name="name">purchase.order.form.inherit.tax</field>
+            <field name="model">purchase.order</field> 
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//sheet//notebook//page[@name='products']//field[@name='order_line']//tree//field[@name='taxes_id']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//form//sheet//notebook//page[@name='products']//field[@name='notes']" position="before">
+                    <div class="o_row o_td_label">
+                        <label for="tax_id" string="Taxes"/>
+                    </div>                            
+                    <div class="o_row">
+                        <field name="tax_id" options="{'no_create': True, 'no_edit_create': True}" context="{'search_view_ref': 'account.account_tax_view_search'}" attrs="{'readonly': [('state','!=','draft')]}" domain="[('type_tax_use','=','purchase'), ('company_id','=',company_id)]"/>
+                        <button name="action_compute_tax" type="object" string="Compute Tax" help="Recompute all taxes" class="btn-link mb-1 px-0" icon="fa-refresh" confirm="This can affect the total amount of the sales order!!" attrs="{'invisible': [('state','!=','draft')]}"/>                              
+                    </div>   
+                </xpath>
+            </field>
+        </record>        
+
+    </data>
+</odoo>

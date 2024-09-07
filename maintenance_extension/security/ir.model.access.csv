@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_maintenance_type,maintenance_type,model_maintenance_type,base.group_user,1,1,1,1
+access_maintenance_work_schedule,maintenance_work_schedule,model_maintenance_work_schedule,base.group_user,1,1,1,1

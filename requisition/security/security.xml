@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        
+        <!-- Group Rule -->
+
+        <record model="ir.module.category" id="module_category_requisition">
+            <field name="name">Requisition</field>
+        </record>
+
+        
+        <record id="group_requisition_readonly" model="res.groups">
+            <field name="name">Read-only</field>
+            <field name="category_id" ref="requisition.module_category_requisition"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="group_requisition_user" model="res.groups">
+            <field name="name">Users</field>
+            <field name="category_id" ref="requisition.module_category_requisition"/>
+            <field name="implied_ids" eval="[(4, ref('requisition.group_requisition_readonly'))]"/>
+        </record>
+
+        <record id="group_requisition_approver" model="res.groups">
+            <field name="name">Approver</field>
+            <field name="implied_ids" eval="[(4, ref('requisition.group_requisition_user'))]"/>
+            <field name="category_id" ref="requisition.module_category_requisition"/>
+        </record>
+
+        <record id="group_requisition_manager" model="res.groups">
+            <field name="name">Adminstrator</field>
+            <field name="implied_ids" eval="[(4, ref('requisition.group_requisition_approver'))]"/>
+            <field name="category_id" ref="requisition.module_category_requisition"/>
+        </record>
+    </data>
+</odoo>

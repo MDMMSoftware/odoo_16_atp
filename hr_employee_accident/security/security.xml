@@ -1,0 +1,47 @@
+<!-- <?xml version="1.0" encoding="utf-8"?> -->
+<odoo>
+	<data>
+		<record id="hr_accident_user_rule" model="ir.rule">
+            <field name="name">Employee Accident User</field>
+            <field ref="hr_employee_accident.model_employee_accident" name="model_id"/>
+            <field name="domain_force">[('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+		<record id="hr_accident_admin_rule" model="ir.rule">
+            <field name="name">Employee Accident Admin</field>
+            <field ref="hr_employee_accident.model_employee_accident" name="model_id"/>
+            <field name="domain_force">['|',('department_id','in',user.hr_department_ids.ids),('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+        </record>
+
+        <record id="hr_warning_user_rule" model="ir.rule">
+            <field name="name">Employee Warning User</field>
+            <field ref="hr_employee_accident.model_hr_employee_warning" name="model_id"/>
+            <field name="domain_force">[('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="hr_warning_admin_rule" model="ir.rule">
+            <field name="name">Employee Warning Admin</field>
+            <field ref="hr_employee_accident.model_hr_employee_warning" name="model_id"/>
+            <field name="domain_force">['|',('department_id','in',user.hr_department_ids.ids),('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+        </record>
+
+        <record id="hr_salary_deduction_admin_rule" model="ir.rule">
+            <field name="name">Hr Salary Deduction Admin</field>
+            <field ref="hr_employee_accident.model_hr_salary_deduction" name="model_id"/>
+            <field name="domain_force">['|',('department_id','in',user.hr_department_ids.ids),('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+        </record>
+
+        <record id="hr_salary_deduction_line_admin_rule" model="ir.rule">
+            <field name="name">Hr Salary Deduction Line Admin</field>
+            <field ref="hr_employee_accident.model_hr_salary_deduction" name="model_id"/>
+            <field name="domain_force">['|',('department_id','in',user.hr_department_ids.ids),('employee_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+        </record>
+
+	</data>
+</odoo>

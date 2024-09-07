@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+
+    <!-- Inherit the existing template -->
+    <t t-extend="account.ShowPaymentInfo">
+        
+        <!-- Locate the specific part you want to change using t-jquery or t-call blocks -->
+        <xpath expr="//td[@t-if='line.is_exchange']" position="replace">
+            <td t-if="line.is_exchange" colspan="2">
+                <i class="o_field_widget text-start text-muted text-start">
+                    <span>Exchange Difference</span>
+                    <span class="oe_form_field oe_form_field_float oe_form_field_monetary fw-bold">
+                        <t t-esc="line.amount_formatted"/>
+                    </span>
+                </i>
+            </td>
+        </t>
+        
+    </t>
+
+</templates>

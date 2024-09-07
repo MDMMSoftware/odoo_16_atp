@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- <record id="action_report_daily_gps" model="ir.actions.report">
+        <field name="name">Daily GPS</field>
+        <field name="model">gps.daily.history</field>
+        <field name="report_type">py3o</field>
+        <field name="module">gps_tracker</field>
+        <field name="py3o_filetype">pdf</field>
+        <field name="report_name">gps_tracker.report_daily_gps</field>
+        <field name="report_file">gps_tracker.report_daily_gps</field>
+        <field name="binding_model_id" ref="model_gps_daily_history"/>
+        <field name="binding_type">report</field>
+        <field name="py3o_template_fallback">report/gps_daily_compare.odt</field>
+    </record> -->
+
+    <record id="export_report_xlsx" model="ir.actions.report">
+        <field name="name">'Daiy Report Excel</field>
+        <field name="model">daily.gps.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">gps_tracker.export_report_xls</field>
+        <field name="report_file">gps_tracker.export_report_xls</field>
+        <field name="binding_model_id" ref="model_daily_gps_report"/>        
+        <field name="binding_type">report</field>
+    </record>
+
+
+    <!-- <record id="action_report_daily_duty_odoo" model="ir.actions.report">
+        <field name="name">Daily Odoo Duty</field>
+        <field name="model">duty.process.line</field>
+        <field name="report_type">py3o</field>
+        <field name="module">gps_tracker</field>
+        <field name="py3o_filetype">pdf</field>
+        <field name="report_name">gps_tracker.report_daily_duty_odoo</field>
+        <field name="report_file">gps_tracker.report_daily_duty_odoo</field>
+        <field name="binding_model_id" ref="model_duty_process_line"/>
+        <field name="binding_type">report</field>
+        <field name="py3o_template_fallback">report/gps_daily_compare.odt</field>
+    </record> -->
+    
+</odoo>

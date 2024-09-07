@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<record id="view_stock_card_report" model="ir.ui.view">
+			<field name="name">Stock Card Reports</field>
+			<field name="model">stock.card.report</field>
+			<field name="arch" type="xml">
+				<form string="Inventory">
+                    <group>
+                        <group>
+                            <field name="start_date" string="Start Date" />
+                            <field name="location_ids" widget="many2many_tags" string="Location" options="{'no_open':True, 'no_quick_create':True,'no_create_edit':True}"/>
+                            <field name="company_id" string="Company" options="{'no_open':True, 'no_quick_create':True,'no_create_edit':True}" placeholder="Company Name"/>
+                        </group>
+                        <group>
+                            <field name="end_date" string="End Date" />
+							<field name="detailed_type" required="1"/>
+                            <field name="display_all_products" />
+                        </group> 
+                        <br/>
+                        <hr colspan="6"/> 
+						<h4>
+							<label for="filter_product_ids" name="Products"/>
+							<div attrs="{'invisible': [('display_all_products', '=', True)]}" colspan="4">If you do not select any products it will take all products</div>
+						</h4>
+                        <field attrs="{'invisible': [('display_all_products', '=', True)]}"  name="filter_product_ids" nolabel="1" options="{'no_quick_create':True,'no_create_edit':True}">
+                            <tree string="Products">
+                                <field name="name" />
+                                <field name="default_code" />
+                                <field name="qty_available" />
+                            </tree>
+                        </field>                        
+
+                    </group>
+					
+					<footer>
+						<button name="print_report" string="Print XLSX" type="object" class="oe_highlight" />
+						<button name="cancel" string="Cancel" class="oe_link" special="cancel" />
+					</footer>
+				</form>
+			</field>
+		</record>
+
+
+		<record model="ir.actions.act_window" id="action_stock_card_report">
+			<field name="name">Stock Card Report</field>
+			<field name="res_model">stock.card.report</field>
+			<field name="view_mode">form</field>
+			<field name="view_id" ref="view_stock_card_report" />
+			<field name="target">new</field>
+		</record>
+
+
+		<menuitem action="action_stock_card_report" id="menu_action_stock_card_report" parent="stock.menu_warehouse_report" name="Stock Card Report" sequence="1" />
+		<menuitem action="action_stock_card_report" id="menu_action_stock_card_report" parent="stock.menu_stock_warehouse_mgmt" name="Stock Card Report" sequence="110" />
+
+	</data>
+</odoo>

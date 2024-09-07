@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="cv_statement">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                        <div class="page">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h4 class="text-center w-100">
+                                        <strong>
+                                            <span>Private &amp; Confidential</span><br/>
+                                            <span>အလုပ်လျှောက်ထားသူဧ။် ကိုယ်ရေးအကျဥ်း </span>
+                                        </strong>
+                                    </h4>
+                                </div>
+                                <div>
+                                    <h4 class="text-end w-50">
+                                        <strong>
+                                            
+                                            <span>ဓါတ်ပုံ </span>
+                                        </strong>
+                                    </h4>
+                                </div>
+                            </div>
+
+                        </div>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

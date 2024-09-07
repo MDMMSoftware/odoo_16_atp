@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+        <record id="hr_employee_warning_tree_view" model="ir.ui.view">
+            <field name="name">hr.employee.warning.tree.view</field>
+            <field name="model">hr.employee.warning</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="state" widget="badge" 
+                    decoration-muted="state=='by_spoken'" decoration-primary="state=='fst_warning_letter'" decoration-warning="state=='sec_warning_letter'" decoration-danger="state=='lst_warning_letter'"/>
+                </tree>
+            </field>
+        </record>
+        <record id="hr_employee_warning_form" model="ir.ui.view">
+            <field name="name">Employee Warning Form</field>
+            <field name="model">hr.employee.warning</field>
+            <field name="arch" type="xml">
+               <form>
+                    <header>
+                        <button string="By Spoken Warning" type="object" attrs="{'invisible':[('state','!=','draft')]}" name="action_by_spoken" class="oe_highlight"/>
+                        <button string="First Letter Warning" type="object" attrs="{'invisible':[('state','!=','by_spoken')]}" name="action_fst_warning" class="oe_highlight"/>
+                        <button string="Second Letter Warning" type="object" attrs="{'invisible':[('state','!=','fst_warning_letter')]}" name="action_sec_warning" class="oe_highlight"/>
+                        <button string="Last Letter Warning" type="object" attrs="{'invisible':[('state','!=','sec_warning_letter')]}" name="action_lst_warning" class="oe_highlight"/>
+                        <button string="Consideration" type="object" attrs="{'invisible':[('state','!=','lst_warning_letter')]}" name="action_consider" class="oe_highlight"/>
+
+                        <field name="state" widget="statusbar" statusbar_visible="draft,by_spoken,fst_warning_letter,sec_warning_letter,lst_warning_letter,consider"/>
+
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                                <button name="action_open_deduction_form" class="oe_stat_button" icon="fa-usd" type="object" string="Deduction"/>  
+                        </div>
+
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group string="Employee Information">
+                          <group col="2">
+                            <field name="employee_id" required="1" attrs="{'readonly':[('state','!=','draft')]}" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                            <field name="department_id" force_save="1" required="1" readonly="1"/>
+
+                            <field name="employee_job_position" force_save="1" required="1" readonly="1"/>
+                            <field name="warning_year" attrs="{'readonly':[('state','!=','draft')]}"/>
+
+                          </group>
+
+                        </group>
+                        <notebook>
+                            <page name="warning" string="Warning Detail">
+                                <group>
+                                    <group string="By Spoken Warning">
+                                        <field name="by_spoken_warning_date" string="Date" attrs="{'readonly':[('state','!=','by_spoken')]}"/>
+                                        <field name="by_spoken_warning_type" string="Type" attrs="{'readonly':[('state','!=','by_spoken')]}"/>
+                                        <field name="by_spoken_warning" string="Reason" attrs="{'readonly':[('state','!=','by_spoken')]}"/>
+                                    </group>
+                                    <group string="First Letter Warning">
+                                        <field name="fst_letter_warning_date" string="Date" attrs="{'readonly':[('state','!=','fst_warning_letter')]}"/>
+                                        <field name="fst_letter_warning_type" string="Type" attrs="{'readonly':[('state','!=','fst_warning_letter')]}"/>
+                                        <field name="fst_letter_warning" string="Reason" attrs="{'readonly':[('state','!=','fst_warning_letter')]}"/>
+                                    </group>
+
+                                    <group string="Second Letter Warning">
+                                        <field name="sec_letter_warning_date" string="Date" attrs="{'readonly':[('state','!=','sec_warning_letter')]}"/>
+                                        <field name="sec_letter_warning_type" string="Type" attrs="{'readonly':[('state','!=','sec_warning_letter')]}"/>
+                                        <field name="sec_letter_warning" string="Reason" attrs="{'readonly':[('state','!=','sec_warning_letter')]}"/>
+                                    </group>
+                                    <group string="Last Letter Warning">
+                                        <field name="lst_letter_warning_date" string="Date" attrs="{'readonly':[('state','!=','lst_warning_letter')]}"/>
+                                        <field name="lst_letter_warning_type" string="Type" attrs="{'readonly':[('state','!=','lst_warning_letter')]}"/>
+                                        <field name="lst_letter_warning" string="Reason" attrs="{'readonly':[('state','!=','lst_warning_letter')]}"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page name="salary_deduction" string="Salary Deduction">
+                                <field name="deduction_ids">
+                                  <tree editable="bottom" create="1">
+                                    <field name="employee_id" required="1"/>
+                                    <field name="deduction_date" required="1"/>
+                                    <field name="total_deduction_amt"/>
+                                    <field name="cost_and_compensation_responsible_ids" invisible="1"/>
+                                    <button icon="fa-bars" type="object" name="action_open_deduction_line" class="oe_highlight"/>
+                                  </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                        
+                                
+                    </sheet>
+                </form>
+            </field>
+
+        </record>
+
+        <record id="hr_employee_warning_view_search" model="ir.ui.view">
+            <field name="name">hr.employee.warning.search</field>
+            <field name="model">hr.employee.warning</field>
+            <field name="arch" type="xml">
+                <search string="Search Employee Warning">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="department_id" operator="child_of"/>
+                    <filter name="all" string="All" domain="[('state', '!=', 'draft')]"/>
+
+                    <filter string="By Spoken" name="state" domain="[('state','=','by_spoken')]" />
+                    <filter string="First Warning" name="state" domain="[('state','=','fst_warning_letter')]" />
+                    <filter string="Second Warning" name="state" domain="[('state','=','sec_warning_letter')]" />
+                    <filter string="Last Warning" name="state" domain="[('state','=','lst_warning_letter')]" />
+                </search>
+            </field>
+        </record>
+
+        <record id="hr_employee_warning_view_action" model="ir.actions.act_window">
+            <field name="name">Employee warning</field>
+            <field name="res_model">hr.employee.warning</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_all': 1}</field>
+        </record>
+
+        <record id="warning_type_view_action" model="ir.actions.act_window">
+            <field name="name">Warning Type</field>     
+            <field name="res_model">hr.warning.type</field>   
+            <field name="view_mode">tree</field>
+            <!-- <field -->
+        </record>
+
+        <record id="warning_type_tree_view" model="ir.ui.view">
+            <field name="name">hr.warning.type.tree</field>
+            <field name="model">hr.warning.type</field>
+            <field name="arch" type="xml">
+                <tree string="Warning Type" editable="bottom">
+                    <field name="name" />                
+                </tree>
+            </field>
+        </record>
+
+    </data>
+
+
+</odoo>

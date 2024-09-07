@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+ 
+        <!-- VIEWS -->
+        <record id="view_account_vendor_payment_tree" model="ir.ui.view">
+            <field name="name">account.payment.tree</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_supplier_payment_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='prepaid_id']" position="replace">
+                    <field name="v_prepaid_id" string="Vender Prepaid"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_vendor_payment_search" model="ir.ui.view">
+            <field name="name">account.payment.search</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='prepaid_id']" position="after">
+                    <field name="v_prepaid_id"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_prepaid_payment_tree" model="ir.ui.view">
+            <field name="name">account.payment.prepaid.tree</field>
+            <field name="model">account.payment.prepaid</field>
+            <field name="arch" type="xml">
+                <tree edit="false" sample="1">
+                    <field name="date"/>
+                    <field name="seq_no" string="Sequence" />
+                    <field name="journal_id"/>
+                    <field name="payment_method_id"/>
+                    <field name="partner_id" string="Vendor"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="company_id" invisible="1" groups="!base.group_multi_company"/>
+                    <field name="amount" sum="Amount"/>
+                    <field name="prepare_amount" sum="Prepare Amount"/>
+                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'posted'"/>
+                    <field name="currency_id" groups="base.group_multi_currency"/>
+                </tree>
+            </field>
+        </record>
+
+        
+
+        <record id="view_account_payment_prepaid_search" model="ir.ui.view">
+            <field name="name">account.payment.search</field>
+            <field name="model">account.payment.prepaid</field>
+            <field name="arch" type="xml">
+                <search string="Payments">
+                    <field name="seq_no" string="Sequence"/>
+                    <field name="partner_id" string="Vendor"/>
+                    <field name="journal_id"/>
+                    <field name="is_internal_transfer"/>
+                    <separator/>
+                    
+                    <filter string="Vendor Payments"
+                            name="outbound_filter"
+                            domain="[('partner_type', '=', 'supplier'), ('is_internal_transfer', '=', False)]"/>
+                    <filter string="Transfers" name="transfers_filter" domain="[('is_internal_transfer', '=', True)]"/>
+                    <separator/>
+                    <filter string="Draft" name="state_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Posted" name="state_posted" domain="[('state', '=', 'posted')]"/>
+                    <separator/>
+                   
+                    <filter string="Payment Date" name="date" date="date"/>
+                    <separator/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="company_id" invisible="1" groups="!base.group_multi_company"/>
+                    <filter string="Vendor" name="partner" domain="[]" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Journal" name="journal" domain="[]" context="{'group_by': 'journal_id'}"/>
+                    <filter string="Payment Method" name="paymentmethod" domain="[]" context="{'group_by': 'payment_method_id'}"/>
+                    <filter string="Status" name="state" domain="[]" context="{'group_by': 'state'}"/>
+                    <filter string="Payment Date" name="groupby_date" domain="[]" context="{'group_by': 'date'}"/>
+                    <filter string="Currency" name="currency" domain="[]" context="{'group_by': 'currency_id'}" groups="base.group_multi_currency"/>
+                    <filter string="Company" name="company" domain="[]" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <separator/>
+                   
+                </search>
+            </field>
+        </record>
+
+        <record id="view_account_payment_prepaid_form" model="ir.ui.view">
+            <field name="name">account.payment.form</field>
+            <field name="model">account.payment.prepaid</field>
+            <field name="arch" type="xml">
+                <form string="Register Payment">
+                    <header>
+                        <button name="action_submit" string="Submit" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="action_finance_officer_approve" string="Finance Check" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('state', '!=', 'check')]}"/> 
+                        <button name="action_finance_mng_approve" string="Finance  Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('state', '!=', 'finance_approve')]}"/> 
+                        <button name="action_bod_mng_approve" string="Director Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('state', '!=', 'director_approve')]}"/>
+                        <button name="action_payment" string="Payment" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('state', '!=', 'waiting_payment')]}"/>
+                        <button name="action_refuse" string="Refuse" type="object" class="oe_highlight btn-danger" attrs="{'invisible': [('state', 'not in', ['check','finance_approve','director_approve'])]}"/>
+                        <button name="action_close" string="Close" class="oe_highlight btn-danger" type="object" attrs="{'invisible': [('state', '!=','waiting_payment')]}"/>
+                        <button name="action_print_prepaidment" context="{'filename':'mmm_vendor_prepaidment'}" string="Print Prepaidment" class="oe_highlight" type="object" attrs="{'invisible': [('state','=','draft')]}"/>
+
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','draft')]}" statusbar_visible="draft,check"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','check')]}" statusbar_visible="draft,check,finance_approve"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','finance_approve')]}" statusbar_visible="check,finance_approve,director_approve"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','director_approve')]}" statusbar_visible="finance_approve,director_approve,waiting_payment"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','waiting_payment')]}" statusbar_visible="director_approve,waiting_payment,paid"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','paid')]}" statusbar_visible="waiting_payment,paid,refuse"/>
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','refuse')]}" statusbar_visible="paid,refuse"/>  
+                        <field name="state" widget="statusbar" attrs="{'invisible': [('state', '!=','close')]}" statusbar_visible="paid,close"/> 
+                    </header>
+
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <button name="action_open_payments" class="oe_stat_button" icon="fa-book"  type="object" string="Payments"/>  
+                            <button name="action_open_moves" class="oe_stat_button" icon="fa-bars"  type="object" string="Moves"/>                              
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="seq_no" force_save="1" readonly="1"/></h1>
+                        </div>
+                        <!-- Invisible fields -->
+                        <field name="available_payment_method_line_ids" invisible="1"/>
+                        <field name="available_journal_ids" invisible="1"/>
+                        
+                        <group>
+                            <group name="group1">
+                                <field name="is_internal_transfer" invisible="1"/>
+                                <field name="payment_type" widget="radio"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="partner_type" widget="selection"
+                                       attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('is_internal_transfer', '=', True)]}"/>
+                                <field name="partner_id" options="{'no_creat_edit':True,'no_create':True}" context="{'default_is_company': True}"
+                                       attrs="{'readonly': ['|', ('state', '!=', 'draft'), ('is_internal_transfer', '=', True)]}"/>
+                                <field name="destination_account_id" invisible="1"/>
+                                <field name="company_id" groups="base.group_multi_company" invisible="1"/>
+                                <field name="company_id" invisible="1" groups="!base.group_multi_company"/>
+                            </group>
+                            <group name="group2">
+                                <field name="branch_ids" options="{'no_creat_edit':True,'no_create':True}" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}" />
+                                <field name="allow_division_feature" invisible="1"/>
+                                <field name="division_id" domain="[('company_id','=',company_id)]"  attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('allow_division_feature', '=', False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')] }" options="{'no_creat_edit':True,'no_create':True}" />
+                                <field name="department_id" readonly="0" options="{'no_creat_edit':True,'no_create':True}" required="0" />
+                                <field name="journal_id" options="{'no_creat_edit':True,'no_create':True}" domain="[('type', 'in', ('bank', 'cash'))]" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                                <field name="payment_method_line_id" required="1" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="move_ids" widget="many2many_tags"/>
+                                <field name="payment_ids" widget="many2many_tags" invisible="1"/>
+                                
+                                <field name="desc" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                                <field name="need_of_director_approve" attrs="{'invisible': [('state', 'in', ['draft'])],'readonly': [('state', 'not in', ['draft','check','finance_approve'])]}"/>
+                                <field name="director" attrs="{'invisible': ['|',('state', 'in', ['draft']),('need_of_director_approve','=',False)],'readonly': [('state', 'not in', ['draft','check','finance_approve'])]}"/>                                
+                            </group>
+                            <group name="group3">
+                                <div class="o_row o_td_label">
+	                                <label for="amount" string="Amount" />	                                
+                                </div>
+                                <div class="o_row">                                	
+                                	<label for="amount" string="Done" />
+                                    <field name="amount" readonly="1" force_save="1"/>
+                                    <label for="prepare_amount" string="Prepare" force_save="1"/>
+                                    <field name="prepare_amount" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                                </div>
+                                <div class="o_row o_td_label">
+	                                <label for="currency_id" string="Currency" />	                                
+                                </div>                                
+                                <div class="o_row">  
+                                	<label for="currency_id" string="Type"/>
+                                    <field name="currency_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>                                                              	
+                                	<label for="exchange_rate"/>
+                                    <field name="exchange_rate" string="Exchange Rate"  attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </div>
+                                <field name="check_amount_in_words" groups="base.group_no_one"/>
+                                <!-- <field name="discount_amt" readonly="1" force_save="1"/>
+                                <field name="discount_account_id" readonly="1" force_save="1"/>
+                                <field name="discount_note" readonly="1" force_save="1"/> -->
+                                <!-- <field name="advance_date" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}" /> -->
+                                <field name="date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="bank_reference" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="cheque_reference" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="acc_holder_name" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                                <field name="bank_id" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                                <field name="ref" string="Memo" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <div class="o_attachment_preview"/>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" groups="base.group_user"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        
+
+        <!-- ACTIONS -->
+
+
+        <record id="action_account_payments_prepaid_payable" model="ir.actions.act_window">
+            <field name="name">Prepaidment</field>
+            <field name="res_model">account.payment.prepaid</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{
+                'default_payment_type': 'outbound',
+                'default_partner_type': 'supplier',
+                'search_default_outbound_filter': 1,
+                'default_move_journal_types': ('bank', 'cash'),
+            }</field>
+            <field name="view_id" ref="view_account_prepaid_payment_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                  Register a payment
+                </p><p>
+                  Payments are used to register liquidity movements. You can process those payments by your own means or by using installed facilities.
+                </p>
+            </field>
+        </record>
+
+
+        <menuitem id="menu_action_account_prepaid_payments_payable" action="action_account_payments_prepaid_payable" parent="account.menu_finance_payables" name="Vendor Prepaidment"/>
+
+        <record id="view_account_payment_v_prepaidment_form_inherited" model="ir.ui.view">
+            <field name="name">account.payment.v.prepaidment.form.inherited</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='prepaid_id']" position="after">
+                    <field name="v_prepaid_id" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

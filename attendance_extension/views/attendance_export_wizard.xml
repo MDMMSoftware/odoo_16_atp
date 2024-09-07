@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<!-- Wizard Form Daily Income Report-->
+		<record id="view_form_attendance_export_wizard" model="ir.ui.view">
+			<field name="name">Attendance Export Wizard</field>
+			<field name="model">attendance.export.wizard</field>
+			<field name="arch" type="xml">
+				<form>
+					<group name="group-top">
+						<group name="group-left">
+                            <field name="export_type" invisible="1"/>
+							<field name="from_date" attrs="{'required': [('export_type','=','attendance')], 'invisible': [('export_type','!=','attendance')]}"/>
+							<field name="unit_id" widget="many2many_tags" required="1" options="{'no_create_edit':True,'no_create':True}" />
+							<field name="department_id"  widget="many2many_tags"  />
+							<!-- <field name="attendance_only"/> -->
+						</group>
+						<group name="group-right">
+							<field name="to_date" attrs="{'required': [('export_type','=','attendance')], 'invisible': [('export_type','!=','attendance')]}"/>
+							<field name="division_id"  widget="many2many_tags"   options="{'no_create_edit':True,'no_create':True}"  />
+							<field name="branch_id"  widget="many2many_tags"  options="{'no_create_edit':True,'no_create':True}" />
+							<!-- <field name="horizontal_report" /> -->
+							<field name="report_type" required="1"/>
+						</group>
+					</group>
+					<footer>
+						<button context="{'filename':'mmm_attendance_export.rptdesign'}" string="Export" type="object" class="btn-info" name="export_attendance_data"/>
+						<button string="Cancel" special="cancel"/>
+					</footer>
+				</form>
+			</field>
+		</record>
+
+
+		<!--- Wizard Action For Daily Income Report -->
+		<record id="attendance_export_wizard" model="ir.actions.act_window">
+			<field name="name">Attendance Export Wizard</field>
+			<field name="res_model">attendance.export.wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+            <field name="context">{'default_export_type': 'attendance'}</field>            
+            <field name="view_id" ref="view_form_attendance_export_wizard"/>
+			<field name="target">new</field>
+		</record>
+		
+        <menuitem
+            id="hr_attendance.menu_hr_attendance_report"
+            name="Reporting"
+            sequence="30"
+            parent="hr_attendance.menu_hr_attendance_root"
+            
+            groups="hr_attendance.group_hr_attendance_user"
+        />
+
+        <menuitem id="menu_attendance_analysis" name="Attendance Analysis" parent="hr_attendance.menu_hr_attendance_report" action="hr_attendance.hr_attendance_report_action"   sequence="1" /> 
+		<menuitem id="menu_attendance_export_wizard" name="Attendance Export" parent="hr_attendance.menu_hr_attendance_report" action="attendance_export_wizard" sequence="2" />      
+
+	</data>
+</odoo>

@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+        <menuitem name="Inventory" id="stock.menu_stock_root" sequence="140"
+        groups="access_right.group_stock_readonly"
+        web_icon="stock_extension,static/description/inventory.png"/>
+
+        <menuitem id="stock.menu_stock_warehouse_mgmt" name="Operations" parent="stock.menu_stock_root" sequence="2" groups="stock.group_stock_manager,stock.group_stock_user,access_right.group_stock_readonly"/>
+        
+        <menuitem id="stock.all_picking" name="Transfers" parent="stock.menu_stock_warehouse_mgmt" sequence="20" action="stock.action_picking_tree_all" groups="stock.group_stock_manager,stock.group_stock_user,access_right.group_stock_readonly"/>
+        
+        <record id="view_warehouse_valuation_tree" model="ir.ui.view">
+            <field name="name">warehouse.valuation.tree</field>
+            <field name="model">warehouse.valuation</field>
+            <field name="mode">primary</field>
+            <field name="priority" eval="1000"/>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="location_id"/>
+                    <field name="warehouse_id"/>
+                    <field name="location_cost"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Product Template Form View -->
+        <record id="product_template_general_form_view" model="ir.ui.view">
+            <field name="name">product.template.general.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='barcode']" position="attributes">  
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='default_code']" position="attributes">  
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='barcode']" position="attributes">  
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='default_code']" position="attributes">  
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='uom_po_id']" position="after">  
+                    <field name="default_code" string="Internal Reference" attrs="{'invisible': [('product_variant_count', '>', 1)]}"/>
+                    <field name="barcode" attrs="{'invisible': [('product_variant_count', '>', 1)]}"/>
+                </xpath>
+            </field>
+        </record>
+        <record id="prduct_template_form_view_inherited_stock" model="ir.ui.view">
+            <field name="name">product.template.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//sheet[@name='product_form']//div[@name='options']//span[2]" position="after">
+                    <span class="d-inline-block">
+                        <field name="expense_ok"/>
+                        <label for="expense_ok"/>
+                    </span>
+                    <span class="d-inline-block">
+                        <field name="repair_ok"/>
+                        <label for="repair_ok"/>
+                    </span>     
+                    <span class="d-inline-block">
+                        <field name="can_be_unit"/>
+                        <label for="can_be_unit"/>
+                    </span>  
+                    <span class="d-inline-block">
+                        <field name="tax_ok"/>
+                        <label for="tax_ok"/>
+                    </span>                                                
+                </xpath>
+                <xpath expr="//sheet//label[@for='name']" position="attributes">
+                    <attribute name="attrs">{"invisible":[('repair_ok','=',True),('detailed_type','=','service')]}</attribute>
+                </xpath>
+                <xpath expr="//sheet//label[@for='name']" position="before">
+                    <label for="product_code" attrs="{'invisible':[('repair_ok','=',True),('detailed_type','=','service')]}" string="Product Code"/>
+                    <label for="product_code" attrs="{'invisible':['|',('repair_ok','=',False),('detailed_type','!=','service')]}" string="Job Code"/>
+                    <h1>
+                        <div class="d-flex">
+                            <field name="priority" widget="priority" class="me-3"/>
+                            <field class="text-break" required="1" name="product_code" placeholder="e.g. CB-001"/>
+                        </div>
+                    </h1>
+                    <label for="name" attrs="{'invisible':['|',('repair_ok','=',False),('detailed_type','!=','service')]}" string="Job Details"/>
+                </xpath>
+                <!-- General Information Page -->
+                    <!-- Replacing -->
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//field[@name='invoice_policy']" position="replace">  
+                </xpath>   
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//field[@name='expense_policy']" position="replace">  
+                </xpath>   
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//field[@name='product_tooltip']" position="replace">  
+                </xpath> 
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//label[@for='product_tooltip'][2]" position="replace">  
+                </xpath>      
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//label[@for='product_tooltip'][1]" position="replace">  
+                </xpath>  
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//div[2]" position="replace">  
+                </xpath>   
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//div[1]" position="replace">  
+                </xpath> 
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_standard_price']//field[@name='company_id']" position="replace"> 
+                    <field name="company_id" groups="base.group_user" required="1"  options="{'no_create': True}"/>
+                    <field name="product_location_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                    <field name="dead_stock_id" options="{'no_create': True, 'no_create_edit': True}"/>  
+                    <field name="is_analytic_required" invisible="1"/>
+                    <field name="analytic_plan_id" attrs="{
+                    'required':[('is_analytic_required','!=',False),('can_be_unit','!=',False)],
+                    'invisible':['|',('can_be_unit','=',False),('is_analytic_required','=',False)],
+                    'readonly':[('analytic_account_id','!=',False)]}"
+                    options="{'no_quick_create': True, 'no_create_edit' : True}"
+                    />  
+                    <field name="analytic_account_id" readonly="1"/>                       
+                </xpath>
+                    <!-- Adding -->
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='general_information']//group[@name='group_general']//field[@name='uom_po_id']" position="after">  
+                    <field name= "custom_category_id" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Category" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    <field name= "custom_category_id" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Model" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    
+                    <field name="group_class_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',True)]}"  string="Group / Class" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    <field name="group_class_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Engine Model" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+
+                    <field name= "custom_brand_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Brand" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    <field name= "custom_brand_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Maker" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+
+                    <field name= "custom_model_no_id" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Model No." options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                    <field name= "custom_model_no_id" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Model Year" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+
+                    <field name="custom_stock_code"/>
+                    <field name="custom_part"/>
+                    <field name="function_use"/>
+                        
+                    <!-- <field name="dead_stock_configuration_month" />
+                    <field name="dead_stock_status" readonly="1" />  -->
+                  
+                </xpath>
+                <!-- <xpath expr="//sheet[@name='product_form']//notebook//page[@name='invoicing']" position="after">  
+                    <page string= "Additional Information" name="additional_information">
+                        <group>
+                            <group>
+                                <field name= "custom_category_id" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Category" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name= "custom_category_id" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Model" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name="group_class_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',True)]}"  string="Group / Class" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name="group_class_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Engine Model" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name= "custom_brand_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Brand" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name= "custom_brand_id" nolabel="0" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Maker" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name="job_id" attrs="{'invisible':[('can_be_unit','=',False)], 'required':[('can_be_unit','=',True)]}" string="Job"  options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name="product_location_id" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name="dead_stock_id" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+
+                            </group>
+                            <group>
+
+                                <field name= "custom_model_no_id" attrs="{'invisible':[('can_be_unit','=',True)]}" string="Model No." options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name= "custom_model_no_id" attrs="{'invisible':[('can_be_unit','=',False)],'required':[('can_be_unit','=',True)]}" string="Model Year" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
+                                <field name= "custom_stock_code"/>
+                                <field name= "custom_part"/>
+                                <field name="function_use"/>
+                                <field name="is_analytic_required" invisible="1"/>
+                                <field name="analytic_plan_id" attrs="{
+                                'required':[('is_analytic_required','!=',False),('can_be_unit','!=',False)],
+                                'invisible':['|',('can_be_unit','=',False),('is_analytic_required','=',False)],
+                                'readonly':[('analytic_account_id','!=',False)]}"
+                                options="{'no_quick_create': True, 'no_create_edit' : True}"
+                                />  
+                                <field name="analytic_account_id" readonly="1"/>         
+
+                            </group>
+                        </group>
+                    </page>                    
+                </xpath> -->
+                <!-- <xpath expr="//field[@name='company_id']" position="after">
+                </xpath> -->
+                <!-- Sales Page    -->
+                    <!-- Replacing and Adding -->
+                <xpath expr="//sheet[@name='product_form']//notebook//page[@name='sales']" position="replace">  
+                    <page string="Sales" attrs="{'invisible':[('sale_ok','=',False)]}" name="sales">
+                        
+                        <group name="sale">
+                            <group string="Upsell &amp; Cross-Sell" name="upsell" invisible="1"/>
+                        </group>
+                        <group>
+                            <group string="Sales Description" name="description">
+                                <field colspan="2" name="description_sale" nolabel="1" placeholder="This note is added to sales orders and invoices."/>
+                            </group>
+                        </group>
+                        <group> 
+                            <field name="invoice_policy" required="1"/>
+                            <field name="expense_policy" widget="radio" attrs="{'invisible': [('visible_expense_policy', '=', False)]}"/>
+                            <field name="product_tooltip" string="" class="fst-italic text-muted"/>
+                            <label for="product_tooltip" string=""
+                                attrs="{'invisible': ['|', ('type', 'not in', ('product', 'consu')), ('invoice_policy', '!=', 'order')]}"/>
+                            <div attrs="{'invisible': ['|', ('type', 'not in', ('product', 'consu')), ('invoice_policy', '!=', 'order')]}"
+                                class="fst-italic text-muted">
+                                You can invoice them before they are delivered.
+                            </div>
+                            <label for="product_tooltip" string=""
+                                attrs="{'invisible': ['|', ('type', 'not in', ('product', 'consu')), ('invoice_policy', '!=', 'delivery')]}"/>
+                            <div attrs="{'invisible': ['|', ('type', 'not in', ('product', 'consu')), ('invoice_policy', '!=', 'delivery')]}"
+                                class="fst-italic text-muted">
+                                Invoice after delivery, based on quantities delivered, not ordered.
+                            </div>                                
+                        </group>                            
+                    </page>
+                </xpath>  
+            </field>
+        </record>  
+
+        <!-- Product Template Tree View -->
+
+        <record id="prduct_template_tree_view_inherited_stock" model="ir.ui.view">
+            <field name="name">product.template.tree.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="arch" type="xml"> 
+                <xpath  expr="//tree//field[@name='name']" position="before">
+                    <field name="product_code"/>
+                </xpath> 
+                <xpath  expr="//tree//field[@name='name']" position="after">
+                    <field name="custom_category_id"/>
+                    <field name="group_class_id"/>
+                    <field name="custom_brand_id"/>
+                    <field name="custom_model_no_id"/>
+                    <field name="custom_stock_code"/>
+                    <field name="custom_part"/>
+                </xpath>
+            </field>
+        </record> 
+
+        <!-- Product Template Kanban View -->
+
+        <record id="prduct_template_kanban_view_inherited_stock" model="ir.ui.view">
+            <field name="name">product.template.kanban.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_kanban_view"/>
+            <field name="arch" type="xml"> 
+                <xpath  expr="//kanban//field[@name='name']" position="replace">
+                    <!-- <field name="product_code"/>
+                    <br/><br/> -->
+                    <field name="name"/>
+                </xpath> 
+            </field>
+        </record> 
+
+        <!-- Product Template Search View -->
+
+        <record id="prduct_template_search_view_inherited_stock" model="ir.ui.view">
+            <field name="name">product.template.search.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_search_view"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//search//field[@name='name']" position="after">
+                    <field name="default_code" string="Internal Reference"/>
+                    <field name="group_class_id" string="Group/Class"/>
+                    <field name="custom_brand_id" string="Brand" />
+                    <field name="custom_model_no_id" string="Model No." />
+
+                    <field name="product_code" string="Product Code" filter_domain="['|','|', '|', '|', ('product_code','ilike',self),('default_code', 'ilike', self), ('product_variant_ids.default_code', 'ilike', self),('name', 'ilike', self), ('barcode', 'ilike', self)]"/>
+                    <field name="custom_part" string="Part ID" />
+
+                </xpath>
+                <xpath expr="//search//field[@name='categ_id']" position="replace">
+                    <field name="custom_category_id" string="Category" />
+                </xpath>
+            </field>
+        </record>                 
+
+        <!-- <record id="view_warehouse_valuation_form" model="ir.ui.view">
+            <field name="name">warehouse.valuation.form</field>
+            <field name="model">warehouse.valuation</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="location_id"/>
+                            <field name="warehouse_id"/>
+                            <field name="location_cost"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_warehouse_valuation" model="ir.actions.act_window">
+            <field name="name">Warehouse Valuation</field>
+            <field name="res_model">warehouse.valuation</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_warehouse_valuation_tree"/>
+        </record> -->
+ 
+        <record id="view_product_product_custom_part" model="ir.ui.view">
+            <field name="name">product.product.tree</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//tree/field[@name='name']" position="before">
+                    <field name="product_code"/>
+                </xpath>
+                <xpath expr="//tree/field[@name='lst_price']" position="after">
+                    <field name="custom_part" string="Part ID" />
+                    <field name="custom_brand_id" optional="hide"/>
+                </xpath>
+            </field>
+        
+        </record>
+        <!-- view common to both template and product -->
+        <record id="view_product_valuation_form" model="ir.ui.view">
+            <field name="name">product.valuation.form.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">
+				<xpath expr="//page[@name='inventory']" position="after">
+                    <page string="Warehouse Valuation" name="valuation">
+                        <field name="warehouse_valuation" context="{'default_product_id':context.get('product_id',active_id), 'tree_view_ref':'stock_extension.view_warehouse_valuation_tree'}">
+                            <tree string="Products" editable="top">
+                                <field name="location_id"/>
+                                <field name="location_cost"/>
+                                <field name="warehouse_id"/>
+                            </tree>
+                        </field>
+                        
+                    </page>
+                </xpath>
+			</field>
+		</record>
+
+        <record id="view_category_property_transfer_form" model="ir.ui.view">
+            <field name="name">product.category.property.transfer.form.inherit</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="account.view_category_property_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='property_account_expense_categ_id']" position="after">
+                    <field name="property_account_transfer_id"/>
+                    <field name="account_sale_return_id"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Cusotmization Tree / Form Views of Product -->
+
+            <!-- Parent Menu for Customization Tree / Form View -->
+            
+            <menuitem id="menu_product_customization_config" name="Customizations" sequence="51" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager"/>
+
+            <!-- Custom Group Class -->
+
+        <record id="view_product_groupclass" model="ir.ui.view">
+            <field name="name">custom.group.class.tree</field>
+            <field name="model">custom.group.class</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_product_groupclass" model="ir.actions.act_window">
+            <field name="name">Group/Class</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.group.class</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_groupclass" />
+            <field name="domain">[('what_type', '=', 'product')]</field>
+            <field name="context">{'default_what_type':'product'}</field>
+
+        </record>
+
+        <menuitem id="menu_product_groupclass" name="Group/Class"  parent="menu_product_customization_config" action="view_action_product_groupclass"/>        
+
+            <!-- Custom Category -->
+
+        <record id="view_product_custom_category" model="ir.ui.view">
+            <field name="name">custom.category.tree</field>
+            <field name="model">custom.category</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_product_custom_category" model="ir.actions.act_window">
+            <field name="name">Category</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.category</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_custom_category" />
+            <field name="domain">[('what_type', '=', 'product')]</field>
+            <field name="context">{'default_what_type':'product'}</field>
+
+            </record>
+
+        <menuitem id="menu_product_custom_category" name="Category"  parent="menu_product_customization_config" action="view_action_product_custom_category"/>
+
+            <!-- Custom Brand -->
+
+        <record id="tree_view_product_brand" model="ir.ui.view">
+            <field name="name">custom.brand.tree</field>
+            <field name="model">custom.brand</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_product_brand" model="ir.actions.act_window">
+            <field name="name">Brand</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.brand</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="tree_view_product_brand" />
+            <field name="domain">[('what_type', '=', 'product')]</field>
+            <field name="context">{'default_what_type':'product'}</field>
+
+        </record>
+
+        <menuitem id="menu_product_brand" name="Brand"  parent="menu_product_customization_config" action="view_action_product_brand"/>        
+
+            <!-- Custom Model No -->
+
+        <record id="tree_view_product_model_no" model="ir.ui.view">
+            <field name="name">custom.model.no.tree</field>
+            <field name="model">custom.model.no</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>                                    
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_product_model_no" model="ir.actions.act_window">
+            <field name="name">Model No.</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.model.no</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="tree_view_product_model_no" />
+            <field name="domain">[('what_type', '=', 'product')]</field>
+            <field name="context">{'default_what_type':'product'}</field>
+
+        </record>       
+
+        <menuitem id="menu_product_model_no" name="Model No."  parent="menu_product_customization_config" action="view_action_product_model_no"/>        
+
+            <!-- Product DeadStock -->
+
+        <record id="tree_view_dead_stock_remark" model="ir.ui.view">
+            <field name="name">product.dead.stock.remark.tree</field>
+            <field name="model">product.dead.stock.remark</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>  
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_dead_stock_remark" model="ir.actions.act_window">
+            <field name="name">Dead Stock Remark</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.dead.stock.remark</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="tree_view_dead_stock_remark" />
+
+        </record>
+
+        <menuitem id="menu_dead_stock_remark" name="Dead Stock Remark"  parent="menu_product_customization_config" action="view_action_dead_stock_remark"/>
+
+
+            <!-- Custom Proudct Location -->
+
+        <record id="tree_view_product_location" model="ir.ui.view">
+            <field name="name">product.location.tree</field>
+            <field name="model">product.location</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>  
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_action_product_location" model="ir.actions.act_window">
+            <field name="name">Product Location</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.location</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="tree_view_product_location" />
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+
+        </record>
+
+        <menuitem id="menu_product_location" name="Product Location"  parent="menu_product_customization_config" action="view_action_product_location"/>
+
+    <!-- End of Cusotmization Tree / Form Views of Product -->
+
+        <!-- Inherit Pricelist Form View & Removed Domain of Proudct Template ID -->
+
+        <record id="product_pricelist_view_inherited_product" model="ir.ui.view">
+            <field name="name">product.pricelist.form.inherited.product</field>
+            <field name="model">product.pricelist</field>
+            <field name="inherit_id" ref="product.product_pricelist_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form//sheet//notebook//page[@name='pricelist_rules']//field[@name='product_tmpl_id']" position="attributes">
+                    <attribute name="domain">[]</attribute>
+                </xpath>
+            </field>            
+        </record>
+
+
+
+        <record id="view_action_product_groupclass_unit" model="ir.actions.act_window">
+            <field name="name">Engine Model</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.group.class</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_groupclass" />
+            <field name="domain">[('what_type', '=', 'unit')]</field>
+            <field name="context">{'default_what_type':'unit'}</field>
+
+        </record>
+            <!-- <field name="domain">[('what_type', '=', 'unit')]</field>
+            <field name="context">{'default_what_type':'unit'}</field> -->
+
+        <record id="view_action_product_custom_category_unit" model="ir.actions.act_window">
+            <field name="name">Model</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.category</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_groupclass" />
+            <field name="domain">[('what_type', '=', 'unit')]</field>
+            <field name="context">{'default_what_type':'unit'}</field>
+
+        </record>
+
+        <record id="view_action_product_brand_unit" model="ir.actions.act_window">
+            <field name="name">Maker</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.brand</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_groupclass" />
+            <field name="domain">[('what_type', '=', 'unit')]</field>
+            <field name="context">{'default_what_type':'unit'}</field>
+
+        </record>
+
+        <record id="view_action_product_model_no_unit" model="ir.actions.act_window">
+            <field name="name">Model Year</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">custom.model.no</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_product_groupclass" />
+            <field name="domain">[('what_type', '=', 'unit')]</field>
+            <field name="context">{'default_what_type':'unit'}</field>
+
+        </record>
+
+        <menuitem id="unit_additional_menu" name="Unit Additional Information" sequence="51" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager"/>
+
+        <menuitem id="menu_product_groupclass_unit" name="Engine Model"  parent="unit_additional_menu" action="view_action_product_groupclass_unit"/>        
+
+        <menuitem id="menu_product_custom_category_unit" name="Model"  parent="unit_additional_menu" action="view_action_product_custom_category_unit"/>
+
+        <menuitem id="menu_product_brand_unit" name="Maker"  parent="unit_additional_menu" action="view_action_product_brand_unit"/>        
+
+        <menuitem id="menu_product_model_no_unit" name="Model Year"  parent="unit_additional_menu" action="view_action_product_model_no_unit"/>        
+
+</odoo>
+
+
+<!-- access_stock_picking_readonly,stock.picking.readonly,stock.model_stock_picking,access_right.group_stock_readonly,1,0,0,0
+access_stock_picking_type_readonly,stock.picking.type.readonly,stock.model_stock_picking_type,access_right.group_stock_readonly,1,0,0,0
+access_stock_move_readonly,stock.move.readonly,stock.model_stock_move,access_right.group_stock_readonly,1,0,0,0
+access_stock_move_line_readonly,stock.move.line.readonly,stock.model_stock_move_line,access_right.group_stock_readonly,1,0,0,0
+access_stock_location_readonly,stock.location.readonly,stock.model_stock_location,access_right.group_stock_readonly,1,0,0,0
+access_stock_warehouse_readonly,stock.warehouse.readonly,stock.model_stock_warehouse,access_right.group_stock_readonly,1,0,0,0
+access_product_product_readonly,product.product.readonly,product.model_product_product,access_right.group_stock_readonly,1,1,0,0
+stock.access_product_product_stock_readonly,product_product_stock_readonly,product.model_product_product,access_right.group_stock_readonly,1,0,0,0
+access_stock_warehouse_orderpoint_readonly,stock.warehouse.orderpoint.readonly,stock.model_stock_warehouse_orderpoint,access_right.group_stock_readonly,1,0,0,0
+access_fleet_vehicle_stock_readonly,fleet.vehicle.stock.readonly,fleet.model_fleet_vehicle,access_right.group_stock_readonly,1,0,0,0
+access_sale_order_stock_readonly,sale.order.stock.readonly,sale.model_sale_order,access_right.group_stock_readonly,1,0,0,0
+access_stock_inventory_adjustment_readonly,stock.inventory.adjustment.readonly,stock_adjustment.model_stock_inventory_adjustment,access_right.group_stock_readonly,1,0,0,0
+access_stock_inventory_adjustment_line_readonly,stock.inventory.adjustment.line.readonly,stock_adjustment.model_stock_inventory_adjustment_line,access_right.group_stock_readonly,1,0,0,0
+access_account_journal_stock_readonly,account.journal.stock.readonly,account.model_account_journal,access_right.group_stock_readonly,1,0,0,0
+access_stock_valuation_layer_readonly,stock.valuation.layer.readonly,stock_account.model_stock_valuation_layer,access_right.group_stock_readonly,1,0,0,0 -->

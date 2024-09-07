@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_move_exchange_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.exchange.form.inherit.fleet</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//field[@name='payment_reference']" position="after">
+                    <field name="exchange_rate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                </xpath>
+                <xpath expr="//page[@id='aml_tab']//field[@name='account_id']" position="before">
+                    <field name="exchange_rate" attrs="{'readonly': [('parent.state', '!=', 'draft')]}" invisible="1"/>
+                </xpath>  
+                              
+            </field>   
+        </record>
+
+        <record model="ir.ui.view" id="view_account_payment_register_form_inherit">
+            <field name="name">account.payment.register.inherit</field>
+            <field name="model">account.payment.register</field>
+            <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_date']" position="before">
+                    <field name="exchange_rate"/>
+                    <field name="descriptions"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_payment_form_inherit_exchange" model="ir.ui.view">
+            <field name="name">account.payment.form.inherit.exchange</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date']" position="before">
+                    <field name="exchange_rate" attrs="{'readonly':[('x_state','!=','draft')]}"/>
+                    <field name="descriptions"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

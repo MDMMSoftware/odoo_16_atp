@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data noupdate="1">
+        <record id="default_pic_1" model="job.pic">
+            <field name="name">PIC 1</field>
+        </record>
+
+        <record id="default_pic_2" model="job.pic">
+            <field name="name">PIC 2</field>
+        </record>
+
+        <record id="default_pic_3" model="job.pic">
+            <field name="name">PIC 3</field>
+        </record>
+
+        <record id="default_pic_4" model="job.pic">
+            <field name="name">PIC 4</field>
+        </record>
+
+        <record id="default_pic_5" model="job.pic">
+            <field name="name">PIC 5</field>
+        </record>
+
+    </data>
+</odoo>

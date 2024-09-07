@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="duty_cover_timeoff_warning_wizard_form" model="ir.ui.view">
+            <field name="name">dutycover.timeoff.warning.wizard.form</field>
+            <field name="model">dutycover.timeoff.warning.wizard</field>
+            <field eval="20" name="priority"/>
+            <field name="arch" type="xml">
+                <form string="Duty Cover Warning">
+                    <div class="alert alert-danger oe_inline">
+                        <field name="message" readonly="1" nolabel="1" widget="html"/>
+                        <field name="prepare_id" invisible="1"/>
+                    </div>
+                    <footer>
+                        <button name="action_approve" string="Confirm" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_duty_cover_timeoff_warning_wizard" model="ir.actions.act_window">
+			<field name="name">Duty Cover Warning</field>
+			<field name="res_model">dutycover.timeoff.warning.wizard</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">form</field>
+		</record>
+		
+    </data>
+</odoo>
+

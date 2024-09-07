@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!-- Training Course -->
+		<record id="view_hr_training_course_form" model="ir.ui.view">
+			<field name="name">HR Training Course Form</field>
+			<field name="model">hr.training.course</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Course">
+					<sheet>						
+						<group>
+							<field name="name" requierd="True"/>
+						</group>						
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="view_hr_training_course_tree" model="ir.ui.view">
+			<field name="name">HR Training Course Tree</field>
+			<field name="model">hr.training.course</field>
+			<field name="arch" type="xml">
+				<tree string="HR Training Course">
+					<field name="name" />					
+				</tree>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_course_view" model="ir.actions.act_window">
+			<field name="name">Training Course</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.course</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_training_course_tree" />
+		</record>
+
+
+		<!-- Training Place -->
+		<record id="view_hr_training_place_form" model="ir.ui.view">
+			<field name="name">HR Training Place Form</field>
+			<field name="model">hr.training.place</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Place">
+					<sheet>						
+						<group>
+							<field name="name" />
+						</group>	
+						<group string="Description">
+							<field name="place" nolabel="1" />
+						</group>					
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="view_hr_training_place_tree" model="ir.ui.view">
+			<field name="name">HR Training Place Tree</field>
+			<field name="model">hr.training.place</field>
+			<field name="arch" type="xml">
+				<tree string="HR Training Place">
+					<field name="name" />				
+				</tree>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_place_view" model="ir.actions.act_window">
+			<field name="name">Training Place</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.place</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_training_place_tree" />
+		</record>
+
+		<!-- Training Result -->
+		<record id="view_hr_training_result_form" model="ir.ui.view">
+			<field name="name">HR Training Result Form</field>
+			<field name="model">hr.training.result</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Result">
+					<sheet>						
+						<group>
+							<group>
+								<field name="name" />
+							</group>
+							<group>
+								<field name="result" />
+							</group>
+						</group>						
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="view_hr_training_result_tree" model="ir.ui.view">
+			<field name="name">HR Training Result Tree</field>
+			<field name="model">hr.training.result</field>
+			<field name="arch" type="xml">
+				<tree string="HR Training Result">
+					<field name="name" />
+					<field name="result" />					
+				</tree>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_result_view" model="ir.actions.act_window">
+			<field name="name">Training Result</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.result</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_training_result_tree" />
+		</record>
+
+		<!-- Training Type -->
+		<record id="view_hr_training_type_form" model="ir.ui.view">
+			<field name="name">HR Training Type Form</field>
+			<field name="model">hr.training.type</field>
+			<field name="arch" type="xml">
+				<form string="HR Training Type">
+					<sheet>						
+						<group>
+							<field name="name" />
+						</group>						
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="view_hr_training_type_tree" model="ir.ui.view">
+			<field name="name">HR Training Type Tree</field>
+			<field name="model">hr.training.type</field>
+			<field name="arch" type="xml">
+				<tree string="HR Training Type">
+					<field name="name" />					
+				</tree>
+			</field>
+		</record>
+		
+		<record id="action_hr_training_type_view" model="ir.actions.act_window">
+			<field name="name">Training Type</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">hr.training.type</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_training_type_tree" />
+		</record>
+
+		<menuitem id="hr_training_menu" name="Training" parent="hr.menu_human_resources_configuration" sequence="5" groups="base.group_erp_manager,base.group_user"/>
+
+		<menuitem action="action_hr_training_course_view" id="hr_training_course_menu" parent="hr_training_menu" name="Training Course" sequence="2" groups="base.group_erp_manager,base.group_user"/>
+		<menuitem action="action_hr_training_place_view" id="hr_training_place_menu" parent="hr_training_menu" name="Training Place" sequence="3" groups="base.group_erp_manager,base.group_user"/>	
+		<menuitem action="action_hr_training_type_view" id="hr_training_type_menu" parent="hr_training_menu" name="Training Type" sequence="4" groups="base.group_erp_manager,base.group_user"/>		
+		<menuitem action="action_hr_training_result_view" id="hr_training_result_menu" parent="hr_training_menu" name="Training Result" sequence="5" groups="base.group_erp_manager,base.group_user"/>	
+	</data>
+</odoo>

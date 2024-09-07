@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+user_access_gps_daily_history,user_access_gps_daily_history,model_gps_daily_history,group_gps_tracker_user,1,0,0,0
+entry_access_gps_daily_history,entry_access_gps_daily_history,model_gps_daily_history,group_gps_tracker_data_entry,1,1,1,1
+user_access_import_gps_data,user_access_import_gps_data,model_import_gps_data,group_gps_tracker_user,1,0,0,0
+entry_access_import_gps_data,entry_access_import_gps_data,model_import_gps_data,group_gps_tracker_data_entry,1,1,1,1
+access_daily_gps_report,access_daily_gps_report,model_daily_gps_report,group_gps_tracker_user,1,1,1,1
+access_drain_info,access_drain_info,model_drain_info,group_gps_tracker_user,1,1,1,1
+

@@ -1,0 +1,22 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_warehouse_valuation,warehouse_valuation,model_warehouse_valuation,base.group_user,1,1,1,0
+access_stock_valuation_layer,access_stock_valuation_layer,model_stock_valuation_layer,stock.group_stock_user,1,0,1,0
+access_stock_location_valuation_report,access_stock_location_valuation_report,model_stock_location_valuation_report,base.group_user,1,1,1,0
+access_custom_category_manager,access.custom.category manager,model_custom_category,stock.group_stock_manager,1,1,1,1
+access_custom_category_user,access.custom.category user,model_custom_category,stock.group_stock_user,1,0,0,0
+access_custom_group_class_manger,access.custom.group.class,model_custom_group_class,stock.group_stock_manager,1,1,1,1
+access_custom_group_class_user,access.custom.group.class,model_custom_group_class,stock.group_stock_user,1,0,0,0
+access_custom_brand_manager,custom.brand manager,model_custom_brand,stock.group_stock_manager,1,1,1,1
+access_custom_brand_user,custom.brand user,model_custom_brand,base.group_user,1,0,0,0
+access_custom_model_no_manager,custom.model.no manager,model_custom_model_no,stock.group_stock_manager,1,1,1,1
+access_custom_model_no_user,custom.model.no user,model_custom_model_no,base.group_user,1,0,0,0
+access_product_location,product.location manager,model_product_location,stock.group_stock_manager,1,1,1,0
+access_product_dead_stock_remark,product.dead.stock.remark manager,model_product_dead_stock_remark,stock.group_stock_manager,1,1,1,0
+access_stock_card_report,access.stock.card.report,model_stock_card_report,,1,1,1,1
+
+account.access_product_template_account_manager,product.template.account.manager,product.model_product_template,account.group_account_manager,1,0,0,0
+account.access_product_product_account_manager,product.product.account.manager,product.model_product_product,account.group_account_manager,1,0,0,0
+purchase.access_product_template_purchase_manager,product.template purchase_manager,product.model_product_template,purchase.group_purchase_manager,1,0,0,0
+purchase.access_product_product_purchase_manager,product.product purchase_manager,product.model_product_product,purchase.group_purchase_manager,1,0,0,0
+sale.access_product_template_sale_manager,product.template salemanager,product.model_product_template,sales_team.group_sale_manager,1,0,0,0
+sale.access_product_product_sale_manager,product.product salemanager,product.model_product_product,sales_team.group_sale_manager,1,0,0,0

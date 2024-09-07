@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <data>
+
+        <!--  valuation stock-->
+        <record id="stock_valuation_layer_location_inherit" model="ir.ui.view">
+            <field name="name">stock.valuation.location.inherit</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='other_info']//field[@name='company_id']" position="after">
+                    <field name="location_id" options="{'no_create': True}"/>
+                    <field name="location_dest_id" options="{'no_create': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="stock_location_valuation_layer_tree_inherit" model="ir.ui.view">
+            <field name="name">stock.location.valuation.tree.inherit</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_tree"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='quantity']" position="before">
+                        <field name="lot_ids" widget="many2many_tags"/>
+                        <field name="by_location" options="{'no_create': True}"/>
+                        <field name="location_id" options="{'no_create': True}"/>
+                        <field name="location_dest_id" options="{'no_create': True}"/>
+                        <field name="division_id"/>
+                    </xpath>
+                </field>
+        </record>
+
+        <record id="view_inventory_location_valuation_search_inherit" model="ir.ui.view">
+            <field name="name">stock.location.valuation.search.inherit</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.view_inventory_valuation_search"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//search/group" position="inside">
+					    <filter string="To Location" name="to_loc" context="{'group_by':'location_id'}"/>
+                        <filter string="From Location" name="from_loc" context="{'group_by':'location_dest_id'}"/>
+                        <filter string="By Location" name="by_loc" context="{'group_by':'by_location'}"/>                        
+				    </xpath>
+                </field>
+        </record>
+
+        <record id="exchange_rate_view_picking_form" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.exchange</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="exchange_rate" readonly="1"/>
+                </xpath>
+            </field>
+        </record> 
+
+        <!-- Picking Form for Stock Move -->
+
+        <record id="project_view_picking_form_stock" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.stock</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header//button[@name='action_set_quantities_to_reservation']" position="before">
+                    <button name="action_print_picking" class="oe_highlight btn-info" context="{'filename':'mmm_picking_report'}" attrs="{'invisible': [('state', 'in', ('draft', 'cancel'))]}" string="Print Form" type="object" groups="stock.group_stock_user"  data-hotkey="p"/>
+                </xpath>
+                <xpath expr="//sheet//group//field[@name='location_dest_id'][2]" position="after">
+					<field name="allow_division_feature" invisible="1"/>
+				</xpath>                
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='product_uom']" position="after">
+                    <field name="remark" optional="hide" attrs="{'readonly':[('state','!=','draft')]}" />
+                </xpath>
+                <xpath expr="//sheet//page[@name='operations']//tree//field[@name='description_picking']" position="after">
+
+                    <field name="division_id"  domain="[('company_id','=',parent.company_id)]"   attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')], 'readonly':[('state','!=','draft')]}" optional="show" options="{'no_create': True,'no_create_edit': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+       <record id="view_move_form_inherit_project" model="ir.ui.view">
+            <field name="name">stock.move.form.inherit</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//sheet//group[@name='main_grp_col1']//field[@name='branch_id']" position="after">
+                        <field name="allow_division_feature" invisible="1"/>
+                        <field name="division_id"  domain="[('company_id','=',parent.company_id)]" attrs="{'column_invisible':[('allow_division_feature','=',False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create': True, 'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>
+        <record id="view_stock_move_line_form_inherit_project" model="ir.ui.view">
+            <field name="name">stock.move.line.form.inherit</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='create_uid']" position="after">
+                        <field name="allow_division_feature" invisible="1"/>
+                        <field name="division_id"  domain="[('company_id','=',parent.company_id)]" attrs="{'column_invisible':[('allow_division_feature','=',False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')]}" options="{'no_create': True, 'no_create_edit': True}"/>
+                    </xpath>
+                </field>
+        </record>         
+
+    </data>
+</odoo>

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+			
+		<record id="view_prepare_time_off_form" model="ir.ui.view">
+	        <field name="name">hr.leave.prepare.timeoff.form</field>
+	        <field name="model">hr.leave.prepare.timeoff</field>
+	        <field name="arch" type="xml">
+	            <form string="Validate Time Off">  
+	                <div>
+	                    <group>
+	                        <group>                            
+							    <field name="leave_type_request_unit" invisible="1"/>
+	                            <field name="request_date_from"/>
+	                            <field name="date_to" invisible="1"/>
+	                            <field name="date_from" invisible="1"/>
+	                            <field name="request_date_to" attrs="{'invisible':[('request_unit_half','!=',False)]}"/>
+	                            <field name="hr_leave_prepare_id" invisible="1"/>
+                            	<field name="holiday_status_id" force_save="1" domain="['|', ('requires_allocation', '=', 'no'), '&amp;', ('has_valid_allocation', '=', True), '&amp;', ('virtual_remaining_leaves', '&gt;', 0), ('max_leaves', '>', '0')]" context="{'employee_id':employee_id, 'default_date_from':date_from, 'default_date_to':date_to}" options="{'no_create': True, 'no_open': True, 'request_type':'leave'}" />
+								<!-- <field name="number_of_days_display"/> -->
+								<field name="number_of_days"/>
+								<field name="request_unit_half" class="oe_inline" attrs="{'readonly': [('request_unit_half','!=','False')],'invisible': [('leave_type_request_unit', '=', 'day')]}" />
+								<field name="employee_id" invisible="1" />
+								<field name="holiday_type" invisible="1" />
+			                    <field name="employee_company_id" invisible="1" />
+			                    <field name="request_date_from_period" attrs="{'invisible': [('leave_type_request_unit', '=', 'day')],'readonly': [('request_unit_half', '!=', 'False')]}" />
+	                        </group>
+	                    </group>
+	                </div>
+	                <footer>
+	                    <button string="Register" name="action_register" type="object" class="btn-primary"/>
+	                    <button string="Cancel" class="btn-default" special="cancel"/>
+	                </footer>
+	            </form>
+	         </field>
+    	</record>
+
+    	<record id="action_view_prepare_time_off" model="ir.actions.act_window">
+			<field name="name">Time Off</field>
+			<field name="res_model">hr.leave.prepare.timeoff</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="context">{
+            'holiday_status_name_get': True}
+        </field>
+			<field name="view_mode">form</field>
+		</record>
+		
+	</data>
+</odoo>
+
+      

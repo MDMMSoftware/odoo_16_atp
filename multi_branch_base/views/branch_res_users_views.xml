@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_users_form_inherit" model="ir.ui.view">
+            <field name="name">res.users.form.inherit</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='access_rights']//group" position="after">
+                    <group string="Multi Branches">
+                        <field name="branch_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        <field name="branch_id" options="{'no_create': True}"/>
+                    </group>
+				</xpath>
+                <xpath expr="//field[@name='property_warehouse_id']" position="replace">
+                    <group>
+                        <group>
+                            <field name="property_warehouse_id" options="{'no_create_edit':True,'no_create':True}" groups="stock.group_stock_multi_warehouses"/>
+                            <field name="location_id" options="{'no_create_edit':True,'no_create':True}"/>
+                        </group>
+                        <group>
+                            <field name="pricelist_id" options="{'no_create_edit':True,'no_create':True}"/>
+                            <field name="payment_journal_id" options="{'no_create_edit':True,'no_create':True}"/>
+                        </group>
+                    </group>
+                </xpath>                
+            </field>
+        </record>
+    </data>
+</odoo>

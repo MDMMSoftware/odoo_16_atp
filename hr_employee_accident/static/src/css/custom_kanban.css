@@ -1,0 +1,16 @@
+.accident_kanban {
+    width: 50% !important;
+}
+.accident_kanban_box{
+    width: 50% !important;
+
+}
+
+.accident_kanban_box > .o_kanban_group.flex-shrink-0.flex-grow-1.flex-md-grow-0.bg-100{
+    /* flex-basis: fit-content; */
+    min-width: 100px;
+    max-width: 224px;
+}
+/* .accident_kanban_box > .o_kanban_group > .o_kanban_header {
+    width: 50% !important;
+} */

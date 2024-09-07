@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="hr_leave_allocation_view_tree_my_inherit" model="ir.ui.view">
+        <field name="name">hr.leave.allocation.inherit</field>
+        <field name="model">hr.leave.allocation</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_allocation_view_tree_my" />
+        <field name="arch" type="xml">
+           <xpath expr="//field[@name='duration_display']" position="after">
+                <field name="leaves_taken"/>
+                <field name="remaining_leaves"/>
+            </xpath>
+        </field>
+    </record>
+        <record id="hr_leave_allocation_view_tree_inherit" model="ir.ui.view">
+        <field name="name">hr.leave.allocation.approval.inherit</field>
+        <field name="model">hr.leave.allocation</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_allocation_view_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="attributes">
+                <attributes name="create">0</attributes>
+            </xpath>
+           <xpath expr="//field[@name='duration_display']" position="after">
+                <field name="leaves_taken"/>
+                <field name="remaining_leaves"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

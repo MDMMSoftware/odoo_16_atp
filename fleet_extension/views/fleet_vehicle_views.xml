@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <menuitem name="Fleet" id="fleet.menu_root" sequence="220" groups="fleet_group_readonly" web_icon="fleet_extension,static/description/icon.png"/>
+        <menuitem name="Fleet" parent="fleet.menu_root" id="fleet.fleet_vehicles" sequence="2" groups="fleet_group_readonly"/>
+
+        <record id="fleet_vehicle_view_form_inherit" model="ir.ui.view">
+            <field name="name">fleet.vehicle.form.inherit</field>
+            <field name="model">fleet.vehicle</field>
+            <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@class='oe_title']" position="replace">
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" readonly="0" required="1" placeholder="e.g. Kobelco"/>
+                        </h1>
+                        <group name="brand_and_model" >
+                            <group>
+                                <label for="brand_id" />
+                                <h1>
+                                    <field name="brand_id" required="1" placeholder="e.g. Toyota" options="{'no_create_edit': True, 'no_create':True}"/>
+                                </h1>
+                            </group>
+                            <group>
+                                <label for="model_id"/>
+                                <h1>
+                                    <field name="model_id" required="1" domain="[('brand_id','=',brand_id)]" placeholder="e.g. Hilux" options="{'no_create_edit': True, 'no_create':True}"/>
+                                </h1>                            
+                            </group>
+                        </group>
+                        <label for="license_plate"  />
+                        <h2>
+                            <field name="license_plate"  class="oe_inline" placeholder="e.g. PAE 326"/>
+                        </h2>
+                        <label for="tag_ids" class="me-3" />
+                        <field name="tag_ids" widget="many2many_tags"  options="{'color_field': 'color', 'no_create_edit': True}"/>
+                    </div>                    
+                </xpath>
+                <xpath expr="//field[@name='tag_ids']" position="after">
+                    <group name="fleet_specification" >
+                        <group>
+                            <field name="vehicle_type"/>
+                            <field name="owner_type"/>
+                            <field name="short_name"/>
+                            <field name="model_name" invisible="1"/>
+                            <field name="brand_id" invisible="1"/>
+                            <field name="allow_fleet_partner_relationship" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="allow_analytic"/>
+                            <field name="analytic_plan_id" attrs="{'invisible':[('allow_analytic', '=', False)], 'required': [('allow_analytic', '=', True)]}" options="{'no_create_edit': True, 'no_create':True}"/>
+                            <field name="analytic_fleet_id" attrs="{'invisible':[('allow_analytic', '=', False)]}" readonly="1" />
+                        </group>
+                    </group>
+                </xpath>
+                <xpath expr="//notebook//page[2]//group[1]//group[2]" position="attributes">
+                    <attribute name="attrs">{}</attribute>
+                </xpath>  
+                <xpath expr="//notebook//page[1]" position="before">
+                    <page name="fleet_info" string="Information">
+                        <group>
+                            <group string="Configuration">
+                                <field name="owner_id" options="{'no_create_edit': True, 'no_create':True}"/>
+                                <field name="default_attachment_id"  options="{'no_create_edit': True, 'no_create':True}"/>
+                                <field name="duty_price" />
+                                <field name="standard_consumption" />
+                                <field name="machine_capacity"  />
+                                <field name="imei" />
+                                <field name="location_id" />
+                                <field name="price_type" />
+                                <field name="product_id" />
+                                <field name="partner_id" />
+                            </group>                          
+                        </group>
+                    </page>
+                    <page name="Partners" string="Partner" attrs="{'invisible':[('allow_fleet_partner_relationship','=',False)]}">
+                        <field name="partner_ids" nolabel="1"/>
+                    </page>
+                    <page name="fleet_account_info" string="Account Setting" >
+                        <group>
+                            <group string="Accounting">
+                                <field name="repair_account_id" options="{'no_create_edit': True, 'no_create':True}"/>
+                                <field name="fuel_account_id" options="{'no_create_edit': True, 'no_create':True}"/>
+                                <field name="duty_hr_account_id" options="{'no_create_edit': True, 'no_create':True}"/>
+                                <field name="duty_depreciation_account_id" options="{'no_create_edit': True, 'no_create':True}"/>
+                            </group>                          
+                        </group>
+                    </page>
+                </xpath>
+                <xpath expr="//notebook//field[@name='horsepower']" position="before">
+                    <field name="engine_model_id" options="{'no_create_edit': True, 'no_create':True}" />
+                    <field name="engine_serial"/>
+                    <field name="mc_serial"/>
+                    <field name="smu"/>
+                    <field name="onhand_fuel"/>
+                </xpath>    
+                <xpath expr="//field[@name='location']" position="replace">
+                    <field name="location" readonly="1" force_save="1"  options="{'no_create_edit': True, 'no_create':True}" />
+                    <field name="check_computer" invisible="1"/>
+                    <field name="service_meter"/>
+                </xpath>  
+                <xpath expr="//notebook//page[4]" position="after">
+                    <page string="Location History" >
+                        <field name="location_lines">
+                            <tree editable="top">
+                                <field name="location_id" required="1" options="{'no_create_edit':True, 'no_create':True}"/>
+                                <field name="start_time" required="1"/>
+                                <field name="end_time" readonly="1" force_save="1"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>                        
+            </field>
+        </record>
+
+        <record id="fleet_vehicle_view_tree_inherit" model="ir.ui.view">
+            <field name="name">fleet.vehicle.tree.inherit</field>
+            <field name="model">fleet.vehicle</field>
+            <field name="inherit_id" ref="fleet.fleet_vehicle_view_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='license_plate']" position="before">
+                    <field name="name"/>
+                </xpath>
+                <xpath expr="//field[@name='acquisition_date']" position="after">
+                    <field name="check_computer" invisible="1"/>
+                    <field name="location"/>
+                </xpath>
+            </field>    
+        </record>
+
+        <record id="fleet_vehicle_model_view_form_inherit" model="ir.ui.view">
+            <field name="name">fleet.vehicle.model.form.inherit</field>
+            <field name="model">fleet.vehicle.model</field>
+            <field name="inherit_id" ref="fleet.fleet_vehicle_model_view_form"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//sheet//notebook//page[@name='information']//group[2]" position="attributes">
+                    <attribute name="invisible">0</attribute>
+                </xpath>   
+                <xpath expr="//sheet//notebook//page[@name='information']//group[1]//group[1]" position="attributes">
+                    <attribute name="attrs"></attribute>
+                </xpath>
+                <xpath expr="//sheet//notebook//page[@name='information']//group[1]//group[2]" position="attributes">
+                    <attribute name="attrs"></attribute>
+                </xpath>                                             
+            </field>    
+        </record>        
+
+        <record id="vehicle_type_form_view" model="ir.ui.view">
+            <field name="name">fleet.vehicle.type</field>
+            <field name="model">vehicle.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                        
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="vehicle_type_list_view" model="ir.ui.view">
+            <field name="name">fleet.vehicle.type.list</field>
+            <field name="model">vehicle.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_vehicle_type_view" model="ir.actions.act_window">
+            <field name="name">Vehicle Type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">vehicle.type</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+
+        <record id="vehicle_capacity_form_view" model="ir.ui.view">
+            <field name="name">fleet.vehicle.capacity</field>
+            <field name="model">machine.capacity</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                        
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="machine_capacity_list_view" model="ir.ui.view">
+            <field name="name">machine.capacity.list</field>
+            <field name="model">machine.capacity</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_machine_capacity_view" model="ir.actions.act_window">
+            <field name="name">Machine Capacity</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">machine.capacity</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem action="action_vehicle_type_view" parent="fleet.fleet_vehicles_configuration" id="fleet_vehicle_type_menu" sequence="12"/>
+        <menuitem action="action_machine_capacity_view" parent="fleet.fleet_vehicles_configuration" id="machine_capacity_menu" sequence="14"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        
+        <!-- Group Rule -->
+
+        <record model="ir.module.category" id="module_category_repair_external">
+            <field name="name">Repair External</field>
+        </record>
+
+
+        <record id="group_repair_external_readonly" model="res.groups">
+            <field name="name">Readonly</field>
+            <field name="category_id" ref="repair_external.module_category_repair_external"/>
+        </record>        
+
+        <record id="group_repair_external_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="repair_external.module_category_repair_external"/>
+            <field name="implied_ids" eval="[(4, ref('repair_external.group_repair_external_readonly'))]"/>
+        </record>
+
+        <record id="group_repair_external_approver" model="res.groups">
+            <field name="name">Approver</field>
+            <field name="implied_ids" eval="[(4, ref('repair_external.group_repair_external_user'))]"/>
+            <field name="category_id" ref="repair_external.module_category_repair_external"/>
+        </record>
+
+        <record id="group_repair_external_manager" model="res.groups">
+            <field name="name">Adminstrator</field>
+            <field name="implied_ids" eval="[(4, ref('repair_external.group_repair_external_approver'))]"/>
+            <field name="category_id" ref="repair_external.module_category_repair_external"/>
+        </record>
+    </data>
+</odoo>

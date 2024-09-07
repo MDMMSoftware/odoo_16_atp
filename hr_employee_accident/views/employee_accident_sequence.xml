@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Sequences for hr.resignation -->
+        <record id="seq_hr_employee_accident" model="ir.sequence">
+            <field name="name">Employee Accident</field>
+            <field name="code">employee.accident</field>
+            <field name="prefix">A</field>
+            <field name="padding">7</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_hr_employee_warning" model="ir.sequence">
+            <field name="name">Employee Warning</field>
+            <field name="code">hr.employee.warning</field>
+            <field name="prefix">WARN</field>
+            <field name="padding">7</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Top Menu Root to override icon -->
+        <menuitem name="Contacts"
+            id="contacts.menu_contacts"
+            sequence="20"
+            web_icon="employee_extension,static/description/contacts.png"
+            groups="base.group_user,base.group_partner_manager"/>
+        
+        <record id="view_partner_tree_partner_code_inherit" model="ir.ui.view">
+            <field name="name">res.partner.tree.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="priority">35</field>
+            <field name="inherit_id" ref="base.view_partner_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='translated_display_name']" position="after">
+                    <field name="partner_code" string="Code"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_partner_search_partner_code_inherit" model="ir.ui.view">
+            <field name="name">res.partner.search.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="priority">35</field>
+            <field name="inherit_id" ref="base.view_res_partner_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="partner_code" string="Code"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="partner_view_form_extend">
+            <field name="name">partner.view.form.extend</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@id='company']" position="replace">
+                    <field id="company" class="text-break" name="name" default_focus="1" placeholder="e.g. Lumber Inc" attrs="{'required' : [('type', '=', 'contact')], 'invisible': ['|',('allow_prefix_name','=',True),('is_company','=', False)]}"/>
+                    <h1 attrs="{'invisible':['|',('allow_prefix_name','=',False),('is_company','=', False)]}">
+                        <div class="o_row" attrs="{'invisible':[('allow_prefix_name','=',False)]}">
+                            <field name="prefix_name_filter_ids" invisible="1" />
+                            <field name="partner_name_prefix_id" domain="[('id','in',prefix_name_filter_ids)]" attrs="{'required':[('allow_prefix_name','=',True)],'invisible': ['|',('allow_prefix_name','=',False),('is_company','=', False)]}" placeholder="ASC" options="{'no_quick_create': true, 'no_create_edit':true}"/> -
+                            <field id="company" class="text-break" name="concat_name" default_focus="1" placeholder="e.g. Lumber Inc" attrs="{'required' : [('allow_prefix_name','=',True)], 'invisible': ['|',('allow_prefix_name','=',False),('is_company','=', False)]}"/>
+                        </div>
+                    </h1>
+                </xpath>   
+                <xpath expr="//field[@id='individual']" position="replace">
+                    <field name="allow_prefix_name" invisible="1" />
+                    <field id="individual" class="text-break" name="name" default_focus="1" placeholder="e.g. Brandom Freeman" attrs="{'required' : [('type', '=', 'contact')], 'invisible': ['|',('allow_prefix_name','!=',False),('is_company','=', True)]}"/>
+                    <h1 attrs="{'invisible':['|',('allow_prefix_name','=',False),('is_company','=', True)]}">
+                        <div class="o_row" attrs="{'invisible':[('allow_prefix_name','=',False)]}">
+                            <field name="prefix_name_filter_ids" invisible="1" />
+                            <field name="partner_name_prefix_id" domain="[('id','in',prefix_name_filter_ids)]" attrs="{'required':[('allow_prefix_name','!=',False)],'invisible': [('allow_prefix_name','=',False)]}" placeholder="ASC" options="{'no_quick_create': true, 'no_create_edit':true}"/> -
+                            <field id="individual" class="text-break" name="concat_name" default_focus="1" placeholder="e.g. Brandom Freeman" attrs="{'required':[('allow_prefix_name','!=',False)],'invisible': ['|',('allow_prefix_name','=',False),('is_company','=', True)]}"/>
+                        </div>
+                    </h1>
+                </xpath>             
+                <xpath expr="//sheet//field[@name='company_type']" position="before">
+                    <field name="partner_relation_type" widget="radio" options="{'horizontal':True}" required="1"/>
+                </xpath>                 
+                <xpath expr="//sheet//field[@name='company_type']" position="after">
+                    <div name="partner_type_div" class="o_row">
+                        <field name="partner_type" widget="radio" options="{'horizontal':True}" required="1"/>
+                        <label for="allow_partner_code_defined" name="Allow Partner Code" attrs="{'invisible':[('partner_code','!=',False)]}"/>
+                        <field name="allow_partner_code_defined"  attrs="{'invisible':[('partner_code','!=',False)]}" class="oe_inline"/>
+                    </div>
+                </xpath>  
+                <xpath expr="//sheet//div[2]//h1" position="after">
+                    <h3>
+                        <div class="o_row" attrs="{'invisible':['|',('partner_code','!=',False),('allow_partner_code_defined','=',True)]}">
+                            <field name="partner_code_prefix_id" placeholder="CUS"  attrs="{'required':[('allow_partner_code_defined','=',False)]}"/> -
+                            <field name="partner_code_infix_id"  placeholder="MDL"  attrs="{'required':[('allow_partner_code_defined','=',False)]}"/> -
+                            <field name="seq" readonly="1" force_save="1"/>
+                        </div>
+                        <field name="partner_code_defined" placeholder="Partner Code" attrs="{'invisible':['|',('partner_code','!=',False),('allow_partner_code_defined','=',False)], 'required':[('allow_partner_code_defined','=',True)]}"/> 
+                        <field name="partner_code" readonly="1" attrs="{'invisible':[('partner_code','=',False)]}"/> 
+                    </h3>               
+                </xpath>          
+                <xpath expr="//sheet//group[1]//group[1]//span[@name='address_name']" position="before">
+                    <field name="owner_id"/>
+                </xpath>
+                <xpath expr="//field[@name='vat']" position="after">
+                    <field name="advance_user"/>
+                    <field name="customer_category_id" attrs="{'invisible':[('partner_type','!=','customer')],'required':[('partner_type','=','customer')]}"/>
+                    <field name="vendor_category_id" attrs="{'invisible':[('partner_type','!=','vendor')],'required':[('partner_type','=','vendor')]}" />
+                    <field name="other_category_id" attrs="{'invisible':[('partner_type','in',['vendor','customer'])],'required':[('partner_type','not in',['vendor','customer'])]}" />
+                </xpath>
+
+                <xpath expr="//form//sheet//div[@class='o_address_format'][1]" position="replace">
+                    <div class="o_address_format">
+                        <field name="street" placeholder="Street..." class="o_address_street"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/>
+                        <field name="street2" placeholder="Street 2..." class="o_address_street"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/>
+                        <div name="partner_address_country" class="d-flex justify-content-between">
+                            <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'
+                                attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/>
+                        </div>   
+                        <field name="state_id" class="o_address_state" placeholder="State" options="{'no_open': True, 'no_quick_create': True}"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}" context="{'country_id': country_id, 'default_country_id': country_id, 'zip': zip}"/>
+                        <field name="zip" placeholder="ZIP" class="o_address_zip"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/> 
+                        <field name="township_id" placeholder="Township" class="o_address_city"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}" domain="[('state_id','=',state_id)]"/> 
+                        <field invisible="1" name="city" placeholder="City" class="o_address_city"
+                            attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/> 
+                    </div>           
+                </xpath>
+                <xpath expr="//field[@name='website']" position="before">
+                    <field name="is_duty_owner" string="Is Duty Owner?"/>
+                </xpath>
+                <xpath expr="//group[@name='misc']//field[@name='company_id']" position="replace">
+                    <field name="company_id" options="{'no_create': True}" attrs="{'readonly': [('parent_id', '!=', False)]}" required="1" force_save="1"/>
+                </xpath>
+                <xpath expr="//page[@name='accounting']//group[@name='accounting_entries']" position="attributes">
+                    <attribute name="groups"></attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="partner_view_account_extend">
+            <field name="name">partner.view.account.extend</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account.view_partner_property_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='property_account_payable_id']" position="after">
+                    <field name="property_account_advance_id" attrs="{'required':[('partner_type','=','advance')]}"/>
+                    <field name="account_advance_id" force_save="1" invisible="1"/>
+                    <field name="advance_receivable_id"/>
+                    <field name="advance_payable_id"/>
+                    <field name="partner_income_account_id"/>
+                    <field name="partner_return_account_id"/>
+                    <field name="sale_discount_account_id"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_account_advance_form_extends">
+            <field name="name">account.advance.form.extend</field>
+            <field name="model">advance.prepaid</field>
+            <field name="inherit_id" ref="advance_expense.view_account_advance_form" />
+            <field name="arch" type="xml">   
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="is_partner_duty_owner" invisible="1"/>
+                </xpath>  
+                <xpath expr="//field[@name='fleet_id']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('state', '!=', 'draft')],'required':['&amp;', ('is_internal_transfer', '=', True), ('is_partner_duty_owner', '=', True)],'invisible':[('is_internal_transfer', '=', False)]}</attribute>
+                </xpath>   
+            </field>
+        </record>
+
+        <!-- Remove the internal user group access rights  of contact menu  -->
+        <record model="ir.ui.menu" id="contacts.menu_contacts">
+            <field name="groups_id" eval="[(3,ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Cusotmization Menu & Models -->
+
+            <!-- Parent Menu for Customization Tree / Form View -->
+            
+            <menuitem id="menu_partner_code" name="Partner Code" sequence="51" parent="contacts.res_partner_menu_config"/>
+
+            <!-- Partner Code Prefix -->
+
+            <record id="view_partner_code_prefix" model="ir.ui.view">
+                <field name="name">partner.code.prefix.tree</field>
+                <field name="model">partner.code.prefix</field>
+                <field name="arch" type="xml">
+                    <tree>
+                        <field name="name"/>                                    
+                    </tree>
+                </field>
+            </record>
+
+            <record id="view_action_partner_code_prefix" model="ir.actions.act_window">
+                <field name="name">Partner Code Prefix</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">partner.code.prefix</field>
+                <field name="view_mode">tree,form</field>
+                <field name="view_id" ref="view_partner_code_prefix" />
+            </record>
+
+            <menuitem id="menu_partner_code_prefix" name="Partner Code Prefix"  parent="menu_partner_code" action="view_action_partner_code_prefix"/>     
+
+            <!-- Parnter Code Infix -->
+
+            <record id="view_partner_code_infix" model="ir.ui.view">
+                <field name="name">partner.code.infix.tree</field>
+                <field name="model">partner.code.infix</field>
+                <field name="arch" type="xml">
+                    <tree>
+                        <field name="name"/> 
+                        <field name="branch_id"/>
+                        <field name="padding"/>                                   
+                    </tree>
+                </field>
+            </record>
+
+            <record id="view_action_partner_code_infix" model="ir.actions.act_window">
+                <field name="name">Partner Code Infix</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">partner.code.infix</field>
+                <field name="view_mode">tree,form</field>
+                <field name="view_id" ref="view_partner_code_infix" />
+            </record>
+            <menuitem id="menu_partner_code_infix" name="Partner Code Infix"  parent="menu_partner_code" action="view_action_partner_code_infix"/>   
+
+            <!-- Categories Views -->
+
+            <menuitem id="menu_parent_res_partner_category" name="Categories" sequence="52" parent="contacts.res_partner_menu_config"/>
+
+                <!-- Customer Category -->
+
+                <record id="view_res_partner_customer_category" model="ir.ui.view">
+                    <field name="name">res.partner.customer.category.tree</field>
+                    <field name="model">res.partner.customer.category</field>
+                    <field name="arch" type="xml">
+                        <tree>
+                            <field name="name"/>                                   
+                        </tree>
+                    </field>
+                </record>
+
+                <record id="view_action_res_partner_customer_category" model="ir.actions.act_window">
+                    <field name="name">Customer Category</field>
+                    <field name="type">ir.actions.act_window</field>
+                    <field name="res_model">res.partner.customer.category</field>
+                    <field name="view_mode">tree,form</field>
+                    <field name="view_id" ref="view_res_partner_customer_category" />
+                </record>
+
+                <menuitem id="menu_res_partner_customer_category" action="view_action_res_partner_customer_category" name="Customer Category" sequence="1" parent="menu_parent_res_partner_category"/>              
+
+                <!-- Vendor Category -->
+
+                <record id="view_res_partner_vendor_category" model="ir.ui.view">
+                    <field name="name">res.partner.vendor.category.tree</field>
+                    <field name="model">res.partner.vendor.category</field>
+                    <field name="arch" type="xml">
+                        <tree>
+                            <field name="name"/>                                   
+                        </tree>
+                    </field>
+                </record>
+
+                <record id="view_action_res_partner_vendor_category" model="ir.actions.act_window">
+                    <field name="name">Vendor Category</field>
+                    <field name="type">ir.actions.act_window</field>
+                    <field name="res_model">res.partner.vendor.category</field>
+                    <field name="view_mode">tree,form</field>
+                    <field name="view_id" ref="view_res_partner_vendor_category" />
+                </record>
+
+                <menuitem id="menu_res_partner_vendor_category" action="view_action_res_partner_vendor_category" name="Vedor Category" sequence="2" parent="menu_parent_res_partner_category"/>    
+
+                <!-- Owner Category -->
+
+                <record id="view_res_partner_owner" model="ir.ui.view">
+                    <field name="name">res.partner.owner.tree</field>
+                    <field name="model">res.partner.owner</field>
+                    <field name="arch" type="xml">
+                        <tree>
+                            <field name="name"/>                                   
+                        </tree>
+                    </field>
+                </record>
+
+                <record id="view_action_res_partner_owner" model="ir.actions.act_window">
+                    <field name="name">Owner</field>
+                    <field name="type">ir.actions.act_window</field>
+                    <field name="res_model">res.partner.owner</field>
+                    <field name="view_mode">tree,form</field>
+                    <field name="view_id" ref="view_res_partner_owner" />
+                </record>
+
+                <menuitem id="menu_res_partner_owner" action="view_action_res_partner_owner" name="Owner" sequence="3" parent="menu_parent_res_partner_category"/>                       
+
+                <!-- Other Category -->
+
+                <record id="view_res_partner_other_category" model="ir.ui.view">
+                    <field name="name">res.partner.other.category.tree</field>
+                    <field name="model">res.partner.other.category</field>
+                    <field name="arch" type="xml">
+                        <tree>
+                            <field name="name"/>                                   
+                        </tree>
+                    </field>
+                </record>
+
+                <record id="view_action_res_partner_other_category" model="ir.actions.act_window">
+                    <field name="name">Other Category</field>
+                    <field name="type">ir.actions.act_window</field>
+                    <field name="res_model">res.partner.other.category</field>
+                    <field name="view_mode">tree,form</field>
+                    <field name="view_id" ref="view_res_partner_other_category" />
+                </record>
+
+                <menuitem id="menu_res_partner_other_category" action="view_action_res_partner_other_category" name="Other Category" sequence="4" parent="menu_parent_res_partner_category"/>  
+
+            <!-- Parent Menu for Customization Tree / Form View -->
+            
+            <menuitem id="menu_partner_code_sequence_header" name="Sequence" sequence="56" parent="contacts.res_partner_menu_config"/>
+
+            <!-- Partner Code Prefix -->
+
+            <record id="view_partner_code_sequence" model="ir.ui.view">
+                <field name="name">partner.code.sequence.tree</field>
+                <field name="model">partner.code.sequence</field>
+                <field name="arch" type="xml">
+                    <tree>
+                        <field name="prefix" readonly="1"/>   
+                        <field name="infix" readonly="1"/> 
+                        <field name="seq" readonly="1"/>                                                          
+                    </tree>
+                </field>
+            </record>
+
+            <record id="view_action_partner_code_sequence" model="ir.actions.act_window">
+                <field name="name">Partner Code Sequence</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">partner.code.sequence</field>
+                <field name="view_mode">tree,form</field>
+                <field name="view_id" ref="view_partner_code_sequence" />
+            </record>
+
+            <menuitem id="menu_partner_code_sequence" name="Partner Code"  parent="menu_partner_code_sequence_header" action="view_action_partner_code_sequence"/> 
+
+            <!-- Localization - Township -->
+
+            <record id="view_res_state_township" model="ir.ui.view">
+                <field name="name">res.state.township.tree</field>
+                <field name="model">res.state.township</field>
+                <field name="arch" type="xml">
+                    <tree>
+                        <field name="state_id"/>  
+                        <field name="name"/>                                 
+                    </tree>
+                </field>
+            </record>
+
+            <record id="view_res_state_township" model="ir.ui.view">
+                <field name="name">res.state.township.form</field>
+                <field name="model">res.state.township</field>
+                <field name="arch" type="xml">
+                    <tree editable="top">
+                        <field name="state_id" required="1"/>  
+                        <field name="name" required="1"/>                                 
+                    </tree>
+                </field>
+            </record>                       
+
+            <record id="view_action_res_state_township" model="ir.actions.act_window">
+                <field name="name">Townships</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">res.state.township</field>
+                <field name="view_mode">tree,form</field>
+                <field name="view_id" ref="view_res_state_township" />
+            </record>
+
+            <menuitem id="menu_res_state_township" action="view_action_res_state_township" name="Township" parent="contacts.menu_localisation" sequence="4"/> 
+
+        <!-- Account Configuration Setup --> 
+
+            <record id="view_res_partner_configuration" model="ir.ui.view">
+                <field name="name">res.partner.configuration.tree</field>
+                <field name="model">res.partner.configuration</field>
+                <field name="arch" type="xml">
+                    <tree>
+                        <field name="company_id"  options="{'no_create_edit':True,'no_create':True}" force_save="1" required="1" readonly="1"/>   
+                        <field name="partner_relation_type" force_save="1" required="1"/> 
+                        <field name="property_account_receivable_id" options="{'no_create_edit':True,'no_create':True}"/>    
+                        <field name="property_account_payable_id" options="{'no_create_edit':True,'no_create':True}"/> 
+                        <field name="customer_category_id" options="{'no_create_edit':True,'no_create':True}"/> 
+                        <field name="vendor_category_id" options="{'no_create_edit':True,'no_create':True}"/> 
+                    </tree>
+                </field>
+            </record>
+
+            <record id="view_action_res_partner_configuration" model="ir.actions.act_window">
+                <field name="name">Res Partner Configuration</field>
+                <field name="type">ir.actions.act_window</field>
+                <field name="res_model">res.partner.configuration</field>
+                <field name="view_mode">tree,form</field>
+                <field name="view_id" ref="view_res_partner_configuration"/>
+            </record>
+
+            <menuitem id="parent_menu_res_partner_configuration" name="All Configuration" sequence="100" parent="contacts.res_partner_menu_config" groups="base.group_system"/>
+
+            <menuitem id="menu_res_partner_configuration" name="Partner Configuration"  parent="parent_menu_res_partner_configuration" action="view_action_res_partner_configuration" groups="base.group_system"/>  
+
+
+
+            <record id="view_move_form_inherit_partner" model="ir.ui.view">
+                <field name="name">account.move.form.inherit.partner</field>
+                <field name="model">account.move</field>
+                <field name="inherit_id" ref="account.view_move_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='line_ids']/tree//field[@name='partner_id']" position="replace">
+                        <field name="partner_id"
+                            optional="show"
+                            domain="['|', ('parent_id', '=', False), ('is_company', '=', True),('partner_type','!=','employee')]"
+                            attrs="{'column_invisible': [('parent.move_type', '!=', 'entry')]}"/>
+                    </xpath>
+                    
+                </field>
+            </record>     
+
+            <record id="ir_cron_scheduler_property_advance" model="ir.cron">
+                <field name="name">Auto fill advance account</field>
+                <field name="model_id" ref="model_res_partner"/>
+                <field name="state">code</field>
+                <field name="code">model.auto_fill_advance()</field>
+                <field name="user_id" ref="base.user_root" />
+                <field name="interval_number">1</field>
+                <field name="interval_type">days</field>
+                <field name="numbercall">-1</field>
+            </record>                                                     
+
+    </data>
+
+    <record id="partner_name_prefix_tree" model="ir.ui.view">
+        <field name="name">partner.name.prefix.tree</field>
+        <field name="model">partner.name.prefix</field>
+        <field name="arch" type="xml">
+            <tree name="Partner Name Prefix" editable="bottom">
+                <field name="name"/>
+                <field name="company_id" readonly="1" />
+            </tree>
+        </field>
+    </record>
+    <record id="view_action_partner_name_prefix" model="ir.actions.act_window">
+        <field name="name">Partner Name Prefix</field>
+        <field name="res_model">partner.name.prefix</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree</field>
+
+    </record>
+</odoo>

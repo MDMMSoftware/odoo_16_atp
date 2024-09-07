@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_advance_prepaid,access_advance_prepaid,model_advance_prepaid,advance_expense.group_advance_expense_user,1,1,1,1
+access_advance_prepaid_readonly,access_advance_prepaid_readonly,model_advance_prepaid,advance_expense.group_advance_expense_readonly,1,0,0,0
+access_prepaid_register_advance,prepaid_register_advance,model_prepaid_register_advance,advance_expense.group_advance_expense_user,1,1,1,0
+access_job_code_manager,job_code_manager,model_job_code,advance_expense.group_advance_expense_manager,1,1,1,0
+access_job_code_user,job_code_user,model_job_code,base.group_user,1,0,0,0
+access_report_remark_manager,report_remark_manager,model_report_remark,advance_expense.group_advance_expense_manager,1,1,1,0
+access_report_remark_user,report_remark_user,model_report_remark,base.group_user,1,0,0,0
+access_voucher_type_manager,voucher_type_manager,model_voucher_type,advance_expense.group_advance_expense_manager,1,1,1,0
+access_voucher_type_user,voucher_type_user,model_voucher_type,base.group_user,1,0,0,0
+"base.access_res_company_group_user","res_company group_user","base.model_res_company",,1,1,0,0
+access_direct_exp_wizard,_direct_exp_wizard,model_direct_exp_wizard,,1,1,1,0
+

@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<odoo>
+
+    <data noupdate="0">
+
+        
+        <!-- Group Rule -->
+
+        <record model="ir.module.category" id="module_category_adv_exp">
+            <field name="name">Advance &amp; Expense</field>
+        </record>
+
+        <record id="group_advance_expense_readonly" model="res.groups">
+            <field name="name">Read Only</field>
+            <field name="category_id" ref="advance_expense.module_category_adv_exp"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>            
+        </record>        
+
+        <record id="group_advance_expense_user" model="res.groups">
+            <field name="name">Users' Own Documents Only</field>
+            <field name="category_id" ref="advance_expense.module_category_adv_exp"/>
+            <field name="implied_ids" eval="[(4, ref('advance_expense.group_advance_expense_readonly'))]"/>            
+        </record>
+
+        <record id="group_advance_expense_approver" model="res.groups">
+            <field name="name">Users' All Documents Only</field>
+            <field name="implied_ids" eval="[(4, ref('advance_expense.group_advance_expense_user'))]"/>
+            <field name="category_id" ref="advance_expense.module_category_adv_exp"/>
+        </record>
+
+        <record id="group_advance_expense_manager" model="res.groups">
+            <field name="name">Adminstrator</field>
+            <field name="implied_ids" eval="[(4, ref('advance_expense.group_advance_expense_approver'))]"/>
+            <field name="category_id" ref="advance_expense.module_category_adv_exp"/>
+        </record>
+
+        <record model="ir.rule" id="job_code_company_rule">
+            <field name="name">Job Code Company</field>
+            <field name="model_id" ref="advance_expense.model_job_code"></field>
+            <field name="domain_force">[('company_id','in',company_ids)]</field>
+        </record>
+        
+         <record model="ir.rule" id="report_remark_company_rule">
+            <field name="name">Report Remark Company</field>
+            <field name="model_id" ref="advance_expense.model_report_remark"></field>
+            <field name="domain_force">[('company_id','in',company_ids)]</field>
+        </record>
+        
+        <delete model="ir.rule" id="account.account_move_comp_rule"/>
+        <delete model="ir.rule" id="analytic.analytic_comp_rule"/>
+        <delete model="ir.rule" id="account.account_move_line_comp_rule"/>
+        <delete model="ir.rule" id="account.account_invoice_rule_portal"/>
+        <delete model="ir.rule" id="account.account_move_rule_group_readonly"/>
+        <delete model="ir.rule" id="account.account_move_rule_group_invoice"/>
+        <delete model="ir.rule" id="account.account_move_see_all"/>
+        <delete model="ir.rule" id="account.account_move_line_rule_group_readonly"/>
+        <delete model="ir.rule" id="account.account_move_line_rule_group_invoice"/>
+        <delete model="ir.rule" id="account.account_move_line_see_all"/>
+        <delete model="ir.rule" id="base.res_partner_rule"/>
+        <delete model="ir.rule" id="base.res_partner_rule_private_employee"/>
+        <delete model="ir.rule" id="base.res_partner_rule_private_group"/>
+        
+
+    </data>
+</odoo>  
