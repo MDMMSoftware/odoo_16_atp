@@ -44,7 +44,7 @@ class PurchaseOrder(models.Model):
                     branch_ids = self.env.user.branch_ids
                     branch_id = branch_ids.filtered(
                         lambda branch: branch.company_id == so_company)
-                order.branch_id = branch_id
+                order.branch_id = branch_id[0] if branch_id else False
 
 # branch_ids = self.env['res.branch'].search([('id','in',self.env.user.branch_ids.ids),
 #                     ('company_id','=',self.env.company.id)])
