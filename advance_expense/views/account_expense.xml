@@ -51,7 +51,7 @@
                     <attribute name="attrs">{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')]}</attribute>
                 </xpath>  
                  <xpath expr="//field[@name='ref'][1]" position="replace">
-                    <field name="ref" nolabel="1" attrs="{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')],'invisible':[('move_type', 'not in', ('in_invoice', 'in_receipt', 'in_refund'))]}" />
+                    <field name="ref" readonly="1" nolabel="1" attrs="{'readonly':['|',('state','!=','draft'),('x_state','!=','draft')],'invisible':[('move_type', 'not in', ('in_invoice', 'in_receipt', 'in_refund'))]}" />
 
                 </xpath>   
                 
@@ -61,7 +61,7 @@
                     <field name="term_type" readonly="1" attrs="{'invisible':[('move_type','not in',['out_invoice', 'out_refund'])]}" />
                 </xpath>                 
                 <xpath expr="//field[@name='name']" position="after">
-                    <field name="ref"  attrs="{'readonly': True}" placeholder="Draft"/>
+                    <field name="ref" readonly="1"  attrs="{'readonly': True}" placeholder="Draft"/>
                 </xpath>       
                 <xpath expr="//field[@name='partner_id']" position="before">
                     <label for="partner_id" string="Contact" style="font-weight:bold;" attrs="{'invisible': [('move_type', '!=', 'entry')]}"/>
