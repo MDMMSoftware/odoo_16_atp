@@ -21,9 +21,9 @@
                     <field name="amount_total"/>
                 </xpath>
                 <xpath expr="//page[@name='products']//tree//field[@name='price_unit']" position="before">             
-                    <field name="discount_type" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
-                    <field name="discount" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
-                    <field name="discount_amt" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount_type" optional="hide" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount"  optional="hide" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount_amt"  optional="hide"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
                 </xpath>
                 				
 			</field>

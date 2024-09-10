@@ -18,9 +18,6 @@
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//button[@name='action_toggle_is_locked']" position="after">
-                  <button name="action_print"  context="{'filename':'mmm_store_transfer_report'}"  string="Print" type="object" class="oe_highlight btn-info"/>           
-                </xpath>            
                 <xpath expr="//sheet//page[@name='operations']//tree//field[@name='description_picking']" position="after">
                     <field name="product_name" optional="hide"/>
                     <field name="custom_part" readonly="1" optional="hide" />
