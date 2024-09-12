@@ -44,7 +44,7 @@ class PurchaseOrder(models.Model):
                     branch_ids = self.env.user.branch_ids
                     branch_id = branch_ids.filtered(
                         lambda branch: branch.company_id == so_company)
-                order.branch_id = branch_id
+                order.branch_id = branch_id[0] if branch_id else False
 
 # branch_ids = self.env['res.branch'].search([('id','in',self.env.user.branch_ids.ids),
 #                     ('company_id','=',self.env.company.id)])
@@ -76,6 +76,11 @@ class PurchaseOrder(models.Model):
                 raise UserError(error_msg)
             return picking_type[:1]
         else:
+            default_warehouse_id = self.env.user.property_warehouse_id
+            if default_warehouse_id:
+                picking_type_id = self.env['stock.picking.type'].search([('code', '=', 'incoming'), ('warehouse_id', '=', self.env.user.property_warehouse_id.id), ('return_picking_type_id','!=',False)],limit=1)
+                if picking_type_id:
+                    return picking_type_id
             res = super(PurchaseOrder, self)._get_picking_type(company_id)
             return res
 
@@ -183,7 +188,7 @@ class PurchaseOrder(models.Model):
             picking_type = self.env['stock.picking.type'].sudo().search(
                 [('branch_id', '=', self.branch_id.id), ('company_id', '=', self.company_id.id)], limit=1)
             self.picking_type_id = picking_type
-            if not picking_type or picking_type.id != self.env.user.branch_id.id:
+            if not picking_type or picking_type.branch_id.id != self.env.user.branch_id.id:
                 branch_ids = self.env['res.branch'].search([('id','in',self.env.user.branch_ids.ids),
                                     ('company_id','=',self.env.company.id)])
 
