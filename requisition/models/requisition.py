@@ -45,7 +45,7 @@ class Requisition(models.Model):
     
     def _get_all_branches(self):
         selections = []
-        query = "SELECT id::text,name FROM res_branch WHERE active=true ORDER BY name"
+        query = "SELECT id::text,name FROM res_branch ORDER BY name"
         self.env.cr.execute(query)
         selections = self.env.cr.fetchall()
 
