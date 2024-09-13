@@ -157,7 +157,7 @@ class Requisition(models.Model):
         else:
             if self.transit_location_id:
                 picking_type = self.env['stock.picking.type']
-                from_picking_type = picking_type.search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal')],limit=1)
+                from_picking_type = picking_type.sudo().search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal')],limit=1)
                 from_picking = self._create_requisition_picking(self.src_location_id,self.transit_location_id,from_picking_type,branch=int(self.from_branch))
                 from_picking_move_ids_lst = []
                 for res in partial_line:
@@ -181,7 +181,7 @@ class Requisition(models.Model):
                                     'move_ids':from_picking_move_ids_lst
                                     })
                 
-                to_picking_type = picking_type.search([('warehouse_id','=',self.location_id.warehouse_id.id),('code','=','internal')],limit=1)
+                to_picking_type = picking_type.sudo().search([('warehouse_id','=',self.location_id.warehouse_id.id),('code','=','internal')],limit=1)
                 to_picking = self._create_requisition_picking(self.transit_location_id,self.location_id,to_picking_type,branch=int(self.to_branch))
                 to_picking_move_ids_lst = []
                 for res in partial_line:
@@ -209,7 +209,7 @@ class Requisition(models.Model):
                 self.write({'picking_ids':[(4, to_picking.id)]})
             else:
                 picking_type_id = self.env['stock.picking.type']
-                picking_type = picking_type_id.search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal'),('active','=',True)],limit=1)
+                picking_type = picking_type_id.sudo().search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal'),('active','=',True)],limit=1)
                 picking = self._create_requisition_picking(self.src_location_id,self.location_id,picking_type,branch=False)
                 picking_move_ids_lst = []
                 for res in partial_line:
