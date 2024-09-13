@@ -15,7 +15,7 @@
         'views/purchase_order.xml',
         'views/purchase_team.xml',
         'views/purchase_detail_wizard.xml',
-        'views/account_tax.xml',
+        # 'views/account_tax.xml',
     ],
     'license': "AGPL-3",
     'installable': True,

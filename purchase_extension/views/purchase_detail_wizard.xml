@@ -8,7 +8,7 @@
             <field name="inherit_id" ref="reporting_module.form_view_detail_report_wizard"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='department_id']" position="after">
-                    <field name="invoice_user_id"  invisible="context.get('report_type') == 'sale'" string="Purchase Person"  options="{'no_create':True,'no_create_edit': True,'no_open': True}"/>
+                    <field name="invoice_user_id"  groups="purchase.group_purchase_user"    invisible="context.get('report_type') == 'sale'" string="Purchase Person"  options="{'no_create':True,'no_create_edit': True,'no_open': True}"/>
                     <field name="purchase_team_id" invisible="context.get('report_type') == 'sale'" options="{'no_create_edit':True, 'no_create':True}"/>
                 </xpath>
                 <xpath expr="//button[@class='btn-default']" position="before">

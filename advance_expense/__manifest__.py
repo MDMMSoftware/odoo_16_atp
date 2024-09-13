@@ -14,7 +14,7 @@
         'security/ir.model.access.csv',
         'views/account_advance.xml',
         'views/account_expense.xml',
-        'views/account_tax.xml',
+        # 'views/account_tax.xml',
         'wizard/advance_wizard.xml',
     ],
     # This is for testing owl & qweb

@@ -90,10 +90,8 @@ class PurchaseOrder(models.Model):
                 amount_untaxed = totals.get(order.currency_id, {}).get('amount_untaxed', 0.0)
                 amount_tax = totals.get(order.currency_id, {}).get('amount_tax', 0.0)
             else:
-                amount_untaxed = sum(order_lines.mapped('price_subtotal'))         
-
-            amount_tax = (order.tax_id.amount / 100) * (order.amount_untaxed-order.discount_amt)  if hasattr(order,'tax_id') and order.tax_id else 0.0                        
-                
+                amount_untaxed = sum(order_lines.mapped('price_subtotal'))
+                amount_tax = sum(order_lines.mapped('price_tax'))
             if order.discount or order.discount_type:
                 if order.discount_type=='amount' and order.discount:
                     order.discount_amt = order.discount

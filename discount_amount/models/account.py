@@ -129,7 +129,6 @@ class AccountMoveLine(models.Model):
     add_type = fields.Selection([('amount','Amt'),('percentage','%')],string='Additional Type',default="percentage")
     add_amt = fields.Float('Additional Rate',copy=False)
     account_type = fields.Selection(related='account_id.account_type',store=True)
-    is_tax_line = fields.Boolean("Is Tax Line?",default=False)
     
 
     @api.depends('discount_amt')
@@ -154,7 +153,7 @@ class AccountMoveLine(models.Model):
             line_discount_price_unit = line.price_unit
             subtotal = line.quantity * line_discount_price_unit
 
-            # # Compute 'price_total'.
+            # Compute 'price_total'.
             if line.tax_ids:
                 taxes_res = line.tax_ids.compute_all(
                     line_discount_price_unit,
@@ -405,69 +404,30 @@ class AccountMove(models.Model):
             total_residual, total_residual_currency = 0.0, 0.0
             total, total_currency = 0.0, 0.0
             amount_add = 0.0
-            tax_line = False
             for inv_line in move.invoice_line_ids:
                 amount_add += (inv_line.add_amt*inv_line.quantity) if inv_line.add_type == 'amount' else ((inv_line.price_unit*inv_line.quantity) * (inv_line.add_amt /100))
             for line in move.line_ids:
                 if move.is_invoice(True):
                     # === Invoices ===
-                    if move.company_id.tax_feature:
-                        if line.is_tax_line:
-                            tax_line = line
-                            continue
-                        elif line.display_type == 'tax' or (line.display_type == 'rounding' and line.tax_repartition_line_id):
-                            # Tax amount.
-                            total_tax += line.balance
-                            total_tax_currency += line.amount_currency
-                            total += line.balance
-                            total_currency += line.amount_currency
-                        elif line.display_type in ('product', 'rounding'):
-                            # Untaxed amount.
-                            total_untaxed += line.balance
-                            total_untaxed_currency += line.amount_currency
-                            total_currency += line.amount_currency
-                            total += line.balance    
-                        elif line.display_type == 'payment_term':
-                            # Residual amount.
-                            total_residual += line.amount_residual
-                            total_residual_currency += line.amount_residual_currency
-                    else:           
-                        if line.display_type == 'tax' or (line.display_type == 'rounding' and line.tax_repartition_line_id):
-                            # Tax amount.
-                            total_tax += line.balance
-                            total_tax_currency += line.amount_currency
-                            total += line.balance
-                            total_currency += line.amount_currency
-                        elif line.display_type in ('product', 'rounding'):
-                            # Untaxed amount.
-                            total_untaxed += line.balance
-                            total_untaxed_currency += line.amount_currency
-                            total_currency += line.amount_currency
-                            total += line.balance    
-                        elif line.display_type == 'payment_term':
-                            # Residual amount.
-                            total_residual += line.amount_residual
-                            total_residual_currency += line.amount_residual_currency
-
-
-                    # if line.display_type == 'tax' or (line.display_type == 'rounding' and line.tax_repartition_line_id):
-                    #     # Tax amount.
-                    #     total_tax += line.balance
-                    #     total_tax_currency += line.amount_currency
-                    #     total += line.balance
-                    #     total_currency += line.amount_currency
-                    # elif line.display_type in ('product', 'rounding'):
-                    #     # Untaxed amount.
-                    #     total_untaxed += line.balance
-                    #     total_untaxed_currency += line.amount_currency
-                    #     total_currency += line.amount_currency
-                    #     total += line.balance
+                    
+                    if line.display_type == 'tax' or (line.display_type == 'rounding' and line.tax_repartition_line_id):
+                        # Tax amount.
+                        total_tax += line.balance
+                        total_tax_currency += line.amount_currency
+                        total += line.balance
+                        total_currency += line.amount_currency
+                    elif line.display_type in ('product', 'rounding'):
+                        # Untaxed amount.
+                        total_untaxed += line.balance
+                        total_untaxed_currency += line.amount_currency
+                        total_currency += line.amount_currency
+                        total += line.balance
                         
                         
-                    # elif line.display_type == 'payment_term':
-                    #     # Residual amount.
-                    #     total_residual += line.amount_residual
-                    #     total_residual_currency += line.amount_residual_currency
+                    elif line.display_type == 'payment_term':
+                        # Residual amount.
+                        total_residual += line.amount_residual
+                        total_residual_currency += line.amount_residual_currency
                 else:
                     # === Miscellaneous journal entry ===
                     if line.debit:
@@ -487,48 +447,11 @@ class AccountMove(models.Model):
                     total_discount_amt = 0
             if sum(move.invoice_line_ids.mapped('discount_amt')) > 0:
                 total_discount_amt = (total_discount_amt+sum(move.invoice_line_ids.mapped('discount_amt')))*move.exchange_rate
-                
+            
             exhange_rate = move.exchange_rate != 0.0 and move.exchange_rate or 1.0
-            sign = move.direction_sign   
+            sign = move.direction_sign
             if move.move_type in ('out_refund'):
-                total_discount_amt = total_discount_amt*sign            
-
-            if tax_line:
-                if not move.tax_id:
-                    tax_line.unlink()
-                else:
-                    tax_amount = (move.tax_id.amount / 100) * ((sign * total_untaxed_currency)-total_discount_amt )                
-                    pp_id = self.env['product.product'].search([('product_tmpl_id','=',move.tax_id.product_template_id.id)]) 
-                    if not pp_id:
-                        raise ValidationError("There is no product associated with the tax!!")
-                    tax_line.product_id = pp_id
-                    tax_line.quantity = 1
-                    tax_line.product_uom_id = pp_id.uom_id
-                    tax_line.price_unit = tax_amount 
-                    tax_amount_signed = sign > 0 and sign * tax_amount or sign * tax_amount            
-                    total_tax += tax_amount_signed 
-                    total_tax_currency += tax_amount_signed
-                    total += tax_amount_signed
-                    total_currency += tax_amount_signed                     
-            else:
-                if move.tax_id: 
-                    tax_amount = (move.tax_id.amount / 100) * ((sign * total_untaxed_currency)-total_discount_amt )
-                    pp_id = self.env['product.product'].search([('product_tmpl_id','=',move.tax_id.product_template_id.id)]) 
-                    if not pp_id:
-                        raise ValidationError("There is no product associated with the tax!!")                    
-                    move.invoice_line_ids = [Command.create({
-                        "product_id":pp_id.id,
-                        "product_uom_id":pp_id.uom_id.id,
-                        "quantity":1,
-                        "price_unit":tax_amount,
-                        "is_tax_line":True,
-                    })]   
-                    tax_amount_signed = sign > 0 and sign * tax_amount or sign * tax_amount          
-                    total_tax += tax_amount_signed 
-                    total_tax_currency += tax_amount_signed
-                    total += tax_amount_signed
-                    total_currency += tax_amount_signed                                 
-
+                total_discount_amt = total_discount_amt*sign
             move.discount_amt = total_discount_amt
             move.amount_untaxed = sign * total_untaxed_currency
             move.amount_tax = sign * (total_tax_currency)

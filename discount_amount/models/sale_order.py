@@ -18,7 +18,6 @@ class SaleOrderLine(models.Model):
     commercial_amt = fields.Float('Commission Rate',copy=False)
     add_type = fields.Selection([('amount','Amt'),('percentage','%')],string='Additional Type',default="percentage")
     add_amt = fields.Float('Additional Rate',copy=False)
-    is_tax_line = fields.Boolean("Is Tax Line?",default=False)
    
     @api.depends('product_uom_qty', 'discount', 'price_unit', 'tax_id','discount_type')
     def _compute_amount(self):
@@ -126,6 +125,7 @@ class SaleOrder(models.Model):
                     'invoice_line_ids': [],
                     'invoice_date': record.date_order,
                     'company_id':record.company_id and record.company_id.id or False,
+                    'branch_id':record.branch_id and record.branch_id.id or False,
                 }
 
                 line_vals = {
@@ -193,17 +193,8 @@ class SaleOrder(models.Model):
                 amount_untaxed = totals.get(order.currency_id, {}).get('amount_untaxed', 0.0)
                 amount_tax = totals.get(order.currency_id, {}).get('amount_tax', 0.0)
             else:
-                if order.company_id.tax_feature:
-                    amount_untaxed = amount_tax = 0.0                                       
-                    for line in order_lines:
-                        if line.is_tax_line:
-                            amount_tax += line.price_subtotal
-                        else:
-                            amount_untaxed += line.price_subtotal
-                else:
-                    amount_untaxed = sum(order_lines.mapped('price_subtotal'))
-            
-            amount_tax = (order.tax_id.amount / 100) * (order.amount_untaxed-order.discount_amt)  if hasattr(order,'tax_id') and order.tax_id else 0.0 
+                amount_untaxed = sum(order_lines.mapped('price_subtotal'))
+                amount_tax = sum(order_lines.mapped('price_tax'))
 
             if order.discount or order.discount_type:
                 if order.discount_type=='amount' and order.discount:

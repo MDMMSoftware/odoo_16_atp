@@ -11,13 +11,12 @@
                 </xpath>
                 
                 <xpath expr="//page[@id='invoice_tab']//field[@name='discount']" position="replace">
-                    <field name="is_tax_line" optional="hide" readonly="1"/>
-                    <field name="discount_type" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="discount" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="discount_amt" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="add_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
-                    <field name="add_amt" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
-                    <field name="account_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="discount_type" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount_amt" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="add_type" optional="hide"/>
+                    <field name="add_amt" optional="hide"/>
+                    <field name="account_type" optional="hide"/>
                     
                 </xpath>
                 <xpath expr="//field[@name='narration']" position="before">
@@ -31,7 +30,6 @@
                     <field name="amount_untaxed"/>
                     <field name="discount_amt" invisible="1"/>
                     <field name="discount_amt_currency"/>
-                    <field name="amount_tax" attrs="{'invisible': [('amount_tax','&lt;=',0.0)]}"/>
                     <field name="amount_total"/>
                     <field name="amount_add"/>
 

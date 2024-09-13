@@ -26,22 +26,13 @@ class DetailReportWizard(models.TransientModel):
         my_date = fields.Datetime.context_timestamp(self, timestamp=datetime.now())
         return my_date
     
-    def _compute_invoice_user_id_readonly(self):
-        report_type = self.context.get('report_type')
-        if report_type and report_type == 'purchase':
-            return not self.user.has_group("purchase.group_purchase_manager")
-        elif report_type and report_type == 'sale':
-            return not self.user.has_group("sales_team.group_sale_salesman_all_leads")
-        else:
-            return True
-
     date_from = fields.Date('From Date',default=get_today)
     date_to = fields.Date('To Date',default=get_today)
     company_id = fields.Many2one('res.company', 'Company',default=_get_default_company)
     shop_id = fields.Many2one('res.branch',string="Branch",default=_get_default_branch)
     department_id = fields.Many2one('res.department','Department',default=False,required=False,readonly=True,)
     partner_id = fields.Many2one('res.partner',string="Customer",domain=False)
-    invoice_user_id = fields.Many2one('res.users',string="Sale Person", default=lambda self: self.env.user, readonly=_compute_invoice_user_id_readonly)
+    invoice_user_id = fields.Many2one('res.users',string="Sale Person", default=lambda self: self.env.user, readonly=False)
     # team_id = fields.Many2one('crm.team',string="Team")
     # purchase_team_id = fields.Many2one('crm.purchase_team',string="
     # all_read_user = fields.Boolean('Show Sale Person?')
