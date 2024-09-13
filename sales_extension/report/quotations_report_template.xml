@@ -81,7 +81,7 @@
             </tr>
             <tr>
                 <td style="padding:10 0px;">Sales Person : <span><t t-esc="doc.user_id.name"/></span></td>
-                <td style="padding:10 0px;">Phone No : <span><t t-esc="doc.user_id.partner_id.phone"/></span></td>
+                <td style="padding:10 0px;">Phone No : <span><t t-esc="doc.user_id.partner_id.mobile"/></span></td>
                 <td style="padding:10 0px;">Payment Terms : <span><t t-esc="doc.payment_term_id.name"/></span></td>
             </tr>
             </table>

@@ -21,10 +21,13 @@ class Requisition(models.Model):
     position_id = fields.Many2one('hr.job', 'Position',related="request_person_id.job_id",store=True, tracking=True)
     department_id = fields.Many2one('res.department','Department',related=False,store=True,required=False,readonly=True,tracking=True)
     company_id = fields.Many2one('res.company',string="Company", required=True, default=lambda self: self.env.company)
-    from_branch = fields.Many2one('res.branch', string='From Branch', store=True,
-                                readonly=False,domain=_get_branch_domain,required=False)
-    to_branch = fields.Many2one('res.branch', string='To Branch', store=True,
-                                readonly=False,domain=_get_branch_domain,required=False)
+    
+    from_branch = fields.Selection(lambda self:self._get_all_branches(),string='From Branch', store=True, readonly=False,)
+    to_branch = fields.Selection(lambda self:self._get_all_branches(),string='To Branch', store=True, readonly=False,)
+    # from_branch = fields.Many2one('res.branch', string='From Branch', store=True,
+    #                             readonly=False,domain=_get_branch_domain,required=False)
+    # to_branch = fields.Many2one('res.branch', string='To Branch', store=True,
+    #                             readonly=False,domain=_get_branch_domain,required=False)
     order_date = fields.Date('Order Date',required=True,default=fields.Datetime.now,tracking=True)
     required_date = fields.Date('Required Date',required=True,tracking=True)
     location_id = fields.Many2one('stock.location', 'To Location',tracking=True,required=False,domain="[('usage', 'in', ['internal','transit'])]")
@@ -33,16 +36,24 @@ class Requisition(models.Model):
     journal_id = fields.Many2one('account.journal',string="Journal")
     state = fields.Selection([('draft', 'Draft'),('confirm', 'Confirm'),('check', 'Check'),('all_check','All Check'),('approve', 'Approve'),('close', 'Closed')],tracking=True, default="draft", readonly=True, string="Status")
     requisition_line = fields.One2many('requisition.line','requisition_id',string='Requisition Line',tracking=True)
-    picking_ids = fields.Many2many('stock.picking')
+    picking_ids = fields.Many2many('stock.picking', copy=False)
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
     requisition_type = fields.Selection(selection=[('transfer','Transfer'),('issue','Issue')],string="Type",default="transfer")
     partner_id = fields.Many2one('res.partner',string="Customer",domain=[('partner_type','=','customer')])
     order_ids = fields.Many2many('sale.order','requisition_sale_order_rel','requisition_id','order_id',ondelete='cascade')
     adjust_ids = fields.Many2many('stock.inventory.adjustment','requisition_adjustment_rel','requisition_id','adjust_id',ondelete='cascade')
     
+    def _get_all_branches(self):
+        selections = []
+        query = "SELECT id::text,name FROM res_branch ORDER BY name"
+        self.env.cr.execute(query)
+        selections = self.env.cr.fetchall()
+
+        return selections
+    
     def action_confirm(self):
         sequence = self.env['sequence.model']
-        self.name = generate_code.generate_code(sequence,self,self.from_branch,self.company_id,self.order_date,None,None)
+        self.name = generate_code.generate_code(sequence,self,self.env['res.branch'].browse(int(self.from_branch)),self.company_id,self.order_date,None,None)
         self.state = 'confirm'
 
     def action_check(self):
@@ -96,7 +107,7 @@ class Requisition(models.Model):
                     "internal_ref":self.name,
                     "date_order":self.required_date,
                     "department_id":self.department_id and self.department_id.id or False,
-                    "branch_id": self.from_branch and self.from_branch.id or False,
+                    "branch_id": int(self.from_branch) and int(self.from_branch) or False,
                     "pricelist_id": pricelist_id.id or False,
                     "exchange_rate":1.0,
                     "order_line":order_line_lst
@@ -136,7 +147,7 @@ class Requisition(models.Model):
                                     {   
                                         'location_id':self.src_location_id.id,
                                         'date':self.required_date,
-                                        "branch_ids": self.from_branch and self.from_branch.id or False,
+                                        "branch_ids": int(self.from_branch) and int(self.from_branch) or False,
                                         'department_id':self.department_id.id,
                                         'journal_id':self.journal_id.id,
                                         'ref':self.name,
@@ -146,8 +157,8 @@ class Requisition(models.Model):
         else:
             if self.transit_location_id:
                 picking_type = self.env['stock.picking.type']
-                from_picking_type = picking_type.search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal')],limit=1)
-                from_picking = self._create_requisition_picking(self.src_location_id,self.transit_location_id,from_picking_type,branch=self.from_branch)
+                from_picking_type = picking_type.sudo().search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal')],limit=1)
+                from_picking = self._create_requisition_picking(self.src_location_id,self.transit_location_id,from_picking_type,branch=int(self.from_branch))
                 from_picking_move_ids_lst = []
                 for res in partial_line:
                     values =    (0, 0, 
@@ -157,7 +168,7 @@ class Requisition(models.Model):
                                             'product_uom_qty': res.quantity,
                                             'location_id':self.src_location_id.id,
                                             'location_dest_id':self.transit_location_id.id,
-                                            'branch_id':self.from_branch and self.from_branch.id or False ,
+                                            'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
                                             'fleet_id':res.requisition_line.fleet_id.id  or False  ,  
                                             'division_id':res.requisition_line.division_id.id or False ,        
                                         })
@@ -165,13 +176,13 @@ class Requisition(models.Model):
                         values[2]['project_id'] = res.requisition_line.project_id.id or False
                     from_picking_move_ids_lst.append(values)
                 from_picking.write({
-                                    'branch_id':self.from_branch and self.from_branch.id or False,
+                                    'branch_id':int(self.from_branch) and int(self.from_branch) or False,
                                     'internal_ref': self.internal_ref,
                                     'move_ids':from_picking_move_ids_lst
                                     })
                 
-                to_picking_type = picking_type.search([('warehouse_id','=',self.location_id.warehouse_id.id),('code','=','internal')],limit=1)
-                to_picking = self._create_requisition_picking(self.transit_location_id,self.location_id,to_picking_type,branch=self.to_branch)
+                to_picking_type = picking_type.sudo().search([('warehouse_id','=',self.location_id.warehouse_id.id),('code','=','internal')],limit=1)
+                to_picking = self._create_requisition_picking(self.transit_location_id,self.location_id,to_picking_type,branch=int(self.to_branch))
                 to_picking_move_ids_lst = []
                 for res in partial_line:
                     values = ( 0 , 0 ,
@@ -181,7 +192,7 @@ class Requisition(models.Model):
                                     'product_uom_qty': res.quantity,
                                     'location_id':self.transit_location_id.id ,
                                     'location_dest_id':self.location_id.id,
-                                    'branch_id':self.to_branch and self.to_branch.id or False,
+                                    'branch_id':int(self.to_branch) and int(self.to_branch) or False,
                                     'fleet_id':res.requisition_line.fleet_id.id or False,  
                                     'division_id':res.requisition_line.division_id.id or False , 
                                 }    
@@ -190,7 +201,7 @@ class Requisition(models.Model):
                         values[2]['project_id'] = res.requisition_line.project_id.id or False
                     to_picking_move_ids_lst.append(values)                
                 to_picking.write({  
-                                    'branch_id':self.to_branch and self.to_branch.id or False,
+                                    'branch_id':int(self.to_branch) and int(self.to_branch) or False,
                                     'internal_ref': self.internal_ref,
                                     'move_ids':to_picking_move_ids_lst
                                 })
@@ -198,7 +209,7 @@ class Requisition(models.Model):
                 self.write({'picking_ids':[(4, to_picking.id)]})
             else:
                 picking_type_id = self.env['stock.picking.type']
-                picking_type = picking_type_id.search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal'),('active','=',True)],limit=1)
+                picking_type = picking_type_id.sudo().search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal'),('active','=',True)],limit=1)
                 picking = self._create_requisition_picking(self.src_location_id,self.location_id,picking_type,branch=False)
                 picking_move_ids_lst = []
                 for res in partial_line:
@@ -227,11 +238,11 @@ class Requisition(models.Model):
             # self.state = 'approve'
 
     def _create_requisition_picking(self,from_loc,to_loc,picking_type_id,branch):
-        picking = self.env['stock.picking'].create({
+        picking = self.env['stock.picking'].sudo().create({
             'location_id':from_loc.id,
             'location_dest_id':to_loc.id,
             'picking_type_id':picking_type_id.id,
-            'branch_id':branch and branch.id or False,
+            'branch_id':branch and branch or False,
             'requisition_id':self.id,
             'origin':self.name or False,
 
