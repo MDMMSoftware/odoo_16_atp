@@ -238,7 +238,7 @@ class Requisition(models.Model):
             # self.state = 'approve'
 
     def _create_requisition_picking(self,from_loc,to_loc,picking_type_id,branch):
-        picking = self.env['stock.picking'].create({
+        picking = self.env['stock.picking'].sudo().create({
             'location_id':from_loc.id,
             'location_dest_id':to_loc.id,
             'picking_type_id':picking_type_id.id,
