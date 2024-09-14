@@ -47,3 +47,8 @@ class AccountPayment(models.Model):
             },
             name=_("Matched Transactions")
         )
+
+    def action_reset_to_draft(self):
+        self.ensure_one()
+        self.x_state = 'draft'
+        
