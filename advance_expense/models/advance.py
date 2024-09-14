@@ -587,14 +587,16 @@ class AccountPayment(models.Model):
         return [(rec.id,rec.seq_name) for rec in self]
     
     def action_draft(self):
-        res = super().action_draft()
-        if self.prepaid_id:
-            self.prepaid_id.state = 'waiting_payment'
-            self.prepaid_id.done_amt = self.prepaid_id.done_amt-self.amount
-            if self.prepaid_id.done_amt > 0:
-                self.prepaid_id.payment_status = 'partial'
-            else:
-                self.prepaid_id.payment_status = 'not_paid'
+        self.x_state = 'draft'
+        # res = super().action_draft()
+        # if self.prepaid_id:
+        #     self.prepaid_id.state = 'waiting_payment'
+        #     self.prepaid_id.done_amt = self.prepaid_id.done_amt-self.amount
+        #     if self.prepaid_id.done_amt > 0:
+        #         self.prepaid_id.payment_status = 'partial'
+        #     else:
+        #         self.prepaid_id.payment_status = 'not_paid'
+        
 
     def action_change_status(self):
         to_status = self._context.get('to_status',None)
