@@ -293,14 +293,9 @@ class AccountMoveReversal(models.TransientModel):
 
     def reverse_moves(self):
         moves = self.move_ids
-        order_id = self.move_ids.line_ids.sale_line_ids.order_id.id
-        if order_id:
-            check_commercial = self.env['account.move'].search_count([
-                        ('commercial_sale_id','=',order_id),
-                        ('state','!=','cancel')
-                    ])
-            if check_commercial > 0:
-                raise UserError('You can not cancel the invoice which has a commission bill.')
+        order_id = self.move_ids.line_ids.sale_line_ids.order_id
+        if order_id and order_id.commercial_move_id:
+            raise UserError('You cannot cancel the invoice which has a commission bill.')
 
         for move in moves:
             if move.line_ids.sale_line_ids:

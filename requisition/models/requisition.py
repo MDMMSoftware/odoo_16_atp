@@ -66,6 +66,8 @@ class Requisition(models.Model):
         self.state = 'check'
 
     def action_all_check(self):
+        if (self.from_branch and not self.to_branch ) or (self.to_branch and not self.from_branch):
+            raise UserError("Both from branch and to branch is required!!")
         for res in self.requisition_line:
             if not res.product_id:
                 raise UserError (_("Product should not be blank in Requisition Line"))          

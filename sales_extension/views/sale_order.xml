@@ -47,6 +47,8 @@
             <field name="arch" type="xml">  
                 <xpath expr="//field[@name='create_date']" position="before">
                     <field name="date_order" string="Quotation Date" widget="date"/>
+                    <field name="sale_type" string="Type" optional="hide"/>
+                    <field name="term_type" string="Payment Type" optional="hide"/>
                 </xpath> 
             </field>
         </record>         
