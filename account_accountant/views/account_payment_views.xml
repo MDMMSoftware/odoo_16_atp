@@ -16,9 +16,6 @@
                         groups="account.group_account_user"
                         attrs="{'invisible': ['|', ('is_reconciled', '=', True), ('state', '!=', 'posted')]}"/>
             </xpath>
-            <xpath expr="//button[@name='unmark_as_sent']" position="after">
-                <button name="action_reset_to_draft" attrs="{'invisible': [('x_state', '!=', 'waiting_payment')]}" type="object" string="Reset to Draft"/>
-            </xpath>
         </field>
     </record>
 </odoo>

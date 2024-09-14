@@ -328,7 +328,7 @@
             <field name="inherit_id" ref="account.view_account_payment_form" />
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_draft']" position="replace">
-                    <button name="action_draft" string="Reset To Draft" type="object" class="btn btn-secondary" attrs="{'invisible': [('state', 'not in', ('posted'))]}"
+                    <button name="action_draft" string="Reset To Draft" type="object" class="btn btn-secondary" attrs="{'invisible': [('x_state', '!=', 'waiting_payment')]}"
                                 groups="account.group_account_invoice" data-hotkey="w"/>
                 </xpath>
                 <xpath expr="//form//header//field[@name='state']" position="replace">
@@ -347,7 +347,7 @@
                     <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//form//header//button[@name='action_draft']" position="attributes">
-                    <attribute name="invisible">1</attribute>
+                    <!-- <attribute name="invisible">1</attribute> -->
                 </xpath>
                 <xpath expr="//form//header//button[@name='action_cancel']" position="after">
                     <button name="action_change_status" context="{'to_status':'check'}" string="Submit" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'draft')]}"/>
