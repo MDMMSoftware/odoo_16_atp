@@ -276,7 +276,7 @@
             <field name="inherit_id" ref="requisition.requisition_form_view"/>
                 <field name="arch" type="xml">
                     <xpath expr="//notebook//page[@name='product_line']//tree//field[@name='part_id']" position="after">
-						<field name="repair_object_id"  options="{'no_quick_create': true, 'no_create_edit':true}" />
+						<field name="repair_object_id" optional="hide"  options="{'no_quick_create': true, 'no_create_edit':true}" />
                     </xpath>
                 </field>
         </record> 

@@ -18,7 +18,6 @@
         'views/sale.xml',
         'views/purchase.xml',
         'views/adjustment.xml',
-        'views/requisition.xml',
         'views/account_move.xml',
         'views/stock_move.xml',
         'views/stock_lot.xml'

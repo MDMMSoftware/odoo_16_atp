@@ -11,17 +11,21 @@
 					<button name="action_confirm" type="object" string="Confirm"  states="draft" class= "oe_highlight"/>
 					<button name="action_check" type="object" string="HOD Approve" states="confirm" class= "oe_highlight"/>
 					<button name="action_all_check" type="object" string="All Check" states="check" class= "oe_highlight"/>
-					<button name="%(requisition.act_stock_requisition)d" type="action" string="Prepare" states="all_check" class= "oe_highlight"/>
+					<button name="%(requisition.act_stock_requisition)d" type="action" string="Prepare" states="all_check" class= "oe_highlight btn-info"/>
+                    <button name="action_close" type="object" string="Close" attrs="{'invisible':[('state','in',['draft','close'])]}"  class="oe_highlight btn-danger"/>
 					<!-- <button name="action_close" type="object" string="Closed" attrs="{'invisible':[('state','in',['draft','close'])]}" class= "oe_highlight"/>
 					<button name="action_reset_to_draft" type="object" string="Reset To Draft" attrs="{'invisible':[('state','in',['draft'])]}" class= "oe_highlight"/>
 					<button name="action_register_issue" type="object" string="Prepare Issue" attrs="{'invisible':[('state','not in',['approve'])]}" /> -->
-					<field name="state" widget="statusbar" statusbar_visible = "draft,confirm,check,all_check,approve"/>
+					<field name="state" widget="statusbar" attrs="{'invisible':[('state','=','close')]}" statusbar_visible = "draft,confirm,check,all_check,approve"/>
+                    <field name="state" widget="statusbar" attrs="{'invisible':[('state','!=','close')]}" statusbar_visible = "draft,confirm,check,all_check,approve,close"/>
 				</header>
 				<sheet>
 					<div name="button_box" class="oe_button_box">
 						<button name="action_open_orders" attrs="{'invisible':['|',('partner_id','=',False),('requisition_type','=','transfer')]}" class="oe_stat_button" icon="fa-book" type="object" string="Sale Orders"/>
 						<button name="action_open_adjustments" attrs="{'invisible':['|',('partner_id','!=',False),('requisition_type','=','transfer')]}" class="oe_stat_button" icon="fa-book" type="object" string="Adjustments"/>    
-            			<button name="action_open_transfers" attrs="{'invisible':[('requisition_type','=','issue')]}" class="oe_stat_button" icon="fa-book" type="object" string="Transfers"/>
+            			<button name="action_open_transfers" attrs="{'invisible':[('requisition_type','=','issue')]}" class="oe_stat_button" icon="fa-book" type="object" string="Transfers">
+                            <field string="Transfers" name="transfer_count" widget="statinfo"/>
+                        </button>                        
           			</div>
 					
 					<div class="oe_title">
@@ -68,12 +72,13 @@
 									<field name="qty" />
 									<field name="done_qty" force_save="1"/>
 									<field name="product_name"/>
-									<field name="part_id"/>
+									<field name="part_id" optional="hide"/>
 									<field name="product_uom_category_id" invisible="1"/>
 									<field name="uom_id" />
 									<field name="remaining_from" />
 									<field name="remaining_to" />
 									<field name="remaining_transit" />
+                                    <field name="remaining_qty_compute" invisible="1"/>
 									<field name="remark" />
 								</tree>
 							</field>
@@ -141,5 +146,22 @@
     <menuitem id="main_requisition_menu" name="Requisition" groups="requisition.group_requisition_readonly" sequence="18" web_icon="requisition,static/description/requisition.png"/>
     <menuitem id="pr_operation_menu" name="Operation" groups="requisition.group_requisition_readonly" parent="main_requisition_menu" sequence="1"/>
     <menuitem action="action_requisition" id="requisition_menu" name="Requisition" parent="pr_operation_menu" sequence="1"/>
+
+    <record id="stock_move_form_inherit_requisition" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.requisition</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet//group//field[@name='partner_id']" position="after">
+                <field name="requisition_id" invisible="1" readonly="1" force_save="1"/>
+            </xpath>
+            <xpath expr="//sheet//page[@name='operations']//field[@name='move_ids_without_package']" position="attributes">
+                <attribute name="attrs">{'readonly': ['|',('requisition_id','!=',False),'&amp;', ('state', '=', 'done'), ('is_locked', '=', True)]}</attribute>
+            </xpath>      
+            <xpath expr="//sheet//page[@name='detailed_operations']//field[@name='move_line_ids_without_package']" position="attributes">
+                <attribute name="attrs">{'readonly': ['|',('requisition_id','!=',False),'|', '|', ('show_operations', '=', False), ('state', '=', 'cancel'), '&amp;', ('state', '=', 'done'), ('is_locked', '=', True)], 'invisible': [('show_reserved', '=', False)]}</attribute>
+            </xpath>                  
+        </field>
+    </record>       
 
 </odoo>

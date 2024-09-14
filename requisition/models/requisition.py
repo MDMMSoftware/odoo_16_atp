@@ -42,6 +42,12 @@ class Requisition(models.Model):
     partner_id = fields.Many2one('res.partner',string="Customer",domain=[('partner_type','=','customer')])
     order_ids = fields.Many2many('sale.order','requisition_sale_order_rel','requisition_id','order_id',ondelete='cascade')
     adjust_ids = fields.Many2many('stock.inventory.adjustment','requisition_adjustment_rel','requisition_id','adjust_id',ondelete='cascade')
+    transfer_count = fields.Integer(compute="_compute_transfer_count", string='Transfers Count')
+    
+    @api.depends('picking_ids')
+    def _compute_transfer_count(self):
+        for move in self:
+            move.transfer_count = len(move.picking_ids)    
     
     def _get_all_branches(self):
         selections = []
@@ -237,6 +243,10 @@ class Requisition(models.Model):
                 # self.write({'picking_ids':[(6, 0, picking.ids)]})
             # self.state = 'approve'
 
+    def action_close(self):
+        for res in self:
+            res.state = 'close'
+
     def _create_requisition_picking(self,from_loc,to_loc,picking_type_id,branch):
         picking = self.env['stock.picking'].sudo().create({
             'location_id':from_loc.id,
@@ -297,34 +307,41 @@ class RequisitionLine(models.Model):
     done_qty = fields.Float('Done Qty',readonly=True)
     product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id')
     uom_id = fields.Many2one('uom.uom',string='Unit',related="product_id.uom_id",domain="[('category_id', '=', product_uom_category_id)]")
-    remaining_from = fields.Float(string='Remaining Stock(From)',compute='compute_stock_from',store=True)
+    remaining_from = fields.Float(string='Remaining Stock(From)',compute=False,store=True)
     remark = fields.Char('Remark')
     compute_qty = fields.Float(string='Compute Stock')
-    remaining_to = fields.Float(string='Remaining Stock(To)',compute='compute_stock_to',store=True)
-    remaining_transit = fields.Float(string='Remaining Stock(Transit)',compute='compute_stock_transit',store=True)
+    remaining_to = fields.Float(string='Remaining Stock(To)',compute=False,store=True)
+    remaining_transit = fields.Float(string='Remaining Stock(Transit)',compute=False,store=True)
+    remaining_qty_compute = fields.Boolean(string="Compute for Remaining Quantity",compute='_compute_all_remaining_quantity')
     part_id = fields.Char('Part ID')
     state = fields.Selection([('draft', 'Draft'),('confirm', 'Confirm'),('check', 'Check'),('approve', 'Approve'),('close', 'Closed')],related='requisition_id.state',store=True, string="Status")
     division_id = fields.Many2one(comodel_name='analytic.division',string="Division")
     production_move_id = fields.Many2one('stock.move')
 
+    def _compute_all_remaining_quantity(self):
+        for res in self:
+            res.remaining_from = res.compute_remaining_stock(res.requisition_id.src_location_id)
+            res.remaining_to = res.compute_remaining_stock(res.requisition_id.location_id)
+            res.remaining_transit = res.compute_remaining_stock(res.requisition_id.transit_location_id)
+            res.remaining_qty_compute = False
 
-    @api.depends('requisition_id.src_location_id','product_id','uom_id')
-    def compute_stock_from(self):
-        for rec in self:
-            qty = rec.compute_remaining_stock(rec.requisition_id.src_location_id)
-            rec.remaining_from = qty
+    # @api.depends('requisition_id.src_location_id','product_id','uom_id')
+    # def compute_stock_from(self):
+    #     for rec in self:
+    #         qty = rec.compute_remaining_stock(rec.requisition_id.src_location_id)
+    #         rec.remaining_from = qty
 
-    @api.depends('requisition_id.location_id','product_id','uom_id')
-    def compute_stock_to(self):
-        for rec in self:
-            qty = rec.compute_remaining_stock(rec.requisition_id.location_id)
-            rec.remaining_to = qty 
+    # @api.depends('requisition_id.location_id','product_id','uom_id')
+    # def compute_stock_to(self):
+    #     for rec in self:
+    #         qty = rec.compute_remaining_stock(rec.requisition_id.location_id)
+    #         rec.remaining_to = qty 
 
-    @api.depends('requisition_id.transit_location_id','product_id','uom_id')
-    def compute_stock_transit(self):
-        for rec in self:
-            qty = rec.compute_remaining_stock(rec.requisition_id.transit_location_id)
-            rec.remaining_transit = qty         
+    # @api.depends('requisition_id.transit_location_id','product_id','uom_id')
+    # def compute_stock_transit(self):
+    #     for rec in self:
+    #         qty = rec.compute_remaining_stock(rec.requisition_id.transit_location_id)
+    #         rec.remaining_transit = qty         
 
     def compute_remaining_stock(self,location_id):
         for rec in self:
