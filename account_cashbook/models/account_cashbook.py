@@ -86,7 +86,7 @@ class AccountCashBook(models.Model):
         compute='_compute_amount_cashbook', store=True, readonly=True,default=0.0
     )
 
-    transfer_type = fields.Selection([('contra',"Contra"),('transfer','Cash Transfer'),('income','Income'),('expense','Expense'),('other','Other')], string='Transfer Type',track_visibility='onchange')
+    transfer_type = fields.Selection([('contra',"Contra"),('income','Income'),('expense','Expense'),('other','Other')], string='Transfer Type',track_visibility='onchange')
     transfer_company_id = fields.Many2one('transfer.company',track_visibility='onchange')
     desc = fields.Char(string="Description")
     
