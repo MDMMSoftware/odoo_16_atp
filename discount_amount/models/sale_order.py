@@ -114,7 +114,7 @@ class SaleOrder(models.Model):
                 # Invoice values.
                 invoice_vals = {
                     # 'name': 'Draft' + record.name,
-                    'ref': record.name or '',
+                    'ref': False,
                     'internal_ref':record.name,
                     'move_type': 'in_invoice',
                     'currency_id': record.currency_id.id,

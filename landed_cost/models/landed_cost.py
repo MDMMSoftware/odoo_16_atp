@@ -144,6 +144,8 @@ class StockLandedCost(models.Model):
         self['cost_lines'].unlink()
         landed_costs_lines = self.vendor_bill_ids.filtered(lambda x:x.state=='posted').line_ids.filtered(lambda line: line.is_landed_costs_line)
         cost_lines = []
+        if not landed_costs_lines:
+            raise ValidationError("No landed costs product found in the vendor bills!!")
         for line in landed_costs_lines:
             cost_lines.append([0, 0, {
                 'product_id':line.product_id.id,
