@@ -22,8 +22,8 @@ class Requisition(models.Model):
     department_id = fields.Many2one('res.department','Department',related=False,store=True,required=False,readonly=True,tracking=True)
     company_id = fields.Many2one('res.company',string="Company", required=True, default=lambda self: self.env.company)
     
-    from_branch = fields.Selection(lambda self:self._get_all_branches(),string='From Branch', store=True, readonly=False,)
-    to_branch = fields.Selection(lambda self:self._get_all_branches(),string='To Branch', store=True, readonly=False,)
+    from_branch = fields.Selection(lambda self:self._get_all_branches(),string='From Branch', store=True, readonly=False,tracking=True)
+    to_branch = fields.Selection(lambda self:self._get_all_branches(),string='To Branch', store=True, readonly=False,tracking=True)
     # from_branch = fields.Many2one('res.branch', string='From Branch', store=True,
     #                             readonly=False,domain=_get_branch_domain,required=False)
     # to_branch = fields.Many2one('res.branch', string='To Branch', store=True,
@@ -32,7 +32,7 @@ class Requisition(models.Model):
     required_date = fields.Date('Required Date',required=True,tracking=True)
     location_id = fields.Many2one('stock.location', 'To Location',tracking=True,required=False,domain="[('usage', 'in', ['internal','transit'])]")
     transit_location_id = fields.Many2one('stock.location', 'Transit Location',tracking=True,domain="[('usage', 'in', ['transit'])]")
-    src_location_id = fields.Many2one('stock.location',string="Main Location",required=False,domain="[('usage', 'in', ['internal','transit'])]")
+    src_location_id = fields.Many2one('stock.location',string="Main Location",required=False,domain="[('usage', 'in', ['internal','transit'])]",tracking=True)
     journal_id = fields.Many2one('account.journal',string="Journal")
     state = fields.Selection([('draft', 'Draft'),('confirm', 'Confirm'),('check', 'Check'),('all_check','All Check'),('approve', 'Approve'),('close', 'Closed')],tracking=True, default="draft", readonly=True, string="Status")
     requisition_line = fields.One2many('requisition.line','requisition_id',string='Requisition Line',tracking=True)

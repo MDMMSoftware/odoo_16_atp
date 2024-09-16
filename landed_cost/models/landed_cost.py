@@ -101,16 +101,18 @@ class StockLandedCost(models.Model):
 
             # batch standard price computation avoid recompute quantity_svl at each iteration
             products = self.env['product.product'].browse(p.id for p in cost_to_add_byproduct.keys())
-            if len(cost.valuation_adjustment_lines.move_id.mapped('location_dest_id'))>1:
+            product_location_id = cost.valuation_adjustment_lines.move_id.mapped('location_dest_id')
+            if len(product_location_id)>1:
                 raise UserError("Please add same destination location for Receipts")
             for product in products:  # iterate on recordset to prefetch efficiently quantity_svl
-                if not float_is_zero(product.quantity_svl, precision_rounding=product.uom_id.rounding):
-                    product.with_company(cost.company_id).sudo().with_context(disable_auto_svl=True).standard_price += cost_to_add_byproduct[product] / product.quantity_svl
-                    if product.warehouse_valuation.search([('location_id','=',cost.valuation_adjustment_lines.move_id.mapped('location_dest_id').id)]):
-                        product.warehouse_valuation.write({'location_cost':product.warehouse_valuation.location_cost+(cost_to_add_byproduct[product] / product.quantity_svl)})
+                product_quant = self.env['stock.quant'].search([('location_id','=',product_location_id.id),('product_id','=', product.id)])
+                if not float_is_zero(product_quant.quantity, precision_rounding=product.uom_id.rounding):
+                    product.with_company(cost.company_id).sudo().with_context(disable_auto_svl=True).standard_price += cost_to_add_byproduct[product] / product_quant.quantity
+                    existed_warehouse_valuation = product.warehouse_valuation.filtered(lambda x:x.location_id.id == product_location_id.id)
+                    if existed_warehouse_valuation:
+                        existed_warehouse_valuation.write({'location_cost': existed_warehouse_valuation.location_cost+(cost_to_add_byproduct[product] / product_quant.quantity)})
                     else:
-                        vals = self.env['warehouse.valuation'].create({'location_id':cost.valuation_adjustment_lines.move_id.mapped('location_dest_id').id,
-                                                                    'location_cost':cost_to_add_byproduct[product] / product.quantity_svl})
+                        vals = self.env['warehouse.valuation'].create({'location_id':product_location_id.id,'location_cost':cost_to_add_byproduct[product] / product_quant.quantity})
                         if vals:
                             product.write({'warehouse_valuation':[(4,vals.id)]})
             move_vals['stock_valuation_layer_ids'] = [(6, None, valuation_layer_ids)]
@@ -147,7 +149,8 @@ class StockLandedCost(models.Model):
                 'product_id':line.product_id.id,
                 'name': line.product_id.name,
                 'account_id': line.account_id and line.account_id.id or False,
-                'price_unit': line.currency_id._convert(line.price_subtotal, line.company_currency_id, line.company_id, line.move_id.date),
+                # 'price_unit': line.currency_id._convert(line.price_subtotal, line.company_currency_id, line.company_id, line.move_id.date),
+                'price_unit': round(line.price_subtotal / line.currency_rate,2),
                 'split_method': line.product_id.split_method_landed_cost or 'equal',
             }])
             line.move_id.stock_landed_costs_ids = [(4, self.id),]
