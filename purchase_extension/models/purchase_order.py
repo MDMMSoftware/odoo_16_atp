@@ -15,7 +15,7 @@ class PurchaseOrder(models.Model):
     """inherited purchase order"""
     _inherit = 'purchase.order'
 
-    location_id = fields.Many2one('stock.location','Location',required=True,domain="[('usage','=','internal')]")
+    location_id = fields.Many2one('stock.location','Location',required=True,domain=[('usage','=','internal')])
     internal_ref = fields.Char(string="Internal Reference")
     purchase_team_id = fields.Many2one('purchase.team',string="Purchase Team")
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
@@ -37,7 +37,7 @@ class PurchaseOrder(models.Model):
     @api.onchange('picking_type_id')
     def onchange_location_id(self):
         if self.picking_type_id:
-            return {'domain': {'location_id': [('warehouse_id', 'in', self.picking_type_id.warehouse_id.ids)]}}
+            return {'domain': {'location_id': [('warehouse_id', 'in', self.picking_type_id.warehouse_id.ids),('usage','=','internal')]}}
         
 
     def _get_destination_location(self):

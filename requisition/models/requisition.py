@@ -1,6 +1,15 @@
 from odoo import models, fields, api,_
 from ...generate_code import generate_code
 from odoo.exceptions import UserError
+from xlrd import open_workbook
+import base64
+
+HEADER_FIELDS_REQ = ['item code','description','quantity']
+PICKING_STATE_DCT = {'draft':'Draft','waiting': 'Waiting Another Operation',
+                    'confirmed' : 'Waiting', 'assigned': 'Ready',
+                    'done': 'Done','cancel' : 'Cancelled'}
+
+HEADER_INDEXES = {}
 
 
 class Requisition(models.Model):
@@ -14,6 +23,15 @@ class Requisition(models.Model):
         branch = branch_ids.filtered(
             lambda branch: branch.company_id == company)
         return [('id', 'in', branch.ids)]
+    
+    def _compute_function_for_other_fields(self):
+        for res in self:
+            res.issue_status = ''
+            if res.picking_ids:
+                for picking in res.picking_ids:
+                    res.issue_status += PICKING_STATE_DCT.get(picking.state,"Draft") + ', '
+                res.issue_status = res.issue_status[::-2]
+            res.computed_field = False
 
     name = fields.Char("Reference",copy=False)
     internal_ref = fields.Char("Internal Reference")
@@ -43,6 +61,10 @@ class Requisition(models.Model):
     order_ids = fields.Many2many('sale.order','requisition_sale_order_rel','requisition_id','order_id',ondelete='cascade')
     adjust_ids = fields.Many2many('stock.inventory.adjustment','requisition_adjustment_rel','requisition_id','adjust_id',ondelete='cascade')
     transfer_count = fields.Integer(compute="_compute_transfer_count", string='Transfers Count')
+    issue_status = fields.Char("Issue Status")
+    computed_field = fields.Boolean("Fields to Compute other fields!!",compute=_compute_function_for_other_fields)
+    data = fields.Binary('File',track_visibility='onchange')
+    import_fname = fields.Char(string='Filename')    
     
     @api.depends('picking_ids')
     def _compute_transfer_count(self):
@@ -61,6 +83,9 @@ class Requisition(models.Model):
         sequence = self.env['sequence.model']
         self.name = generate_code.generate_code(sequence,self,self.env['res.branch'].browse(int(self.from_branch)),self.company_id,self.order_date,None,None)
         self.state = 'confirm'
+        
+    def action_reset_to_draft(self):
+        self.state = 'draft'
 
     def action_check(self):
         self.state = 'check'
@@ -260,7 +285,6 @@ class Requisition(models.Model):
 
         })
         return picking
-        # self.state = 'approve'
     
     def action_open_transfers(self):
         return {
@@ -297,6 +321,119 @@ class Requisition(models.Model):
             if rec.state != 'draft':
                 raise UserError("Are you doing something fraudly! Why do you want to delete some records?? 🤔 ")
         return super().unlink()
+    
+    # # # import file
+    
+    # Load excel data file
+    def get_excel_datas(self, sheets):
+        result = []
+        for s in sheets:
+            headers = []
+            header_row = 0
+            for hcol in range(0, s.ncols):
+                headers.append(s.cell(header_row, hcol).value)
+                            
+            result.append(headers)
+            
+            for row in range(header_row + 1, s.nrows):
+                values = []
+                for col in range(0, s.ncols):
+                    values.append(s.cell(row, col).value)
+                result.append(values)
+        return result
+    
+    # Check excel row headers with HEADER_FIELDS_REQ and define header indexes for database fields
+    def get_headers(self, line):
+        if line[0].strip().lower() not in HEADER_FIELDS_REQ:
+            raise UserError("Error while processing the header line %s.\n\nPlease check your Excel separator as well as the column header fields" % line)
+        else:
+            for header in HEADER_FIELDS_REQ:
+                HEADER_INDEXES[header] = -1  
+                     
+            col_count = 0
+            for ind in range(len(line)):
+                if line[ind] == '':
+                    col_count = ind
+                    break
+                elif ind == len(line) - 1:
+                    col_count = ind + 1
+                    break
+            
+            for i in range(col_count):                
+                header = line[i].strip().lower()
+                if header not in HEADER_FIELDS_REQ:
+                    raise UserError('Invalid Excel File, Header Field %s is not supported !'% header)
+                else:
+                    HEADER_INDEXES[header] = i
+                                
+            for header in HEADER_FIELDS_REQ:
+                if HEADER_INDEXES[header] < 0:  
+                    raise UserError('Invalid Excel File, Header Field %s is missing !'% header)         
+    
+    # Fill excel row data into list to import to database
+    def get_line_data(self, line):
+        result = {}
+        for header in HEADER_FIELDS_REQ:                        
+            result[header] = line[HEADER_INDEXES[header]]
+    
+    # main function
+    def action_import_order(self):   
+        if self.data:   
+            if '.xls' not in self.import_fname and '.xlsx'  not in self.import_fname:
+                raise UserError("Invalid Excel file format")
+            product_obj = self.env['product.product']       
+            order_line_obj = self.env['requisition.line']
+
+            import_file = self.data                
+
+            header_line = True
+            lines = base64.decodestring(import_file)
+            wb = open_workbook(file_contents=lines)
+            excel_rows = self.get_excel_datas(wb.sheets())
+            all_data = []  
+            
+            for line in excel_rows:
+                if not line or line and line[0] and line[0] in ['', '#']:
+                    continue            
+                if header_line:
+                    self.get_headers(line)
+                    header_line = False                           
+                elif line and line[0] and line[0] not in ['#', '']:
+                    import_vals = {}                
+                    for header in HEADER_FIELDS_REQ:    
+                        import_vals[header] = line[HEADER_INDEXES[header]]              
+                    all_data.append(import_vals)
+
+            
+            for data in all_data:
+                excel_row = all_data.index(data) + 2  
+
+                item_code = data['item code'].strip().encode('utf-8')
+                item_description = data['description'].strip().encode('utf-8')
+                quantity = data['quantity']
+                
+                if not item_code:
+                    raise UserError('Item Code must not be blank in excel Line %s.'% str(excel_row))
+                product_id = product_obj.search([('product_code', '=', item_code)])
+                if not product_id:
+                    raise UserError('Item code not found.')
+                if len(product_id) > 1:
+                    raise UserError('Duplicate item code found.')  
+                if abs(quantity) <= 0.0:
+                    raise UserError('Invalid Quantity')
+                if not item_description:
+                    item_description = product_id.name
+                vals = {
+                        'product_id': product_id.id,
+                        'uom_id':product_id.uom_id.id,
+                        'product_name': item_description,
+                        'qty': quantity,
+                        'purchase_requisition_product_id':self.id,
+                    }
+                order_line_obj.create(vals)
+
+        else:
+            raise UserError('Please First Upload Your File.')       
 
 class RequisitionLine(models.Model):
     _name = "requisition.line"
@@ -326,6 +463,17 @@ class RequisitionLine(models.Model):
             res.remaining_to = res.compute_remaining_stock(res.requisition_id.location_id)
             res.remaining_transit = res.compute_remaining_stock(res.requisition_id.transit_location_id)
             res.remaining_qty_compute = False
+            
+    @api.onchange('product_id')
+    def _onchange_qty_by_product(self):
+        for res in self:
+            if res.product_id:
+                if res.requisition_id.src_location_id:
+                    res.remaining_from = res.compute_remaining_stock(res.requisition_id.src_location_id)
+                elif res.requisition_id.location_id:
+                    res.remaining_to = res.compute_remaining_stock(res.requisition_id.location_id)
+                elif res.requisition_id.transit_location_id:
+                    res.remaining_transit = res.compute_remaining_stock(res.requisition_id.transit_location_id)
 
     # @api.depends('requisition_id.src_location_id','product_id','uom_id')
     # def compute_stock_from(self):

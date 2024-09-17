@@ -17,7 +17,7 @@ class SaleOrder(models.Model):
 
     sale_type = fields.Selection([('counter_sale', 'Counter Sale'),('order_sale', 'Order Sale')],track_visibility='onchange', default="counter_sale",string="Type")
     term_type = fields.Selection([('direct','Cash Sales'),('credit','Credit Sales')],string='Payment Type',default="direct")
-    location_id = fields.Many2one('stock.location','Location',required=True,domain="[('usage','=','internal')]")
+    location_id = fields.Many2one('stock.location','Location',required=True,domain=[('usage','=','internal')])
     other_contact_id = fields.Many2one(comodel_name='res.partner',string='Contact Person',domain=[('is_other_contact','=',True)])
     internal_ref = fields.Char(string="Internal Reference")
     user_id = fields.Many2one(
@@ -69,7 +69,7 @@ class SaleOrder(models.Model):
     @api.onchange('warehouse_id')
     def onchange_location_id(self):
         if self.warehouse_id:
-            return {'domain': {'location_id': [('warehouse_id', 'in', self.warehouse_id.ids)]}} 
+            return {'domain': {'location_id': [('warehouse_id', 'in', self.warehouse_id.ids),('usage','=','internal')]}} 
         
     @api.onchange('term_type')
     def onchange_payment_term_id(self):
