@@ -17,9 +17,9 @@
                     <field name="discount_type" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
                     <field name="discount" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
                     <field name="discount_amt" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
-                    <field name="add_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
-                    <field name="add_amt" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
-                    <field name="account_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="add_type"  optional="hide"/>
+                    <field name="add_amt"  optional="hide"/>
+                    <field name="account_type"  optional="hide"/>
                     
                 </xpath>
                 <xpath expr="//field[@name='narration']" position="before">
