@@ -26,6 +26,7 @@
                     <field name="discount_type" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
                     <field name="discount" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
                     <field name="discount_account_id" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
+                    <field name="line_discount_account_id"/>
                 </xpath>
                 <xpath expr="//field[@name='tax_totals']" position="replace">
                     <field name="tax_totals" widget="account-tax-totals-field" nolabel="1" colspan="2" invisible="1"

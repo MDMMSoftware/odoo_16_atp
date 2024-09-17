@@ -71,6 +71,7 @@ class SaleOrder(models.Model):
     discount_amt = fields.Monetary(string='Discount Amount', store=True, readonly=True, compute='_compute_amounts')
     global_discount = fields.Boolean(string="Global Discount",default=False)
     discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    line_discount_account_id = fields.Many2one('account.account',string="Line Discount Acount")
     is_commission = fields.Boolean(string="Is Commission?",default=False)
     amount_commercial = fields.Float('Commission',compute='_compute_amounts',store=True)
     invisible_commercial = fields.Boolean(compute='compute_invisible_commercial')
@@ -263,7 +264,7 @@ class SaleOrder(models.Model):
             result.update({'invoice_date':self.date_order})
         if self.partner_id.sale_discount_account_id:
             dis_acc = self.partner_id.sale_discount_account_id.id
-        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or dis_acc})
+        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or dis_acc,'line_discount_account_id':self.line_discount_account_id and self.line_discount_account_id.id or False})
         return result
     
     

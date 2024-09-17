@@ -62,6 +62,7 @@ class PurchaseOrder(models.Model):
     discount_amt = fields.Monetary(string='Discount Amount', store=True, readonly=True, compute='_amount_all')
     global_discount = fields.Boolean(string="Global Discount",default=False)
     discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    line_discount_account_id = fields.Many2one('account.account',string="Line Discount Acount")
     line_discount = fields.Monetary(string='Line Discount', store=True, readonly=True, compute='_amount_all')
     order_discount = fields.Monetary(string='Order Discount', store=True, readonly=True, compute='_amount_all')
 
@@ -141,7 +142,7 @@ class PurchaseOrder(models.Model):
 
     def _prepare_invoice(self):
         result = super(PurchaseOrder, self)._prepare_invoice()        
-        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or False})
+        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or False,'line_discount_account_id':self.line_discount_account_id and self.line_discount_account_id.id or False})
         return result
 
                 

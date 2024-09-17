@@ -227,6 +227,7 @@ class AccountMove(models.Model):
     compute_all_disc = fields.Binary(compute='_compute_all_disc', exportable=False)
     compute_all_disc_dirty = fields.Boolean(compute='_compute_all_disc')
     discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    line_discount_account_id = fields.Many2one('account.account',string="Line Discount Acount")
     order_discount = fields.Monetary(
         string='Order Discount',
         store=True, readonly=True,
@@ -327,7 +328,7 @@ class AccountMove(models.Model):
                 disc_vals = compute_line_disc.setdefault(
                     frozendict({
                         'move_id': move.id,
-                        'account_id': move.partner_id.sale_discount_account_id and move.partner_id.sale_discount_account_id.id or False,
+                        'account_id': move.line_discount_account_id and move.line_discount_account_id.id or False,
                         'display_type': 'epd',
                         'name': _("Line Discount"),
 

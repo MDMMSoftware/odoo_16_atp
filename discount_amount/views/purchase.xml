@@ -12,7 +12,8 @@
                 <xpath expr="//field[@name='notes']" position="before">
                     <field name="discount_type" attrs="{'invisible': [('global_discount', '=', False)]}"/>
                     <field name="discount" attrs="{'invisible': [('global_discount', '=', False)]}"/>
-                     <field name="discount_account_id" attrs="{'invisible': [('global_discount', '=', False)]}"/>
+                    <field name="discount_account_id" attrs="{'invisible': [('global_discount', '=', False)]}"/>
+                    <field name="line_discount_account_id"/>
                 </xpath>
                 <xpath expr="//field[@name='tax_totals']" position="replace">
                     <field name="amount_untaxed"/>
