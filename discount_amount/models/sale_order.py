@@ -74,13 +74,13 @@ class SaleOrder(models.Model):
     is_commission = fields.Boolean(string="Is Commission?",default=False)
     amount_commercial = fields.Float('Commission',compute='_compute_amounts',store=True)
     invisible_commercial = fields.Boolean(compute='compute_invisible_commercial')
-    commercial_move_id = fields.Many2one('account.move',string="Commission Bill")
+    commercial_move_id = fields.Many2one('account.move',string="Commission Bill",copy=False)
     amount_add = fields.Float('Additional Amount',compute='_compute_amounts',store=True)
     extra_amt = fields.Boolean('Additional Amount')
     
     def action_open_commercial(self):
         return {
-            'name': _('Transfers'),
+            'name': _('Commissions Bills'),
             'view_mode': 'tree,form',
             'res_model': 'account.move',
             'type': 'ir.actions.act_window',  
@@ -294,7 +294,7 @@ class AccountMoveReversal(models.TransientModel):
     def reverse_moves(self):
         moves = self.move_ids
         order_id = self.move_ids.line_ids.sale_line_ids.order_id
-        if order_id and order_id.commercial_move_id:
+        if order_id and order_id.commercial_move_id and not order_id.commercial_move_id.reversal_move_id:
             raise UserError('You cannot cancel the invoice which has a commission bill.')
 
         for move in moves:
