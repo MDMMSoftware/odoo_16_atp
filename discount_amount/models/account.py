@@ -220,17 +220,29 @@ class AccountMove(models.Model):
     )
     amount_add = fields.Float('Additional Amount',compute='_compute_amount',store=True)
     discount_amt_currency = fields.Monetary(string="Discount Amount",compute='_compute_amount_currency',store=True)
+    line_discount_amt_currency = fields.Monetary(string="Line Discount Amount",store=True)
+    order_discount_amt_currency = fields.Monetary(string="Order Discount Amount",store=True)
     global_discount = fields.Boolean(string="Global Discount",default=False)
 
     compute_all_disc = fields.Binary(compute='_compute_all_disc', exportable=False)
     compute_all_disc_dirty = fields.Boolean(compute='_compute_all_disc')
-    discount_account_id = fields.Many2one('account.account')
+    discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    order_discount = fields.Monetary(
+        string='Order Discount',
+        store=True, readonly=True,
+        tracking=True,
+    )
+    line_discount = fields.Monetary(
+        string='Line Discount',
+        store=True, readonly=True,
+        tracking=True,
+    )
 
-    # @api.onchange('discount_account_id')
-    # def onchnage_discount_account(self):
-    #     for line in self.line_ids:
-    #         if line.name=='Discount' and self.discount_account_id:
-    #             line.update({'account_id':self.discount_account_id.id})
+    @api.onchange('discount_account_id')
+    def onchnage_discount_account(self):
+        for line in self.line_ids:
+            if line.name=='Discount' and self.discount_account_id:
+                line.update({'account_id':self.discount_account_id.id})
     
     def action_post(self):
         if self.commercial_sale_id:
@@ -292,77 +304,116 @@ class AccountMove(models.Model):
 
     @api.depends('discount_amt')
     def _compute_all_disc(self):
-        compute_all_disc = {}
+        compute_all_disc  = {}
+        compute_all_disc2 = {}
+        compute_line_disc = {}
+        compute_order_disc ={}
         res = {}
-        disc_amt = 0
+        disc_amt = line_disc = order_disc = 0
         for move in self:
-            existings = move.line_ids.filtered(lambda x:x.name == 'Discount')
+            existings = move.line_ids.filtered(lambda x:x.name == 'Global Discount' or x.name == 'Line Discount')
             for existing in existings:
                 if move.move_type in ('in_refund','out_refund') and sum(move.line_ids.mapped('debit'))!=sum(move.line_ids.mapped('credit')):
                     existing.unlink()
                 elif move.move_type not in ('in_refund','out_refund'):
-                    if existing and round(abs(existing.balance),2)!=round(existing.move_id.discount_amt,2):
+                    if existing and round(abs(sum(existings.mapped('balance'))),2)!=round(existing.move_id.discount_amt,2):
                         existing.with_context(force_delete=True).unlink()
             move.compute_all_disc = False
             disc_amt=move.discount_amt
+            line_disc = move.line_discount
+            order_disc = move.order_discount
             move.compute_all_disc_dirty = True
-            disc_vals = compute_all_disc.setdefault(
-                frozendict({
-                    'move_id': move.id,
-                    'account_id': move.discount_account_id and move.discount_account_id.id or False,
-                    'display_type': 'epd',
-                    
-                }),
-                {
-                    'name': _("Discount"),
-                    'amount_currency': 0.0,
-                    'balance': 0.0,
-                    'price_subtotal': 0.0,
-                    'analytic_distribution':False
-                },
-            )
-             
-            if move.direction_sign>0:
-                disc_vals['amount_currency'] -= disc_amt/move.exchange_rate
-                disc_vals['balance'] -= disc_amt
-                disc_vals['price_subtotal'] -= disc_amt
-                disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
-            else:
-                disc_vals['amount_currency'] += disc_amt/move.exchange_rate
-                disc_vals['balance'] += disc_amt
-                disc_vals['price_subtotal'] += disc_amt
-                disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
-        if disc_amt:    
+            if line_disc:
+                disc_vals = compute_line_disc.setdefault(
+                    frozendict({
+                        'move_id': move.id,
+                        'account_id': move.partner_id.sale_discount_account_id and move.partner_id.sale_discount_account_id.id or False,
+                        'display_type': 'epd',
+                        'name': _("Line Discount"),
+
+                    }),
+                    {
+
+                        'amount_currency': 0.0,
+                        'balance': 0.0,
+                        'price_subtotal': 0.0,
+                        'analytic_distribution':False
+                    },
+                )
+
+                if move.direction_sign>0:
+                    disc_vals['amount_currency'] -= line_disc/move.exchange_rate
+                    disc_vals['balance'] -= line_disc
+                    disc_vals['price_subtotal'] -= line_disc
+                    disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
+                else:
+                    disc_vals['amount_currency'] += line_disc/move.exchange_rate
+                    disc_vals['balance'] += line_disc
+                    disc_vals['price_subtotal'] += line_disc
+                    disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
+
+            if order_disc:
+                order_disc_vals = compute_order_disc.setdefault(
+                    frozendict({
+                        'move_id': move.id,
+                        'account_id': move.discount_account_id and move.discount_account_id.id or False,
+                        'display_type': 'epd',
+                        'name': _("Global Discount"),
+
+                    }),
+                    {
+
+                        'amount_currency': 0.0,
+                        'balance': 0.0,
+                        'price_subtotal': 0.0,
+                        'analytic_distribution':False
+                    },
+                )
+
+                if move.direction_sign>0:
+                    order_disc_vals['amount_currency'] -= order_disc/move.exchange_rate
+                    order_disc_vals['balance'] -= order_disc
+                    order_disc_vals['price_subtotal'] -= order_disc
+                    order_disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
+                else:
+                    order_disc_vals['amount_currency'] += order_disc/move.exchange_rate
+                    order_disc_vals['balance'] += order_disc
+                    order_disc_vals['price_subtotal'] += order_disc
+                    order_disc_vals['analytic_distribution'] = move.line_ids and move.line_ids[0].analytic_distribution or False
+        if disc_amt:  
+            compute_all_disc = {k: frozendict(v) for k, v in compute_order_disc.items()}
+            compute_all_disc2 = {k: frozendict(v) for k, v in compute_line_disc.items()}
+            compute_all_disc.update(compute_all_disc2)    
             move.compute_all_disc = {k: frozendict(v) for k, v in compute_all_disc.items()}
             
             
          
 
-    @api.constrains('global_discount')
-    def check_discount_amt(self):
-        for move in self:
-            if move.global_discount:
-                for line in move.line_ids:
-                    line.discount = 0
-                    line.discount_amt = 0
-                    line.discount_type = None
-            else:
-                move.discount = 0
-                move.discount_amt = 0
-                move.discount_type = None
+    # @api.constrains('global_discount')
+    # def check_discount_amt(self):
+    #     for move in self:
+    #         if move.global_discount:
+    #             for line in move.line_ids:
+    #                 line.discount = 0
+    #                 line.discount_amt = 0
+    #                 line.discount_type = None
+    #         else:
+    #             move.discount = 0
+    #             move.discount_amt = 0
+    #             move.discount_type = None
     
-    @api.onchange('discount_account_id')
-    def onchange_discount_account_id(self):
-        if self.global_discount:
-            self.discount = 0
-            self.discount_amt = 0
-            self.discount_type = None
+    # @api.onchange('discount_account_id')
+    # def onchange_discount_account_id(self):
+    #     if self.global_discount:
+    #         self.discount = 0
+    #         self.discount_amt = 0
+    #         self.discount_type = None
             
-        else:
-            for line in self.line_ids:
-                line.discount = 0
-                line.discount_amt = 0
-                line.discount_type = None
+    #     else:
+    #         for line in self.line_ids:
+    #             line.discount = 0
+    #             line.discount_amt = 0
+    #             line.discount_type = None
                 
     @api.depends('discount_amt')
     def _compute_amount_currency(self):
@@ -370,11 +421,19 @@ class AccountMove(models.Model):
             if res:
                 if res.discount_amt:
                     if hasattr(res,'exchange_rate'):
+                        if res.line_discount:
+                            res.line_discount_amt_currency = res.line_discount/res.exchange_rate
+                        if res.order_discount:
+                            res.order_discount_amt_currency = res.order_discount/res.exchange_rate
                         res.discount_amt_currency = res.discount_amt/res.exchange_rate
                     else:
                         res.discount_amt_currency = res.discount_amt
+                        res.line_discount_amt_currency = res.line_discount
+                        res.order_discount_amt_currency = res.order_discount
                 else:
                     res.discount_amt_currency = 0
+                    res.line_discount_amt_currency = 0
+                    res.order_discount_amt_currency = 0
 
 
     @api.depends(
@@ -437,33 +496,76 @@ class AccountMove(models.Model):
                         # else:
                         total_currency += line.amount_currency
 
-            total_discount_amt = 0.0
+            total_discount_amt = total_line_disc = total_order_disc = 0.0
+            if sum(move.invoice_line_ids.mapped('discount_amt')) > 0:
+                total_line_disc += sum(move.invoice_line_ids.mapped('discount_amt'))*move.exchange_rate
+
             if move.discount or move.discount_type:
                 if move.discount_type=='amount' and move.discount:
-                    total_discount_amt = move.discount*move.exchange_rate
+                    total_order_disc = move.discount*move.exchange_rate
                 elif move.discount_type=='percent' and move.discount:
-                    total_discount_amt = (total_untaxed - (total_untaxed * (1 - (move.discount / 100.0))))*move.exchange_rate
+                    total_order_disc = ((abs(total_untaxed)-total_line_disc) * (move.discount / 100.0))
                 else:
-                    total_discount_amt = 0
-            if sum(move.invoice_line_ids.mapped('discount_amt')) > 0:
-                total_discount_amt = (total_discount_amt+sum(move.invoice_line_ids.mapped('discount_amt')))*move.exchange_rate
-            
+                    total_order_disc = 0
+            total_discount_amt += total_order_disc+total_line_disc
+
             exhange_rate = move.exchange_rate != 0.0 and move.exchange_rate or 1.0
-            sign = move.direction_sign
+            
+            sign = move.direction_sign   
             if move.move_type in ('out_refund'):
                 total_discount_amt = total_discount_amt*sign
+                total_order_disc = total_order_disc*sign
+                total_line_disc = total_line_disc*sign
+
+            # if tax_line:
+            #     if not move.tax_id:
+            #         tax_line.unlink()
+            #     else:
+            #         tax_amount = (move.tax_id.amount / 100) * ((sign * total_untaxed_currency)-total_discount_amt )                
+            #         pp_id = self.env['product.product'].search([('product_tmpl_id','=',move.tax_id.product_template_id.id)]) 
+            #         if not pp_id:
+            #             raise ValidationError("There is no product associated with the tax!!")
+            #         tax_line.product_id = pp_id
+            #         tax_line.quantity = 1
+            #         tax_line.product_uom_id = pp_id.uom_id
+            #         tax_line.price_unit = tax_amount 
+            #         tax_amount_signed = sign > 0 and sign * tax_amount or sign * tax_amount            
+            #         total_tax += tax_amount_signed 
+            #         total_tax_currency += tax_amount_signed
+            #         total += tax_amount_signed
+            #         total_currency += tax_amount_signed                     
+            # else:
+            #     if move.tax_id: 
+            #         tax_amount = (move.tax_id.amount / 100) * ((sign * total_untaxed_currency)-total_discount_amt )
+            #         pp_id = self.env['product.product'].search([('product_tmpl_id','=',move.tax_id.product_template_id.id)]) 
+            #         if not pp_id:
+            #             raise ValidationError("There is no product associated with the tax!!")                    
+            #         move.invoice_line_ids = [Command.create({
+            #             "product_id":pp_id.id,
+            #             "product_uom_id":pp_id.uom_id.id,
+            #             "quantity":1,
+            #             "price_unit":tax_amount,
+            #             "is_tax_line":True,
+            #         })]   
+            #         tax_amount_signed = sign > 0 and sign * tax_amount or sign * tax_amount          
+            #         total_tax += tax_amount_signed 
+            #         total_tax_currency += tax_amount_signed
+            #         total += tax_amount_signed
+            #         total_currency += tax_amount_signed                                 
+            move.order_discount = total_order_disc
+            move.line_discount = total_line_disc
             move.discount_amt = total_discount_amt
             move.amount_untaxed = sign * total_untaxed_currency
             move.amount_tax = sign * (total_tax_currency)
-            move.exchange_rate = exhange_rate
-            move.amount_total = sign>0 and sign * (total_currency-(total_discount_amt/move.exchange_rate)) or sign * (total_currency+(total_discount_amt/move.exchange_rate))
+            move.amount_total = sign>0 and sign * (total_currency-(total_discount_amt/exhange_rate)) or sign * (total_currency+(total_discount_amt/exhange_rate))
             move.amount_residual = -sign * total_residual_currency
             move.amount_untaxed_signed = -total_untaxed
             move.amount_tax_signed = -total_tax
-            move.amount_total_signed = abs(total-total_discount_amt) if move.move_type == 'entry' else -total+total_discount_amt
+            move.amount_total_signed = abs(total-total_discount_amt) if move.move_type == 'entry' else sign>0 and -total+total_discount_amt or sign*(total+total_discount_amt)
             move.amount_residual_signed = total_residual
             move.amount_total_in_currency_signed = abs(move.amount_total) if move.move_type == 'entry' else -(sign * move.amount_total)
             move.amount_add = amount_add
+            move.exchange_rate = exhange_rate
 
     @api.depends('invoice_payment_term_id', 'invoice_date', 'currency_id', 'amount_total_in_currency_signed', 'invoice_date_due')
     def _compute_needed_terms(self):

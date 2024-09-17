@@ -61,19 +61,21 @@ class PurchaseOrder(models.Model):
         store=True, readonly=False)
     discount_amt = fields.Monetary(string='Discount Amount', store=True, readonly=True, compute='_amount_all')
     global_discount = fields.Boolean(string="Global Discount",default=False)
-    discount_account_id = fields.Many2one('account.account')
+    discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    line_discount = fields.Monetary(string='Line Discount', store=True, readonly=True, compute='_amount_all')
+    order_discount = fields.Monetary(string='Order Discount', store=True, readonly=True, compute='_amount_all')
 
-    @api.constrains('global_discount')
-    def check_discount_amt(self):
-        if self.global_discount:
-            for line in self.order_line:
-                line.discount = 0
-                line.discount_amt = 0
-                line.discount_type = None
-        else:
-            self.discount = 0
-            self.discount_amt = 0
-            self.discount_type = None
+    # @api.constrains('global_discount')
+    # def check_discount_amt(self):
+    #     if self.global_discount:
+    #         for line in self.order_line:
+    #             line.discount = 0
+    #             line.discount_amt = 0
+    #             line.discount_type = None
+    #     else:
+    #         self.discount = 0
+    #         self.discount_amt = 0
+    #         self.discount_type = None
     
 
     @api.depends('order_line.price_total','discount_type','discount','order_line.discount_amt')
@@ -92,26 +94,30 @@ class PurchaseOrder(models.Model):
             else:
                 amount_untaxed = sum(order_lines.mapped('price_subtotal'))
                 amount_tax = sum(order_lines.mapped('price_tax'))
+                
+            order.line_discount = order.order_discount = order.discount_amt = 0
+
+            if sum(order_lines.mapped('discount_amt')) > 0:
+                order.line_discount = sum(order_lines.mapped('discount_amt'))
             if order.discount or order.discount_type:
                 if order.discount_type=='amount' and order.discount:
-                    order.discount_amt = order.discount
+                    order.order_discount = order.discount
                 elif order.discount_type=='percent' and order.discount:
-                    order.discount_amt = amount_untaxed - (amount_untaxed * (1 - (order.discount / 100.0)))
+                    order.order_discount = (amount_untaxed-order.line_discount)*(order.discount / 100.0)
                 else:
-                    order.discount_amt = 0
+                    order.order_discount = 0
 
                 order.amount_untaxed = amount_untaxed 
                 order.amount_tax = amount_tax
                 order.amount_total = order.amount_untaxed + order.amount_tax
-
+                order.discount_amt = order.order_discount+order.line_discount
             else:
-                order.discount_amt = 0
+                order.discount_amt = order.order_discount+order.line_discount
                 order.amount_untaxed = amount_untaxed
                 order.amount_tax = amount_tax
                 order.amount_total = order.amount_untaxed + order.amount_tax
 
-            if sum(order_lines.mapped('discount_amt')) > 0:
-                order.discount_amt = order.discount_amt+sum(order_lines.mapped('discount_amt'))
+            
 
             order.amount_total = order.amount_total - order.discount_amt       
 

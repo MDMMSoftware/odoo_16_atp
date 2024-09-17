@@ -11,18 +11,21 @@
                 </xpath>
                 
                 <xpath expr="//page[@id='invoice_tab']//field[@name='discount']" position="replace">
-                    <field name="discount_type" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="discount" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="discount_amt" attrs="{'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
-                    <field name="add_type" optional="hide"/>
-                    <field name="add_amt" optional="hide"/>
-                    <field name="account_type" optional="hide"/>
+                    <!-- <field name="discount_type" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/>
+                    <field name="discount_amt" attrs="{'readonly': [('is_tax_line','=',True)],'column_invisible': ['|',('parent.global_discount', '=', True),('parent.is_expense','=',True)]}"/> -->
+                    <field name="discount_type" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
+                    <field name="discount" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
+                    <field name="discount_amt" attrs="{'column_invisible': [('parent.is_expense','=',True)]}"/>
+                    <field name="add_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="add_amt" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
+                    <field name="account_type" attrs="{'readonly': [('is_tax_line','=',True)]}" optional="hide"/>
                     
                 </xpath>
                 <xpath expr="//field[@name='narration']" position="before">
                     <field name="discount_type" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
                     <field name="discount" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
-                    <field name="discount_account_id" attrs="{'invisible': [('is_expense', '=', True)]}"/>
+                    <field name="discount_account_id" attrs="{'invisible': ['|',('global_discount', '=', False),('is_expense', '=', True)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='tax_totals']" position="replace">
                     <field name="tax_totals" widget="account-tax-totals-field" nolabel="1" colspan="2" invisible="1"
@@ -30,6 +33,11 @@
                     <field name="amount_untaxed"/>
                     <field name="discount_amt" invisible="1"/>
                     <field name="discount_amt_currency"/>
+                    <field name="line_discount" invisible="1"/>
+                    <field name="line_discount_amt_currency"/>
+                    <field name="order_discount" invisible="1"/>
+                    <field name="order_discount_amt_currency"/>
+                    <field name="amount_tax" attrs="{'invisible': [('amount_tax','&lt;=',0.0)]}"/>
                     <field name="amount_total"/>
                     <field name="amount_add"/>
 
