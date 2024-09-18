@@ -185,19 +185,14 @@ class PurchaseOrder(models.Model):
             raise UserError("Unauthorised Branch")
         self.picking_type_id = False
         if self.branch_id:
-            picking_type = self.env['stock.picking.type'].sudo().search(
-                [('branch_id', '=', self.branch_id.id), ('company_id', '=', self.company_id.id)], limit=1)
+            picking_type = self.env['stock.picking.type'].sudo().search([('branch_id', '=', self.branch_id.id), ('company_id', '=', self.company_id.id)], limit=1)
             self.picking_type_id = picking_type
-            if not picking_type or picking_type.branch_id.id != self.env.user.branch_id.id:
-                branch_ids = self.env['res.branch'].search([('id','in',self.env.user.branch_ids.ids),
-                                    ('company_id','=',self.env.company.id)])
-
-                picking_type = self.env['stock.picking.type'].sudo().search(
-                [('branch_id', 'in', branch_ids.ids)], limit=1)
+            if not picking_type or picking_type.branch_id.id != self.branch_id.id:
+                branch_ids = self.env['res.branch'].search([('id','in',self.env.user.branch_ids.ids),('company_id','=',self.env.company.id)])
+                picking_type = self.env['stock.picking.type'].sudo().search([('branch_id', 'in', branch_ids.ids)], limit=1)
                 self.picking_type_id = picking_type
             if not picking_type:
-                picking_type = self.env['stock.picking.type'].sudo().search(
-                    [('branch_id', '=', False), ('company_id', '=', self.company_id.id)], limit=1)
+                picking_type = self.env['stock.picking.type'].sudo().search([('branch_id', '=', False), ('company_id', '=', self.company_id.id)], limit=1)
             self.picking_type_id = picking_type
             if not picking_type:
                 error_msg = _(
@@ -207,10 +202,11 @@ class PurchaseOrder(models.Model):
                 raise UserError(error_msg)
             location_id = self.env.user.with_company(self.company_id)._get_default_location_id()
             if location_id and not self.location_id:
+                if (self.picking_type_id and self.picking_type_id.warehouse_id) and location_id.warehouse_id.id != self.picking_type_id.warehouse_id.id:
+                    location_id = self.env['stock.location'].sudo().search([('company_id', '=', self.env.company.id),('warehouse_id','=',self.picking_type_id.warehouse_id.id),('usage','=','internal')], limit=1) 
                 self.location_id = location_id
         else:
-            self.picking_type_id = self.env['stock.picking.type'].sudo().search(
-                [('branch_id', '=', False), ('company_id', '=', self.company_id.id)], limit=1)
+            self.picking_type_id = self.env['stock.picking.type'].sudo().search([('branch_id', '=', False), ('company_id', '=', self.company_id.id)], limit=1)
             location_id = self.env.user.with_company(self.company_id)._get_default_location_id()
             if location_id and not self.location_id:
                 self.location_id = location_id  

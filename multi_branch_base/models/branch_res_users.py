@@ -68,12 +68,16 @@ class ResUsers(models.Model):
                 raise UserError(error_msg)
             return warehouse
         else:
-            return self.env['stock.warehouse'].search([
-                ('company_id', '=', self.env.company.id)], limit=1)
+            if self.env.user.branch_id:
+                return self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id),('branch_id','=',self.env.user.branch_id.id)], limit=1)
+            return self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
         
     def _get_default_location_id(self):
         if self.location_id:
             return self.location_id
         # !!! Any change to the following search domain should probably
         # be also applied in sale_stock/models/sale_order.py/_init_column.
-        return self.env['stock.location'].search([('company_id', '=', self.env.company.id)], limit=1)             
+        warehouse_id = self.env.user.with_company(self.company_id.id)._get_default_warehouse_id()
+        if warehouse_id:
+            return self.env['stock.location'].sudo().search([('company_id', '=', self.env.company.id),('warehouse_id','=',warehouse_id.id),('usage','=','internal')], limit=1) 
+        return self.env['stock.location'].sudo().search([('company_id', '=', self.env.company.id)], limit=1)             

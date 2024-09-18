@@ -71,6 +71,15 @@ class SaleOrder(models.Model):
         if self.warehouse_id:
             return {'domain': {'location_id': [('warehouse_id', 'in', self.warehouse_id.ids),('usage','=','internal')]}} 
         
+    @api.depends('partner_id')
+    def _compute_payment_term_id(self):
+        for order in self:
+            order = order.with_company(order.company_id)
+            if not order.term_type == 'direct':
+                term_id = self.env['account.payment.term'].search([('name', '=', 'Immediate Payment')],limit=1)
+                if term_id:
+                    self.payment_term_id = term_id.id      
+        
     @api.onchange('term_type')
     def onchange_payment_term_id(self):
         if self.term_type == 'direct':
