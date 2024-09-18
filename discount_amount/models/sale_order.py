@@ -161,13 +161,13 @@ class SaleOrder(models.Model):
             rec.invisible_commercial = result
             
 
-    @api.onchange('partner_id')
-    def onchange_partner_sale_disc(self):
-        if self.partner_id:
-            if self.partner_id.sale_discount_account_id:
-                self.discount_account_id = self.partner_id.sale_discount_account_id.id
-            else:
-                self.discount_account_id = None
+    # @api.onchange('partner_id')
+    # def onchange_partner_sale_disc(self):
+    #     if self.partner_id:
+    #         if self.partner_id.sale_discount_account_id:
+    #             self.discount_account_id = self.partner_id.sale_discount_account_id.id
+    #         else:
+    #             self.discount_account_id = None
                 
     # @api.constrains('global_discount')
     # def check_discount_amt(self):
