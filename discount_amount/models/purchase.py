@@ -33,7 +33,7 @@ class PurchaseOrderLine(models.Model):
 
             if line.discount_type=='amount' and line.discount:
                 line.update({
-                'discount_amt': line.discount,
+                'discount_amt': line.product_qty*line.discount,
                 })
             elif line.discount_type=='percent' and line.discount:
                 line.update({

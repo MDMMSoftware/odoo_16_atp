@@ -38,7 +38,7 @@ class SaleOrderLine(models.Model):
 
             if line.discount_type=='amount' and line.discount:
                 line.update({
-                'discount_amt': line.discount,
+                'discount_amt': line.product_uom_qty * line.discount,
                 })
             elif line.discount_type=='percent' and line.discount:
                 line.update({
@@ -162,13 +162,13 @@ class SaleOrder(models.Model):
             rec.invisible_commercial = result
             
 
-    @api.onchange('partner_id')
-    def onchange_partner_sale_disc(self):
-        if self.partner_id:
-            if self.partner_id.sale_discount_account_id:
-                self.discount_account_id = self.partner_id.sale_discount_account_id.id
-            else:
-                self.discount_account_id = None
+    # @api.onchange('partner_id')
+    # def onchange_partner_sale_disc(self):
+    #     if self.partner_id:
+    #         if self.partner_id.sale_discount_account_id:
+    #             self.discount_account_id = self.partner_id.sale_discount_account_id.id
+    #         else:
+    #             self.discount_account_id = None
                 
     # @api.constrains('global_discount')
     # def check_discount_amt(self):

@@ -50,4 +50,49 @@ class StockLocationValuationReport(models.Model):
         if self.product_id:
             self.product_name = self.product_id.name
             self.uom_id = self.product_id.uom_id.id    
-     
+
+    def go_to_origin(self):
+        check_purchase = self.env['purchase.order'].search([('name','=',self.seq)],limit=1)
+        if check_purchase:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Purchase Order Form',
+                'res_model': 'purchase.order',
+                'view_mode': 'form',
+                'view_id': self.env.ref('purchase.purchase_order_form').id,
+                'target': 'current',
+                'res_id': check_purchase.id,
+            }
+        check_requisition = self.env['requisition'].search([('name','=',self.seq)],limit=1)
+        if check_requisition:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Requisition Form',
+                'res_model': 'requisition',
+                'view_mode': 'form',
+                'view_id': self.env.ref('requisition.requisition_form_view').id,
+                'target': 'current',
+                'res_id': check_requisition.id,
+                }
+        check_sale_order = self.env['sale.order'].search([('name','=',self.seq)],limit=1)
+        if check_sale_order:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Sale Order Form',
+                'res_model': 'sale.order',
+                'view_mode': 'form',
+                'view_id': self.env.ref('sale.view_order_form').id,
+                'target': 'current',
+                'res_id': check_sale_order.id,
+            }
+        check_sale_order_by_quo = self.env['sale.order'].search([('quotation_ref','=',self.seq)],limit=1)
+        if check_sale_order_by_quo:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Sale Order Form',
+                'res_model': 'sale.order',
+                'view_mode': 'form',
+                'view_id': self.env.ref('sale.view_order_form').id,
+                'target': 'current',
+                'res_id': check_sale_order_by_quo.id,
+            }

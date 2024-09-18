@@ -525,6 +525,8 @@ class StockPicking(models.Model):
                         svl_in_vals['project_id'] = move.project_id.id or False
                     if hasattr(move, 'repair_object_id'):
                         svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
+                    if hasattr(move, 'branch_id'):
+                        svl_in_vals['branch_id'] = move.branch_id.id or False
                     in_valuation = valuation.create(svl_in_vals)
                     # report_values
                     svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
@@ -557,6 +559,9 @@ class StockPicking(models.Model):
                         svl_out_vals['project_id'] = move.project_id.id or False
                     if hasattr(move, 'repair_object_id'):
                         svl_out_vals['repair_object_id'] = move.repair_object_id.id or False
+                    if hasattr(move, 'branch_id'):
+                        svl_out_vals['branch_id'] = move.branch_id.id or False
+
                     out_valuation = valuation.create(svl_out_vals)
                     # report_values
                     svl_report_vals = move._prepare_common_svl_report_vals([svl_out_vals])
@@ -589,6 +594,9 @@ class StockPicking(models.Model):
                         svl_in_vals['project_id'] = move.project_id.id or False
                     if hasattr(move, 'repair_object_id'):
                         svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
+                    if hasattr(move, 'branch_id'):
+                        svl_in_vals['branch_id'] = move.branch_id.id or False
+
                     in_valuation = valuation.create(svl_in_vals)
                     # report_values
                     svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
@@ -779,6 +787,10 @@ class StockMove(models.Model):
             svl_dct['project_id'] = self.project_id.id or False
         if hasattr(self, 'repair_object_id'):
             svl_dct['repair_object_id'] = self.repair_object_id.id or False
+        if hasattr(self, 'branch_id'):
+            svl_dct['branch_id'] = self.picking_id.branch_id.id or False
+            self.branch_id = self.picking_id.branch_id.id or False
+
         return svl_dct
     
     def _prepare_common_svl_report_vals(self, svl_values):
@@ -819,7 +831,7 @@ class StockMove(models.Model):
                 'stock_move_id':svl_val['stock_move_id'],
                 'product_id':svl_val['product_id'],
                 'company_id':svl_val['company_id'],
-                'branch_id': stock_move.branch_id.id,
+                'branch_id': svl_val['branch_id'],
                 'location_id': svl_val['location_id'],
                 'location_dest_id':svl_val['location_dest_id'],                
                 'by_location':svl_val['by_location'],

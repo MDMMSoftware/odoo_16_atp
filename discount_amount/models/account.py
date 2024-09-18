@@ -169,7 +169,7 @@ class AccountMoveLine(models.Model):
                 line.price_total = line.price_subtotal = subtotal
                 if line.discount_type=='amount' and line.discount:
                     line.update({
-                    'discount_amt': line.discount,
+                    'discount_amt': line.quantity*line.discount,
                     })
                 elif line.discount_type=='percent' and line.discount:
                     line.update({
@@ -242,8 +242,10 @@ class AccountMove(models.Model):
     @api.onchange('discount_account_id')
     def onchnage_discount_account(self):
         for line in self.line_ids:
-            if line.name=='Discount' and self.discount_account_id:
+            if line.name=='Global Discount' and self.discount_account_id:
                 line.update({'account_id':self.discount_account_id.id})
+            if line.name=='Line Discount' and self.line_discount_account_id:
+                line.update({'account_id':self.line_discount_account_id.id})
     
     def action_post(self):
         if self.commercial_sale_id:
