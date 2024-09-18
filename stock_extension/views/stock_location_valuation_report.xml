@@ -38,6 +38,7 @@
                 <form>
                     <sheet>
                         <div name="button_box" class="oe_button_box">
+                            <button name="go_to_picking" class="oe_stat_button" icon="fa-truck"  type="object" string="Picking"/>  
                             <button name="go_to_origin" class="oe_stat_button" icon="fa-book"  type="object" string="Origin"/>  
                         </div>
                         <group>
