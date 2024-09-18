@@ -28,9 +28,12 @@
                     <field name="global_discount"/>
                 </xpath>
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='discount']" position="replace">
-                    <field name="discount_type" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
-                    <field name="discount" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
-                    <field name="discount_amt" attrs="{'column_invisible': [('parent.global_discount', '=', True)]}" force_save="1"/>
+                    <!-- <field name="discount_type"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>
+                    <field name="discount_amt"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}" force_save="1"/> -->
+                    <field name="discount_type"/>
+                    <field name="discount"/>
+                    <field name="discount_amt" force_save="1"/>
                     <field name="commercial_type"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
                     <field name="commercial_amt"  attrs="{'column_invisible': [('parent.is_commission', '=', False)]}"/>
                     <field name="add_type"  attrs="{'column_invisible': [('parent.extra_amt', '=', False)]}"/>
@@ -42,11 +45,15 @@
                 <xpath expr="//field[@name='note']" position="before">
                     <field name="discount_type" attrs="{'invisible': [('global_discount', '=', False)]}"/>
                     <field name="discount" attrs="{'invisible': [('global_discount', '=', False)]}"/>
-                    <field name="discount_account_id"/>
+                    <field name="discount_account_id" attrs="{'invisible': [('global_discount', '=', False)]}"/>
+                    <field name="line_discount_account_id"/>
                 </xpath>			
                 <xpath expr="//field[@name='tax_totals']" position="replace">
                     <field name="amount_untaxed"/>
                     <field name="discount_amt" force_save="1"/>
+                    <field name="line_discount"/>
+                    <field name="order_discount"/>
+                    <field name="amount_tax" attrs="{'invisible': [('amount_tax','&lt;=',0.0)]}"/>
                     <field name="amount_total"/>
                     <field name="amount_commercial"/>
                     <field name="amount_add"/>

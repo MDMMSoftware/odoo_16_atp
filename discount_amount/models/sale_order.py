@@ -38,7 +38,7 @@ class SaleOrderLine(models.Model):
 
             if line.discount_type=='amount' and line.discount:
                 line.update({
-                'discount_amt': line.discount,
+                'discount_amt': line.product_uom_qty * line.discount,
                 })
             elif line.discount_type=='percent' and line.discount:
                 line.update({
@@ -70,17 +70,20 @@ class SaleOrder(models.Model):
         store=True, readonly=False)
     discount_amt = fields.Monetary(string='Discount Amount', store=True, readonly=True, compute='_compute_amounts')
     global_discount = fields.Boolean(string="Global Discount",default=False)
-    discount_account_id = fields.Many2one('account.account')
+    discount_account_id = fields.Many2one('account.account',string="Global Discount Acount")
+    line_discount_account_id = fields.Many2one('account.account',string="Line Discount Acount")
     is_commission = fields.Boolean(string="Is Commission?",default=False)
     amount_commercial = fields.Float('Commission',compute='_compute_amounts',store=True)
     invisible_commercial = fields.Boolean(compute='compute_invisible_commercial')
-    commercial_move_id = fields.Many2one('account.move',string="Commission Bill")
+    commercial_move_id = fields.Many2one('account.move',string="Commission Bill",copy=False)
     amount_add = fields.Float('Additional Amount',compute='_compute_amounts',store=True)
     extra_amt = fields.Boolean('Additional Amount')
+    line_discount = fields.Monetary(string='Line Discount', store=True, readonly=True, compute='_compute_amounts')
+    order_discount = fields.Monetary(string='Order Discount', store=True, readonly=True, compute='_compute_amounts')
     
     def action_open_commercial(self):
         return {
-            'name': _('Transfers'),
+            'name': _('Commissions Bills'),
             'view_mode': 'tree,form',
             'res_model': 'account.move',
             'type': 'ir.actions.act_window',  
@@ -114,7 +117,7 @@ class SaleOrder(models.Model):
                 # Invoice values.
                 invoice_vals = {
                     # 'name': 'Draft' + record.name,
-                    'ref': record.name or '',
+                    'ref': False,
                     'internal_ref':record.name,
                     'move_type': 'in_invoice',
                     'currency_id': record.currency_id.id,
@@ -158,27 +161,27 @@ class SaleOrder(models.Model):
             rec.invisible_commercial = result
             
 
-    @api.onchange('partner_id')
-    def onchange_partner_sale_disc(self):
-        if self.partner_id:
-            if self.partner_id.sale_discount_account_id:
-                self.discount_account_id = self.partner_id.sale_discount_account_id.id
-            else:
-                self.discount_account_id = None
+    # @api.onchange('partner_id')
+    # def onchange_partner_sale_disc(self):
+    #     if self.partner_id:
+    #         if self.partner_id.sale_discount_account_id:
+    #             self.discount_account_id = self.partner_id.sale_discount_account_id.id
+    #         else:
+    #             self.discount_account_id = None
                 
-    @api.constrains('global_discount')
-    def check_discount_amt(self):
-        if self.global_discount:
-            for line in self.order_line:
-                line.discount = 0
-                line.discount_amt = 0
-                line.discount_type = None
-        else:
-            self.discount = 0
-            self.discount_amt = 0
-            self.discount_type = None
+    # @api.constrains('global_discount')
+    # def check_discount_amt(self):
+    #     if self.global_discount:
+    #         for line in self.order_line:
+    #             line.discount = 0
+    #             line.discount_amt = 0
+    #             line.discount_type = None
+    #     else:
+    #         self.discount = 0
+    #         self.discount_amt = 0
+    #         self.discount_type = None
 
-    @api.depends('order_line.price_subtotal', 'order_line.price_tax', 'order_line.price_total','order_line.discount_amt','order_line.commercial_amt')
+    @api.depends('order_line.price_subtotal', 'order_line.price_tax', 'order_line.price_total','order_line.discount_amt','order_line.commercial_amt','discount_type','discount')
     def _compute_amounts(self):
         """Compute the total amounts of the SO."""
         for order in self:
@@ -196,26 +199,29 @@ class SaleOrder(models.Model):
                 amount_untaxed = sum(order_lines.mapped('price_subtotal'))
                 amount_tax = sum(order_lines.mapped('price_tax'))
 
+            order.line_discount = order.order_discount = order.discount_amt = 0
+
+
+            if sum(order_lines.mapped('discount_amt')) > 0:
+                order.line_discount = sum(order_lines.mapped('discount_amt'))
             if order.discount or order.discount_type:
                 if order.discount_type=='amount' and order.discount:
-                    order.discount_amt = order.discount
+                    order.order_discount = order.discount
                 elif order.discount_type=='percent' and order.discount:
-                    order.discount_amt = amount_untaxed - (amount_untaxed * (1 - (order.discount / 100.0)))
+                    order.order_discount = (amount_untaxed-order.line_discount)*(order.discount / 100.0)
                 else:
-                    order.discount_amt = 0
-
+                    order.order_discount = 0
                 order.amount_untaxed = amount_untaxed 
                 order.amount_tax = amount_tax
                 order.amount_total = order.amount_untaxed + order.amount_tax
-
+                order.discount_amt = order.order_discount+order.line_discount
             else:
-                order.discount_amt = 0
+                order.discount_amt = order.order_discount+order.line_discount
                 order.amount_untaxed = amount_untaxed
                 order.amount_tax = amount_tax
                 order.amount_total = order.amount_untaxed + order.amount_tax
 
-            if sum(order_lines.mapped('discount_amt')) > 0:
-                order.discount_amt = order.discount_amt+sum(order_lines.mapped('discount_amt'))
+            
 
             order.amount_total = order.amount_total - order.discount_amt
             
@@ -258,7 +264,7 @@ class SaleOrder(models.Model):
             result.update({'invoice_date':self.date_order})
         if self.partner_id.sale_discount_account_id:
             dis_acc = self.partner_id.sale_discount_account_id.id
-        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or dis_acc})
+        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or dis_acc,'line_discount_account_id':self.line_discount_account_id and self.line_discount_account_id.id or False})
         return result
     
     
@@ -294,7 +300,7 @@ class AccountMoveReversal(models.TransientModel):
     def reverse_moves(self):
         moves = self.move_ids
         order_id = self.move_ids.line_ids.sale_line_ids.order_id
-        if order_id and order_id.commercial_move_id:
+        if order_id and order_id.commercial_move_id and not order_id.commercial_move_id.reversal_move_id:
             raise UserError('You cannot cancel the invoice which has a commission bill.')
 
         for move in moves:
@@ -304,4 +310,9 @@ class AccountMoveReversal(models.TransientModel):
                         raise ValidationError('Can not reverse this included commission.')
             
         result = super(AccountMoveReversal, self).reverse_moves()
+        return result
+    
+    def _prepare_default_reversal(self, move=None):
+        result = super(AccountMoveReversal, self)._prepare_default_reversal(move=move)
+        result.update({'exchange_rate': move.exchange_rate})
         return result

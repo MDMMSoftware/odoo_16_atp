@@ -17,7 +17,7 @@ class SaleOrder(models.Model):
 
     sale_type = fields.Selection([('counter_sale', 'Counter Sale'),('order_sale', 'Order Sale')],track_visibility='onchange', default="counter_sale",string="Type")
     term_type = fields.Selection([('direct','Cash Sales'),('credit','Credit Sales')],string='Payment Type',default="direct")
-    location_id = fields.Many2one('stock.location','Location',required=True,domain="[('usage','=','internal')]")
+    location_id = fields.Many2one('stock.location','Location',required=True,domain=[('usage','=','internal')])
     other_contact_id = fields.Many2one(comodel_name='res.partner',string='Contact Person',domain=[('is_other_contact','=',True)])
     internal_ref = fields.Char(string="Internal Reference")
     user_id = fields.Many2one(
@@ -69,7 +69,7 @@ class SaleOrder(models.Model):
     @api.onchange('warehouse_id')
     def onchange_location_id(self):
         if self.warehouse_id:
-            return {'domain': {'location_id': [('warehouse_id', 'in', self.warehouse_id.ids)]}} 
+            return {'domain': {'location_id': [('warehouse_id', 'in', self.warehouse_id.ids),('usage','=','internal')]}} 
         
     @api.onchange('term_type')
     def onchange_payment_term_id(self):
@@ -145,11 +145,8 @@ class SaleOrder(models.Model):
             return self.action_view_invoice()
             
     def action_cancel(self):
-        check_commercial = self.env['account.move'].search_count([
-                    ('commercial_sale_id','=',self.id),
-                    ('state','!=','cancel')
-                ])
-        if check_commercial > 0:
+        commission_moves = self.env['account.move'].search([('commercial_sale_id','=',self.id)])
+        if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:
             raise UserError('You can not cancel sale order which has a commission bill.')
         return super().action_cancel()
     
@@ -417,24 +414,17 @@ class AccountMove(models.Model):
     def button_draft(self):
         order_id = self.line_ids.sale_line_ids.order_id.id
         if order_id:
-            check_commercial = self.env['account.move'].search_count([
-                        ('commercial_sale_id','=',order_id),
-                        ('state','!=','cancel')
-                    ])
-            if check_commercial > 0:
+            commission_moves = self.env['account.move'].search([('commercial_sale_id','=',order_id)])
+            if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:   
                 raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_draft()
     
     def button_cancel(self):
-        if not self.commercial_sale_id:
-            order_id = self.line_ids.sale_line_ids.order_id.id
-            if order_id:
-                check_commercial = self.env['account.move'].search_count([
-                            ('commercial_sale_id','=',order_id),
-                            ('state','!=','cancel')
-                        ])
-                if check_commercial > 0:
-                    raise UserError('You can not reset to draft the invoice which has a commission bill.')
+        order_id = self.line_ids.sale_line_ids.order_id.id
+        if order_id:
+            commission_moves = self.env['account.move'].search([('commercial_sale_id','=',order_id)])
+            if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:
+                raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_cancel()
 
 class AccountMoveLine(models.Model):
