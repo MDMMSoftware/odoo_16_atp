@@ -169,7 +169,7 @@ class AccountMoveLine(models.Model):
                 line.price_total = line.price_subtotal = subtotal
                 if line.discount_type=='amount' and line.discount:
                     line.update({
-                    'discount_amt': line.discount,
+                    'discount_amt': line.quantity*line.discount,
                     })
                 elif line.discount_type=='percent' and line.discount:
                     line.update({
