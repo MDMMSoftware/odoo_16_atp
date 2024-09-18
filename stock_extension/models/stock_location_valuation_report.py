@@ -51,6 +51,19 @@ class StockLocationValuationReport(models.Model):
             self.product_name = self.product_id.name
             self.uom_id = self.product_id.uom_id.id    
 
+    def go_to_picking(self):
+        picking = self.env['stock.picking'].search([('name','=',self.ref)],limit=1)
+        if picking:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Transfer',
+                'res_model': 'stock.picking',
+                'view_mode': 'form',
+                'view_id': self.env.ref('stock.view_picking_form').id,
+                'target': 'current',
+                'res_id': picking.id,
+            }
+        
     def go_to_origin(self):
         check_purchase = self.env['purchase.order'].search([('name','=',self.seq)],limit=1)
         if check_purchase:
