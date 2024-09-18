@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data> 
+        <template id="custom_report_invoice_document_advance_expense" inherit_id="account.report_invoice_document">
+            <xpath expr="//div[@name='reference']" position="replace">
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.ref" name="reference">
+                    <strong>Reference:</strong>
+                    <t t-if="o.reversed_entry_id">Reversal of <p class="m-0" t-esc="o.reversed_entry_id.ref"/></t>
+                    <t t-else=""><p class="m-0" t-field="o.ref"/></t>
+                </div>
+            </xpath>
+        </template>    
+    </data>
+</odoo>

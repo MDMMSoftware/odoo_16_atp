@@ -82,12 +82,13 @@ class SaleOrder(models.Model):
     order_discount = fields.Monetary(string='Order Discount', store=True, readonly=True, compute='_compute_amounts')
     
     def action_open_commercial(self):
+        commercial_moves = self.env['account.move'].search([('commercial_sale_id','=',self.id)]).ids
         return {
             'name': _('Commissions Bills'),
             'view_mode': 'tree,form',
             'res_model': 'account.move',
             'type': 'ir.actions.act_window',  
-            'domain': [('id', 'in',self.commercial_move_id.ids)],              
+            'domain': [('id', 'in',commercial_moves)],              
         } 
     
     def action_create_commercial(self):

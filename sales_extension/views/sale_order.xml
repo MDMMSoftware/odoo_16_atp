@@ -71,7 +71,9 @@
                 <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="attributes">
                     <attribute name="attrs">{'readonly': [('state', 'not in', ('draft','sent'))]}</attribute>
                 </xpath>
-
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="attributes">
+                    <attribute name="style">white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;</attribute>
+                </xpath>
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="after">
                     <field name="available_lot_ids" invisible="1" />
                     <field name="serial_no_id" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
@@ -146,7 +148,7 @@
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//sheet//group//field[@name='branch_id']" position="after">
-					<field name="internal_ref" attrs="{'readonly':[('state','not in',['draft','waiting','confirmed'])]}"/>
+					<field name="internal_ref" attrs="{'readonly':[('state','not in',['done','cancel'])]}"/>
 				</xpath>
             </field>
         </record>                              			
