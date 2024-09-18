@@ -62,7 +62,10 @@
                 </xpath>                 
                 <xpath expr="//field[@name='name']" position="after">
                     <field name="ref" readonly="1"  attrs="{'readonly': True}" placeholder="Draft"/>
-                </xpath>       
+                </xpath>   
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="reversed_entry_id" readonly="1"/>
+                </xpath>    
                 <xpath expr="//field[@name='partner_id']" position="before">
                     <label for="partner_id" string="Contact" style="font-weight:bold;" attrs="{'invisible': [('move_type', '!=', 'entry')]}"/>
                 </xpath>                       
