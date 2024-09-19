@@ -206,6 +206,10 @@ class SaleOrderLine(models.Model):
     serial_no_id = fields.Many2one('stock.lot', string="Serial Number", domain="[('product_id', '=', product_id), ('id', 'in', available_lot_ids)]")
     available_lot_ids = fields.Many2many('stock.lot', compute='_compute_available_lot_ids')
     remaining_stock = fields.Float('On hand',compute="compute_remaining_stock")
+    name = fields.Char(
+        string="Description",
+        compute='_compute_name',
+        store=True, readonly=False, required=True, precompute=True)
     
     @api.depends('product_id','order_id.location_id')
     @api.onchange('product_id')    
