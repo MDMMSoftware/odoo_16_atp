@@ -243,7 +243,7 @@ class Requisition(models.Model):
             else:
                 picking_type_id = self.env['stock.picking.type']
                 picking_type = picking_type_id.sudo().search([('warehouse_id','=',self.src_location_id.warehouse_id.id),('code','=','internal'),('active','=',True)],limit=1)
-                picking = self._create_requisition_picking(self.src_location_id,self.location_id,picking_type,branch=False)
+                picking = self._create_requisition_picking(self.src_location_id,self.location_id,picking_type,branch=int(self.to_branch))
                 picking_move_ids_lst = []
                 for res in partial_line:
                     values = (0, 0,
@@ -254,7 +254,9 @@ class Requisition(models.Model):
                                     'location_id':self.src_location_id.id ,
                                     'location_dest_id':self.location_id.id,
                                     'fleet_id':res.requisition_line.fleet_id.id or False,  
-                                    'division_id': res.requisition_line.division_id.id or False,                         
+                                    'division_id': res.requisition_line.division_id.id or False, 
+                                    'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
+                        
                                 }  
                             )
                     if hasattr(res.requisition_line, 'project_id'):
@@ -263,7 +265,8 @@ class Requisition(models.Model):
                 picking.write(
                                 { 
                                     'internal_ref': self.internal_ref,
-                                    'move_ids':picking_move_ids_lst
+                                    'move_ids':picking_move_ids_lst,
+                                    'branch_id':int(self.from_branch) and int(self.from_branch) or False
                                 }
                             )
                 self.write({'picking_ids':[(4, picking.id)]})
