@@ -831,7 +831,6 @@ class StockMove(models.Model):
                 'stock_move_id':svl_val['stock_move_id'],
                 'product_id':svl_val['product_id'],
                 'company_id':svl_val['company_id'],
-                'branch_id': svl_val['branch_id'],
                 'location_id': svl_val['location_id'],
                 'location_dest_id':svl_val['location_dest_id'],                
                 'by_location':svl_val['by_location'],
@@ -856,6 +855,9 @@ class StockMove(models.Model):
                 svlr_dct['project_id'] = svl_val['project_id']
             if svl_val.get('repair_object_id'):
                 svlr_dct['repair_object_id'] = svl_val['repair_object_id']
+            if svl_val.get('branch_id'):
+                svlr_dct['branch_id'] = svl_val['branch_id']
+
             svlr_values.append(svlr_dct)
         return svlr_values
 
