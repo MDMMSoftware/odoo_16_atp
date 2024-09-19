@@ -14,6 +14,7 @@ class StockLandedCost(models.Model):
     _inherit = 'stock.landed.cost'
     
     vendor_bill_ids = fields.Many2many(comodel_name='account.move', string='Vendor Bills', copy=False, domain=[('move_type', '=', 'in_invoice'),('state','=','posted')])
+    branch_id = fields.Many2one("res.branch",string="Branch")
 
     def button_validate(self):
         self._check_can_validate()
@@ -28,6 +29,7 @@ class StockLandedCost(models.Model):
             move = self.env['account.move']
             move_vals = {
                 'journal_id': cost.account_journal_id.id,
+                'branch_id': cost.branch_id and cost.branch_id.id or False,
                 'date': cost.date,
                 'ref': cost.name,
                 'line_ids': [],
@@ -38,7 +40,8 @@ class StockLandedCost(models.Model):
             for line in cost.valuation_adjustment_lines.filtered(lambda line: line.move_id):
                 remaining_qty = sum(line.move_id.stock_valuation_layer_ids.mapped('remaining_qty'))
                 linked_layer = line.move_id.stock_valuation_layer_ids[:1]
-
+                for s_move in line.move_id:
+                    s_move.branch_id = cost.branch_id and cost.branch_id.id or False
                 # Prorate the value at what's still in stock
                 cost_to_add = (remaining_qty / line.move_id.product_qty) * line.additional_landed_cost
                 if not cost.company_id.currency_id.is_zero(cost_to_add):
@@ -53,6 +56,7 @@ class StockLandedCost(models.Model):
                         'product_id': line.move_id.product_id.id,
                         'stock_landed_cost_id': cost.id,
                         'company_id': cost.company_id.id,
+                        'branch_id': cost.branch_id and cost.branch_id.id or False,
                     })
                     linked_layer.remaining_value += cost_to_add
                     valuation_layer_ids.append(valuation_layer.id)
@@ -72,6 +76,7 @@ class StockLandedCost(models.Model):
                         'division_id': line.move_id.division_id.id or False,
                         'department_id':line.move_id.department_id.id or False,
                         'fleet_location_id':line.move_id.fleet_location_id.id or False,
+                        'branch_id': cost.branch_id and cost.branch_id.id or False,
                     }
                     if hasattr(line.move_id, 'project_id'):
                         svl_in_vals['project_id'] = line.move_id.project_id.id or False
@@ -224,7 +229,7 @@ class StockLandedCost(models.Model):
 class AccountMove(models.Model):
     _inherit = 'account.move'
     
-    stock_landed_costs_ids = fields.Many2many(comodel_name='stock.landed.cost')
+    stock_landed_costs_ids = fields.Many2many(comodel_name='stock.landed.cost',copy=False)
     
     
     def action_view_stock_landed_costs(self):
@@ -246,6 +251,7 @@ class AccountMove(models.Model):
         landed_costs = self.env['stock.landed.cost'].create({
             'vendor_bill_id': self.id,
             'vendor_bill_ids':[(6,0,[self.id])],
+            'branch_id':  self.branch_id and self.branch_id.id or False,
             'cost_lines': [(0, 0, {
                 'product_id': l.product_id.id,
                 'name': l.product_id.name,

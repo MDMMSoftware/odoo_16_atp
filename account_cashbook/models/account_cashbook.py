@@ -164,7 +164,8 @@ class AccountCashBook(models.Model):
                 'credit': debit_amt/(1/self.exchange_rate),
                 'cashbook_id':self.id,
                 'currency_id':self.currency_id.id,
-                'currency_rate':1/self.exchange_rate
+                'currency_rate':1/self.exchange_rate,
+                'name': self.desc,
                 # 'analytic_distribution':distribution
             }
             move_lines.append(vals)
