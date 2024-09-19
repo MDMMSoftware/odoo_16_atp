@@ -255,10 +255,8 @@
                     <field name="group_class_id" string="Group/Class"/>
                     <field name="custom_brand_id" string="Brand" />
                     <field name="custom_model_no_id" string="Model No." />
-
                     <field name="product_code" string="Product Code" filter_domain="['|','|', '|', '|', ('product_code','ilike',self),('default_code', 'ilike', self), ('product_variant_ids.default_code', 'ilike', self),('name', 'ilike', self), ('barcode', 'ilike', self)]"/>
                     <field name="custom_part" string="Part ID" />
-
                 </xpath>
                 <xpath expr="//search//field[@name='categ_id']" position="replace">
                     <field name="custom_category_id" string="Category" />

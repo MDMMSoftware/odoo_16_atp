@@ -88,6 +88,11 @@ class SaleOrder(models.Model):
                 self.payment_term_id = term_id.id
         elif self.term_type == 'credit':
             self.payment_term_id = self.partner_id.property_payment_term_id.id
+            
+    @api.onchange('location_id')
+    def recompute_remaining_stock(self):
+        for line in self.order_line:
+            line.compute_remaining_stock()                
 
 
     @api.constrains('sale_type')
@@ -198,26 +203,31 @@ class SaleOrderLine(models.Model):
     # serial_no_id = fields.Many2one('stock.lot', string="Serial Number")
     serial_no_id = fields.Many2one('stock.lot', string="Serial Number", domain="[('product_id', '=', product_id), ('id', 'in', available_lot_ids)]")
     available_lot_ids = fields.Many2many('stock.lot', compute='_compute_available_lot_ids')
+    remaining_stock = fields.Float('On hand',compute="compute_remaining_stock")
+    
+    @api.depends('product_id','order_id.location_id')
+    @api.onchange('product_id')    
+    def compute_remaining_stock(self):
+        for rec in self:
+            qty = 0
+            location_id = self.order_id.location_id
+            if rec.product_id and location_id:
+                quants = self.env['stock.quant'].search([
+                        ('product_id', '=', rec.product_id.id),('location_id', '=', location_id.id)
+                    ])
+                for qt in quants:
+                    qty += qt._get_available_quantity(rec.product_id, location_id)
+            rec.remaining_stock = round(qty,2)     
 
     @api.depends('product_id')
     def _compute_available_lot_ids(self):
         for line in self:
             if line.product_id and line.can_be_unit:
-                # lot_ids = self.env['stock.lot'].search([('product_id','=',line.product_id.id),('product_qty','>',0)])
-
-                # quants = self.env['stock.quant'].search([('product_id', '=', self.product_id.id),
-                #                                  ('lot_id', 'in', lot_ids.ids),
-                #                                  ('quantity', '!=', 0),
-                #                                  ('location_id.usage', '=', 'customer')])
-
                 stock_lot = self.env['stock.lot'].search([('product_id','=',line.product_id.id),('product_qty','>',0)])
-
-
                 line.available_lot_ids = stock_lot.filtered(lambda stock: not self.env['sale.order.line'].search_count([
                             ('serial_no_id','=',stock.id),
                             ('state','not in',('cancel','draft'))
                         ]))
-
                 line.order_id.allow_fleet_partner_relationship = False if any(line.order_id.order_line.mapped('can_be_unit')) else line.order_id.company_id.allow_fleet_partner_relationship
             else:
                 line.available_lot_ids = self.env['stock.lot']
@@ -231,7 +241,6 @@ class SaleOrderLine(models.Model):
             if analytic_account:
                 line.analytic_distribution = {str(analytic_account.id) : 100}
   
-            
     @api.onchange('division_id')
     def _onchage_analytic_by_division(self):
         dct = {}
@@ -350,20 +359,9 @@ class SaleOrderLine(models.Model):
     
     def check_stock(self):
         for rec in self:
-            qty = rec.compute_remaining_stock(rec.order_id.location_id)
-            if rec.product_uom_qty > qty:
+            rec.compute_remaining_stock()
+            if rec.product_uom_qty > rec.remaining_stock:
                 raise ValidationError('%s is not available to sale.Please check available stock.'% rec.product_id.name)        
-
-    def compute_remaining_stock(self,location_id):
-        for rec in self:
-            qty = 0
-            if rec.product_id and location_id:
-                quants = self.env['stock.quant'].search([
-                        ('product_id', '=', rec.product_id.id),('location_id', '=', location_id.id)
-                    ])
-                for qt in quants:
-                    qty += qt._get_available_quantity(rec.product_id, location_id)
-            return qty    
         
 
 class StockPicking(models.Model):

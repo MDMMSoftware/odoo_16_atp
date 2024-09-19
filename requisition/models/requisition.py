@@ -30,7 +30,7 @@ class Requisition(models.Model):
             if res.picking_ids:
                 for picking in res.picking_ids:
                     res.issue_status += PICKING_STATE_DCT.get(picking.state,"Draft") + ', '
-                res.issue_status = res.issue_status[::-2]
+                res.issue_status = res.issue_status[:-2]
             res.computed_field = False
 
     name = fields.Char("Reference",copy=False)
@@ -417,7 +417,7 @@ class Requisition(models.Model):
                 
                 if not item_code:
                     raise UserError('Item Code must not be blank in excel Line %s.'% str(excel_row))
-                product_id = product_obj.search([('product_code', '=', item_code)])
+                product_id = product_obj.search([('product_code', '=', item_code),('company_id','=', self.company_id.id)])
                 if not product_id:
                     raise UserError('Item code not found.')
                 if len(product_id) > 1:
@@ -431,7 +431,7 @@ class Requisition(models.Model):
                         'uom_id':product_id.uom_id.id,
                         'product_name': item_description,
                         'qty': quantity,
-                        'purchase_requisition_product_id':self.id,
+                        'requisition_id':self.id,
                     }
                 order_line_obj.create(vals)
 
