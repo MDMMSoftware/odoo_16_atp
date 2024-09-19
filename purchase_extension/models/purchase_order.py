@@ -113,7 +113,8 @@ class PurchaseOrder(models.Model):
     division_id = fields.Many2one('analytic.division',string="Division")
     remark = fields.Char(string="Remark")
     product_variant_ids = fields.Many2many('product.template.attribute.value','purchase_product_variant_rel',related="product_id.product_template_variant_value_ids")
-
+    name = fields.Char(
+        string='Description', required=True, compute='_compute_price_unit_and_date_planned_and_name', store=True, readonly=False)
 
     @api.onchange('product_template_id')
     def _onchange_product_id(self):
