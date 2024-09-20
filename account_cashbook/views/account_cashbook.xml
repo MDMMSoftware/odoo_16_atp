@@ -155,8 +155,8 @@
                 <tree string="Cash Book List" decoration-muted="state in ('done','cancel')">
                     <field name="date" />
                     <field name="name" />
-                    <field name="account_id" string="From"/>
                     <field name="origin" optional="hide"/>
+                    <field name="account_id" string="From"/>
                     <field name="branch_ids" optional="show"/>
                     <field name="department_id" optional="show"/>
                     <field name="company_id"/>
