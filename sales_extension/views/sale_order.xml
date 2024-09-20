@@ -61,13 +61,18 @@
 
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='product_uom_qty']" position="attributes">
                     <attribute name="attrs">{'readonly': [('can_be_unit', '!=', False)]}</attribute>
-
                 </xpath>
-                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
-                    <attribute name="domain">[]</attribute>
-
-                </xpath> -->
-
+                <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="before">
+                    <div>
+                        <table>
+                            <tr>
+                                <td> 
+                                    <button name="action_import_order" string ="Generate Data From Excel" type="object" class="btn btn-outline-info" states="draft"/> 
+                                </td>
+                            </tr> 
+                        </table>
+                    </div>
+                </xpath>
                 <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="attributes">
                     <attribute name="attrs">{'readonly': [('state', 'not in', ('draft','sent'))]}</attribute>
                 </xpath>
@@ -94,7 +99,6 @@
 					<field name="remark"/>
                 </xpath>
                 <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="before">
-                    
                     <field name="sale_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
                     <field name="term_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
                     <field name="allow_division_feature" invisible="1"/>
@@ -121,6 +125,13 @@
                 <xpath expr="//sheet//group[@name='order_details']//field[@name='date_order'][1]" position="replace">
                     <field name="date_order" nolabel="1" attrs="{'invisible': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
                 </xpath>    
+                <xpath expr="//sheet//group[@name='order_details']//field[@name='payment_term_id']" position="attributes">
+                    <attribute name="attrs">{"readonly": [('state','not in', ['draft','sent'])] }</attribute>
+                </xpath>     
+                <xpath expr="//sheet//group[@name='order_details']//field[@name='payment_term_id']" position="after">
+                    <field name='data'  attrs="{'readonly':[('state','not in',['draft','sent'])]}"  filename="import_fname"/>
+                    <field name="import_fname" invisible="1" class="oe_inline oe_right" />                    
+                </xpath>                                   
                 <xpath expr="//notebook//page[@name='order_lines']//tree//field[@name='analytic_distribution']" position="attributes">
                     <attribute name="optional">show</attribute>
                 </xpath>      						
