@@ -8,7 +8,7 @@
                       Modules In Odoo""",
     'author': "Mudon Maung Maung Co.,Ltd",
     'category': 'Tools',
-    'depends': ['stock_landed_costs'],
+    'depends': ['stock_landed_costs','multi_branch_base'],
     'data': [
        'views/landed_cost.xml'
     ],
