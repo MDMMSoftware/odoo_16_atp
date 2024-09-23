@@ -13,6 +13,13 @@
         <menuitem id="menu_action_account_report_ja" name="Journal Report" action="action_account_report_ja" groups="account.group_account_readonly"/>
     </menuitem>
 
+
+
+    <menuitem id="account_ledger_menu" name="Ledgers" parent="account.menu_finance_entries" sequence="20">
+        <menuitem id="menu_action_account_ledger_report_general_ledger_inherit" name="General Ledger Inherit" action="action_account_report_general_ledger_inherit" groups="account.group_account_readonly"/>
+        <menuitem id="menu_action_account_ledger_report_partner_ledger" name="Partner Ledger" action="action_account_report_partner_ledger" groups="account.group_account_readonly"/>
+    </menuitem>
+
     <menuitem id="menu_action_account_report_gt" name="Tax Report" action="action_account_report_gt" parent="account.account_reports_legal_statements_menu" sequence="50"/>
     <menuitem id="menu_action_account_report_sales" action="action_account_report_sales" parent="account.account_reports_legal_statements_menu" sequence="60" groups="account.group_account_readonly" active="False"/>
 

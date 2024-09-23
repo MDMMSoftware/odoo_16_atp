@@ -459,7 +459,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.date,
                     account_move_line.date_maturity,
                     account_move_line.name,
-                    account_move_line.ref,
+                    CASE WHEN account_move.reversed_entry_id IS NOT NULL THEN account_move_line.ref || '(Reversal of ' || r_move.ref || ' )' ELSE account_move_line.ref END AS ref,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -485,6 +485,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 LEFT JOIN res_partner partner               ON partner.id = account_move_line.partner_id
                 LEFT JOIN account_account account           ON account.id = account_move_line.account_id
                 LEFT JOIN account_journal journal           ON journal.id = account_move_line.journal_id
+                LEFT JOIN account_move r_move               ON r_move.id  = account_move.reversed_entry_id
                 WHERE {where_clause} AND {directly_linked_aml_partner_clause}
                 ORDER BY account_move_line.date, account_move_line.id
             ''')

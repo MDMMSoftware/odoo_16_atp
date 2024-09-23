@@ -24,7 +24,7 @@ class GeneralLedgerCustomHandlerInherit(models.AbstractModel):
                 column for column in options['columns']
                 if column['expression_label'] != 'amount_currency'
             ]
-        desired_list = ['Date','Project','Division','Fleet','Job Code','Description','Account Code','Account Name','Label','Partner','Currency','Debit','Credit','Balance'] # start of addition
+        desired_list = ['Date','Fleet','Description','Account Code','Account Name','Label','Partner','Currency','Debit','Credit','Balance'] # start of addition
         result = []
         for list in desired_list:
             for res in options['columns']:
@@ -423,10 +423,7 @@ class GeneralLedgerCustomHandlerInherit(models.AbstractModel):
                     {journal_name}                          AS journal_name,
                     full_rec.name                           AS full_rec_name,
                     %s                                      AS column_group_key,
-                    apc.name                                AS project,
-                    dv.name                                 AS division,
                     fv.name                                 AS fleet,
-                    jc.complete_name                        AS job_code,
                     account_move_line.description           AS description
                 FROM {tables}
                 JOIN account_move move                      ON move.id = account_move_line.move_id
@@ -435,10 +432,7 @@ class GeneralLedgerCustomHandlerInherit(models.AbstractModel):
                 LEFT JOIN res_partner partner               ON partner.id = account_move_line.partner_id
                 LEFT JOIN account_account account           ON account.id = account_move_line.account_id
                 LEFT JOIN account_journal journal           ON journal.id = account_move_line.journal_id
-                LEFT JOIN analytic_project_code apc         ON apc.id     = account_move_line.project_id
-                LEFT JOIN analytic_division dv              ON dv.id      = account_move_line.division_id
                 LEFT JOIN fleet_vehicle fv                  ON fv.id      = account_move_line.fleet_id
-                LEFT JOIN job_code jc                       ON jc.id      = account_move_line.job_code_id
                 LEFT JOIN account_full_reconcile full_rec   ON full_rec.id = account_move_line.full_reconcile_id
                 WHERE {where_clause}
                 ORDER BY account_move_line.date, account_move_line.id)
@@ -634,7 +628,7 @@ class GeneralLedgerCustomHandlerInherit(models.AbstractModel):
                 elif col_expr_label == 'balance':
                     col_value = init_bal_by_col_group # start of addition - 18
                     formatted_value = report.format_value(col_value, figure_type=column['figure_type'], blank_if_zero=False)
-                elif col_expr_label == 'communication' or col_expr_label == 'name' or col_expr_label in ('division','project','fleet','job_code','partner_name','description'): # end of addition - 18
+                elif col_expr_label == 'communication' or col_expr_label == 'name' or col_expr_label in ('fleet','partner_name','description'): # end of addition - 18
                     col_class = 'o_account_report_line_ellipsis'
                     formatted_value = report.format_value(col_value, figure_type=column['figure_type'])
                 else:
