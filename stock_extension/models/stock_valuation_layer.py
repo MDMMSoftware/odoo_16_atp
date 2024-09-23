@@ -390,6 +390,8 @@ class StockPicking(models.Model):
 
     
     def button_validate(self):
+        if not self.branch_id and ((self.location_id and self.location_id.warehouse_id and self.location_id.warehouse_id.branch_id) or (self.location_dest_id and self.location_dest_id.warehouse_id and self.location_dest_id.warehouse_id.branch_id) ):
+            raise UserError("Branch is required to validate!!!")
         for move_line in self.move_line_ids:
             if move_line.location_id!=self.location_id or move_line.location_dest_id!=self.location_dest_id:
                 raise UserError(_("Source Location or Destination Location doesn't match with Move Lines"))

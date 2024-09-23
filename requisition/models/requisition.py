@@ -25,8 +25,9 @@ class Requisition(models.Model):
     def _compute_function_for_other_fields(self):
         for res in self:
             res.issue_status = ''
-            if res.picking_ids:
-                for picking in res.picking_ids:
+            picking_ids = self.env['stock.picking'].sudo().search([('requisition_id','=',res.id)])
+            if picking_ids:
+                for picking in picking_ids:
                     res.issue_status += PICKING_STATE_DCT.get(picking.state,"Draft") + ', '
                 res.issue_status = res.issue_status[:-2]
             res.computed_field = False
@@ -437,3 +438,12 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     requisition_id = fields.Many2one('requisition','Material Requisition')
+    
+    def _create_backorder(self):
+        backorders = super()._create_backorder()
+        for backorder in backorders:
+            if self.branch_id:
+                backorder.write({"branch_id":self.branch_id.id})
+            if backorder.requisition_id:
+                backorder.requisition_id.sudo().write({'picking_ids':[(4,backorder.id)]})
+        return backorders
