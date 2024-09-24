@@ -2,7 +2,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
-from ...generate_code import generate_code
+from ...generate_code import generate_code,data_import
 from collections import Counter
 
 READONLY_STATES = {
@@ -10,6 +10,8 @@ READONLY_STATES = {
         'done': [('readonly', True)],
         'cancel': [('readonly', True)],
     }
+HEADER_FIELDS = ['item code','description','quantity','unit price']
+HEADER_INDEXES = {}
 
 class PurchaseOrder(models.Model):
     """inherited purchase order"""
@@ -20,6 +22,8 @@ class PurchaseOrder(models.Model):
     purchase_team_id = fields.Many2one('purchase.team',string="Purchase Team")
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
     partner_id = fields.Many2one('res.partner', string='Vendor', required=True, states=READONLY_STATES, change_default=True, tracking=True, domain=lambda self:self._get_partner_domain())
+    data = fields.Binary('File',track_visibility='onchange')
+    import_fname = fields.Char(string='Filename')    
 
 
     def _get_partner_domain(self):
@@ -104,6 +108,44 @@ class PurchaseOrder(models.Model):
             if rec.state != 'draft':
                 raise UserError("Are you doing something fraudly! Why do you want to delete some records?? 🤔 ")
         return super().unlink()
+    
+    def action_import_order(self):
+        product_obj = self.env['product.product']       
+        order_line_obj = self.env['purchase.order.line']        
+        for res in self:
+            all_datas = data_import.read_and_validate_datas(res,HEADER_FIELDS,HEADER_INDEXES)   
+            for data in all_datas:
+                excel_row = all_datas.index(data) + 2  
+                item_code = data['item code'].strip().encode('utf-8')
+                item_description = data['description'].strip().encode('utf-8')
+                unit_price = data['unit price']
+                quantity = data['quantity']
+                if not item_code:
+                    raise ValidationError('Item Code must not be blank in excel Line %s.'% str(excel_row))
+                product_id = product_obj.search([('product_code', '=', item_code),('company_id', '=', res.company_id.id)])
+                if not product_id:
+                    raise ValidationError('Item code not found.')
+                if len(product_id) > 1:
+                    raise ValidationError('Duplicate item code found.')  
+                if abs(quantity) <= 0.0:
+                    raise ValidationError('Invalid Quantity')
+                if unit_price < 0.0:
+                    raise ValidationError('Invalid Unit Price')
+                line_id = order_line_obj.search([('order_id', '=', self.id), ('product_id', '=', product_id.id), ('product_qty', '=', quantity)],limit=1)
+                if line_id:
+                    raise ValidationError("Duplicate product and quantity in order liness!!!")                
+                if not item_description:
+                    item_description = product_id.name
+                vals = {
+                        'product_id': product_id.id,
+                        'product_uom':product_id.uom_id.id,
+                        'name': item_description,
+                        'product_qty': quantity,
+                        'order_id':self.id,
+                    }
+                if unit_price > 0.0:
+                    vals.update({'price_unit': unit_price})
+                order_line_obj.create(vals)            
 
     
 class PurchaseOrder(models.Model):

@@ -1,6 +1,6 @@
 from odoo import models, fields, api,_
 from ...generate_code import generate_code,data_import
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 HEADER_FIELDS = ['item code','description','quantity']
 PICKING_STATE_DCT = {'draft':'Draft','waiting': 'Waiting Another Operation',
@@ -332,11 +332,9 @@ class Requisition(models.Model):
             order_line_obj = self.env['requisition.line'] 
             for data in all_datas:
                 excel_row = all_datas.index(data) + 2  
-
                 item_code = data['item code'].strip().encode('utf-8')
                 item_description = data['description'].strip().encode('utf-8')
                 quantity = data['quantity']
-                
                 if not item_code:
                     raise UserError('Item Code must not be blank in excel Line %s.'% str(excel_row))
                 product_id = product_obj.search([('product_code', '=', item_code),('company_id','=', self.company_id.id)])
@@ -346,6 +344,9 @@ class Requisition(models.Model):
                     raise UserError('Duplicate item code found.')  
                 if abs(quantity) <= 0.0:
                     raise UserError('Invalid Quantity')
+                line_id = order_line_obj.search([('requisition_id', '=', self.id), ('product_id', '=', product_id.id), ('qty', '=', quantity)],limit=1)
+                if line_id:
+                    raise ValidationError("Duplicate product and quantity in order liness!!!")                 
                 if not item_description:
                     item_description = product_id.name
                 vals = {

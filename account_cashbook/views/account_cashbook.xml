@@ -42,7 +42,7 @@
                         <button name="validate_cashbook" string ="Validate" type="object" class="oe_highlight btn-info"
                             attrs="{'invisible':[('state','in',['draft','done','cancel'])]}"/>
                         <button name="reset_cashbook" string ="Reset to Draft" type="object" class="oe_highlight btn-warning"
-                            attrs="{'invisible':[('state','not in',['submit'])]}"/>
+                            attrs="{'invisible':[('state','in',['draft','cancel'])]}"/>
                         <button name="cancel_cashbook" string ="Cancel" type="object" class="oe_highlight btn-danger"
                             attrs="{'invisible':[('state','in',['draft','cancel'])]}"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,submit,done,cancel"/>

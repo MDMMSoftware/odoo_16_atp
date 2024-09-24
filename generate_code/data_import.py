@@ -21,7 +21,7 @@ def get_excel_datas(sheets):
 
 def get_headers(line,header_fields,header_indexes):
     if line[0].strip().lower() not in header_fields:
-        raise ValidationError("Error while processing the header line %s.\n\nPlease check your Excel separator as well as the column header fields") % line
+        raise ValidationError("Error while processing the header line %s.\n\nPlease check your Excel separator as well as the column header fields" % line)
     else:
         for header in header_fields:
             header_indexes[header] = -1  
@@ -53,7 +53,7 @@ def read_and_validate_datas(self,header_fields,header_indexes):
         import_file = self.data                
 
         header_line = True
-        lines = base64.decodestring(import_file)
+        lines = base64.decodebytes(import_file)
         wb = open_workbook(file_contents=lines)
         excel_rows = get_excel_datas(wb.sheets())
         all_data = []      

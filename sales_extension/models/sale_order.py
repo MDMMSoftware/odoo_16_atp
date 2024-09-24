@@ -219,6 +219,9 @@ class SaleOrder(models.Model):
                     raise ValidationError('Invalid Quantity')
                 if unit_price < 0.0:
                     raise ValidationError('Invalid Unit Price')
+                line_id = order_line_obj.search([('order_id', '=', self.id), ('product_id', '=', product_id.id), ('product_uom_qty', '=', quantity)],limit=1)
+                if line_id:
+                    raise ValidationError("Duplicate product and quantity in order liness!!!")                 
                 if not item_description:
                     item_description = product_id.name
                 vals = {
