@@ -11,3 +11,5 @@ access_voucher_type_user,voucher_type_user,model_voucher_type,base.group_user,1,
 "base.access_res_company_group_user","res_company group_user","base.model_res_company",,1,1,0,0
 access_direct_exp_wizard,_direct_exp_wizard,model_direct_exp_wizard,,1,1,1,0
 
+access_multi_invoice_reconcile,access_multi_invoice_reconcile,model_multi_invoice_reconcile,,1,1,1,1
+access_multi_invoice_line,access_multi_invoice_line,model_multi_invoice_line,,1,1,1,1
