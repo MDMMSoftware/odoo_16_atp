@@ -359,6 +359,10 @@
                 </xpath>  
                 <xpath expr="//form//header//button[@name='action_cancel']" position="attributes">
                     <attribute name="invisible">1</attribute>
+                </xpath> 
+                <xpath expr="//form//header//button[@name='action_cancel']" position="before">
+                    <button name="action_transfer_to_reconcile_wizard" string="Reconcilation  Transfer" type="object" class="oe_highlight"
+                                attrs="{'invisible': [('x_state', 'not in', ['paid'])]}"/>
                 </xpath>                                                
                 <!-- <xpath expr="//field[@name='partner_id'][1]" position="replace">
                     <field name="partner_id" context="{'default_is_company': True}" string="Customer"

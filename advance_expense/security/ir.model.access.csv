@@ -10,4 +10,4 @@ access_voucher_type_manager,voucher_type_manager,model_voucher_type,advance_expe
 access_voucher_type_user,voucher_type_user,model_voucher_type,base.group_user,1,0,0,0
 "base.access_res_company_group_user","res_company group_user","base.model_res_company",,1,1,0,0
 access_direct_exp_wizard,_direct_exp_wizard,model_direct_exp_wizard,,1,1,1,0
-
+access_account_reconcile_transfer,account_reconcile_transfer,model_account_reconcile_transfer,,1,1,1,0
