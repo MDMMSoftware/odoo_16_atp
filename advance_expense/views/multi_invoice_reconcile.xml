@@ -8,25 +8,17 @@
         <field name="model">multi.invoice.reconcile</field>          
         <field name="arch" type="xml">
             <tree>
-                <field name="name" invisible="1"/>
+                <field name="name"/>
                 <field name="payment_type"/>
-                <!-- <field name="partner_name"/> -->
-                <!-- <field name="partner_id" attrs="{'invisible': [('payment_type', '!=', 'receive')]}"/>
-                <field name="vendor_id" attrs="{'invisible': [('payment_type', '!=', 'sent')]}"/> -->
+                <field name="partner_name"/>
+                <field name="branch_id"/>
                 <field name="journal_id"/>
-                <!-- <field name="project_code_id"/>
-                <field name="unit_id"/>
-                <field name="analytic_company_id"/>
-                <field name="department_id"/>
-                <field name="shop_id"/>
-                <field name="other_id"/>
-                <field name="segment_id"/>
-                <field name="channel_id"/> -->
                 <field name="payment_date"/>
+                 <field name="amount_total" string="Total Net Pay Amount"/> 
                 <field name="calculate_currency_id" string="Currency"/>
-                <!-- <field name="amount_total" string="Total Net Pay Amount" /> -->
-                <!-- <field name="memo" string="Description"/> -->
-                <!-- <field name="state" string="Status"/> -->
+                 <field name="company_id"/>
+                <field name="state" string="Status" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'confirm'" decoration-danger="state == 'cancel'" decoration-success="state == 'validate'"/>
+
             </tree>
         </field>
     </record>
@@ -37,8 +29,11 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_validate" string="Post Payment" type="object" class="oe_highlight btn-info"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,validate"/>
+                    <button name="action_confirm" string="Confirm" attrs="{'invisible':[('state','not in',('draft',))]}" type="object" class="oe_highlight btn-info"/>
+                    <button name="action_validate" string="Post Payment" attrs="{'invisible':[('state','not in',('confirm',))]}" type="object" class="oe_highlight btn-success"/>
+                    <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible':[('state','not in',('confirm',))]}" class="oe_highlight btn-danger"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,cancel,validate"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -53,13 +48,14 @@
                             <field name="supplier_rank" invisible="1"/>
                             <field name="partner_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])],'invisible': [('customer_rank', '=', False)]}"/>
                             <field name="vendor_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])],'invisible': [('customer_rank', '=', True)]}"/>
-                            <field name="payment_type"/>
-                            <field name="journal_id"/>
-                            <field name="calculate_currency_id"/>
-                            <field name="exchange_rate"/>
+                            <field name="payment_type" required="1"  attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            <field name="journal_id" required="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                       </group>
                       <group>
-                          <field name="branch_id"/> 
+                            <field name="branch_id" required="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/> 
+                            <field name="calculate_currency_id" required="1"  options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            <field name="exchange_rate" required="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+
                           <!--<field name="company_id"/>-->
                       </group>
                   </group>
@@ -69,8 +65,8 @@
                             <table class="table">
                                 <tbody>
                                   <tr>
-                                    <td><group><field name="from_date"/></group></td>
-                                    <td><group><field name="to_date"/></group></td>
+                                    <td><group><field name="from_date" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/></group></td>
+                                    <td><group><field name="to_date" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/></group></td>
                                     <td>
                                         <button name="define_invoice_lines" string="Search" type="object" class="btn btn-outline-success"/>
                                     </td>
@@ -79,9 +75,9 @@
                             </table>
                           </div>
                           
-                          <field name="invoice_ids" nolabel="1">
+                          <field name="invoice_ids" nolabel="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}">
                                 <tree editable="buttom" create="0"> 
-                                    <field name="select"/>    
+                                    <field name="select" />    
                                     <field name="move_id" readonly="1" force_save="1" string="No:"/>
                                     <field name="ref" readonly="1" force_save="1" invisible="1"/>
                                     <field name="invoice_date" readonly="1" force_save="1"/>
@@ -101,6 +97,21 @@
 
                                 </tree>
                           </field>
+                          <group>
+                            <group>
+                                <field name="discount_type" attrs="{'readonly': ['|',('state', 'not in', ['draft']),('amount_extra', '&gt;', 0.0)]}"/>
+                                <field name="discount_amt" attrs="{'readonly': ['|',('state', 'not in', ['draft']),('amount_extra', '&gt;', 0.0)]}"/>
+                                <field name="discount_account_id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                <field name="discount_note" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            </group>
+                            <group>
+                                <field name="amt_payment" string="Payment Amt(MMK)"/>
+                                <field name="amt_discount" string="Discount Amt(MMK)"/>
+                                <field name="amount_extra" string="Extra Payment"/>
+                                <field name="amount_total" class="oe_subtotal_footer_separator" invisible="0"/>
+                            </group>
+                            </group>
+
                         </page>
                   </notebook>
                 </sheet>

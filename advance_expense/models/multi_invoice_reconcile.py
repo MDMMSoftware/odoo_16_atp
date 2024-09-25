@@ -1,5 +1,6 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError,ValidationError
+from ...generate_code import generate_code
 
 class ExtPayment(models.Model):
     _inherit = 'account.payment'
@@ -13,7 +14,7 @@ class MultiInvoice(models.Model):
     name = fields.Char(string="Payment No:")
     journal_id = fields.Many2one('account.journal', string="Journal", domain=[('type','in',['bank','cash'])])
     payment_date = fields.Date(string="Payment Date",default=fields.Datetime.now())
-    exchange_rate = fields.Float('Exchange Rate')
+    exchange_rate = fields.Float('Exchange Rate',default=1.0)
     branch_id = fields.Many2one('res.branch',string="Branch")
     calculate_currency_id = fields.Many2one('res.currency',string="Currency")
     from_date = fields.Date('From Date')
@@ -23,9 +24,10 @@ class MultiInvoice(models.Model):
                             ('sent', 'Sent Money'),
                             ], string='Type',required=True)
     invoice_ids = fields.One2many('multi.invoice.line','multi_id',string="Invoice Line IDs")
-    state =  fields.Selection([
+    state = fields.Selection([
                             ('draft', 'Draft'),                         
                             ('confirm', 'Confirm'),                         
+                            ('cancel', 'Cancel'),                         
                             ('validate', 'Finished'),
                             ], string='Status',default="draft",track_visibility='onchange')
     supplier_rank = fields.Boolean('Supplier Rank')
@@ -40,9 +42,18 @@ class MultiInvoice(models.Model):
     discount_note = fields.Char('Discount Note.') 
     amount_extra = fields.Float('Extra Payment',compute='_amount_all')
     has_extra = fields.Boolean(compute='_amount_all')
-    discount_account_id = fields.Many2one('account.account','Discount Account',domain=['|',('is_discount', '=', True),('is_line_discount', '=', True)])
+    discount_account_id = fields.Many2one('account.account','Discount Account')
     amt_discount = fields.Float(string='Total Discount', store=True, readonly=True, compute='_amount_all')
     amt_payment = fields.Float(string='Total Amount', store=True, readonly=True, compute='_amount_all')
+    partner_name = fields.Char(compute='get_partner_name')
+
+    def get_partner_name(self):
+        for rec in self:
+            if rec.customer_rank:
+                result = rec.partner_id.name
+            else:
+                result = rec.vendor_id.name
+            rec.partner_name = result
 
     @api.depends('invoice_ids.discount_amt','invoice_ids.amt','exchange_rate','discount_amt','discount_type')
     def _amount_all(self):
@@ -66,7 +77,12 @@ class MultiInvoice(models.Model):
                 rec.has_extra = True    
 
     def action_confirm(self):
-        self.state = 'confirm'
+        sequence = self.env['sequence.model']
+        self.name = generate_code.generate_code(sequence,self,self.env['res.branch'].browse(int(self.branch_id.id)),self.company_id,self.payment_date,None,None)
+        self.state = 'confirm'   
+             
+    def action_cancel(self):
+        self.state = 'cancel'
         
     def _get_pay_info(self):
         name = ''
@@ -124,9 +140,9 @@ class MultiInvoice(models.Model):
             'branch_id': self.branch_id.id
         }
         payment_id = self.env['account.payment'].create(vals)
-        to_reconcile = []
-        payment_arap_id = self.env['account.move.line'].search([('payment_id','=',payment_id.id),('account_id','=',partner_account_id.id)])
-        full_reconcile_id = None
+        # payment_id
+        payment_id.with_context({'to_status':'paid'}).action_change_status()
+
         pay_term_lines = payment_id.move_id.line_ids\
                 .filtered(lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable'))
         domain = [
@@ -137,33 +153,16 @@ class MultiInvoice(models.Model):
                 '|', ('amount_residual', '!=', 0.0), ('amount_residual_currency', '!=', 0.0),
             ]
 
-        payments_widget_vals = {'outstanding': True, 'content': [], 'move_id': payment_id.move_id.id}
-
-        # if self.payment_type == 'receive':
-        #     domain.append(('balance', '<', 0.0))
-        # else:
-        #     domain.append(('balance', '>', 0.0))
         domain.append(('id','in',invoice_ids.move_id.line_ids.ids))
-        line = self.env['account.move.line'].search(domain)[0]
-        sorted_lines = line
-        sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
-        sorted_lines._all_reconciled_lines()
-        involved_lines = sorted_lines._all_reconciled_lines()
-        involved_partials = involved_lines.matched_credit_ids | involved_lines.matched_debit_ids
-        partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
-        sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
-        partials = self._create_reconciliation_partials(sorted_lines_ctx,invoice_ids)
-        print(partials)
-        # for multi_line,line in zip(invoice_ids,self.env['account.move.line'].search(domain)):
-        #     sorted_lines = line
-        #     sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
-        #     sorted_lines._all_reconciled_lines()
-        #     involved_lines = sorted_lines._all_reconciled_lines()
-        #     involved_partials = involved_lines.matched_credit_ids | involved_lines.matched_debit_ids
-        #     partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
-        #     sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
-        #     partials = self._create_reconciliation_partials(sorted_lines_ctx,multi_line)
-            
+        for multi_line,line in zip(invoice_ids,self.env['account.move.line'].search(domain)):
+            sorted_lines = line
+            sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
+            sorted_lines._all_reconciled_lines()
+            involved_lines = sorted_lines._all_reconciled_lines()
+            partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
+            sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
+            partials = self._create_reconciliation_partials(sorted_lines_ctx,multi_line)
+            multi_line.amount_due = multi_line.move_id.amount_residual
 
     def _create_reconciliation_partials(self,lines,multi_line):
         prepare_partial_vals_list = [{
@@ -267,6 +266,11 @@ class MultiInvoice(models.Model):
                 new_lines += new_line
             self.invoice_ids += new_lines
 
+    def unlink(self):
+        for rec in self:
+            if rec.state != 'draft':
+                raise UserError("Are you doing something fraudly! Why do you want to delete some records?? 🤔 ")
+        return super().unlink()
 
 class MultiInvoiceLine(models.Model):
     _name = 'multi.invoice.line'
