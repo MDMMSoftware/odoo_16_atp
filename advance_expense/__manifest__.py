@@ -16,7 +16,7 @@
         'views/account_expense.xml',
         'views/reconcile_transfer.xml',
         'report/account_invoice_report.xml',        
-        # 'views/account_tax.xml',
+        'views/multi_invoice_reconcile.xml',
         'wizard/advance_wizard.xml',
     ],
     # This is for testing owl & qweb

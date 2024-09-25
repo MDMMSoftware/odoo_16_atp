@@ -158,7 +158,7 @@ class AccountMoveLine(models.Model):
                 for line_id in line_ids:
                     if line_id[-1]:
                         analytic_dct = {}
-                        if payment_id.project_id:
+                        if hasattr(payment_id,'project') and payment_id.project_id:
                             line_id[-1]["project_id"] = payment_id.project_id.id
                             if payment_id.project_id.analytic_project_id:
                                 analytic_dct[payment_id.project_id.analytic_project_id.id] = 100

@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+
+
+     <record id="tree_view_multi_payment" model="ir.ui.view">
+        <field name="name">multi.invoice.reconcile.tree</field>
+        <field name="model">multi.invoice.reconcile</field>          
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="payment_type"/>
+                <field name="partner_name"/>
+                <field name="branch_id"/>
+                <field name="journal_id"/>
+                <field name="payment_date"/>
+                 <field name="amount_total" string="Total Net Pay Amount"/> 
+                <field name="calculate_currency_id" string="Currency"/>
+                 <field name="company_id"/>
+                <field name="state" string="Status" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'confirm'" decoration-danger="state == 'cancel'" decoration-success="state == 'validate'"/>
+
+            </tree>
+        </field>
+    </record>
+
+    <record id="form_view_multi_payment" model="ir.ui.view">
+        <field name="name">multi.invoice.reconcile.form</field>
+        <field name="model">multi.invoice.reconcile</field>            
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" string="Confirm" attrs="{'invisible':[('state','not in',('draft',))]}" type="object" class="oe_highlight btn-info"/>
+                    <button name="action_validate" string="Post Payment" attrs="{'invisible':[('state','not in',('confirm',))]}" type="object" class="oe_highlight btn-success"/>
+                    <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible':[('state','not in',('confirm',))]}" class="oe_highlight btn-danger"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,cancel,validate"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" force_save="1"/>
+                        </h1>   
+                    </div>
+                    <group>
+                      <group>
+                            <field name="state" invisible="1"/>
+                            <field name="customer_rank" invisible="1"/>
+                            <field name="supplier_rank" invisible="1"/>
+                            <field name="partner_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])],'invisible': [('customer_rank', '=', False)]}"/>
+                            <field name="vendor_id" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])],'invisible': [('customer_rank', '=', True)]}"/>
+                            <field name="payment_type" required="1"  attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            <field name="journal_id" required="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                      </group>
+                      <group>
+                            <field name="branch_id" required="1" options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/> 
+                            <field name="calculate_currency_id" required="1"  options="{'no_create':True,'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            <field name="exchange_rate" required="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+
+                          <!--<field name="company_id"/>-->
+                      </group>
+                  </group>
+                  <notebook>
+                        <page string="Invoice Line">  
+                          <div>
+                            <table class="table">
+                                <tbody>
+                                  <tr>
+                                    <td><group><field name="from_date" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/></group></td>
+                                    <td><group><field name="to_date" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/></group></td>
+                                    <td>
+                                        <button name="define_invoice_lines" string="Search" type="object" class="btn btn-outline-success"/>
+                                    </td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          
+                          <field name="invoice_ids" nolabel="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}">
+                                <tree editable="buttom" create="0"> 
+                                    <field name="select" />    
+                                    <field name="move_id" readonly="1" force_save="1" string="No:"/>
+                                    <field name="ref" readonly="1" force_save="1" invisible="1"/>
+                                    <field name="invoice_date" readonly="1" force_save="1"/>
+                                    <field name="payment_term_id" readonly="1" force_save="1" string="Due Date."/>
+                                    <field name="total_amt" readonly="1" force_save="1" sum="total_amt"/>
+                                    <field name="amount_due" readonly="1" force_save="1" sum="amount_due"/>
+                                    <field name="amt" string="Pay Amt" sum="amt"/>
+                                    <field name="discount_type" invisible="1"/>
+                                    <field name="discount_amt" invisible="1"/> 
+                                    <field name="discount_label" invisible="1"/>    
+                                    <field name="currency_id" readonly="1" force_save="1"/>  
+                                    <field name="exchange_rate" string="Ori. Rate" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="arap_id" invisible="1"/>                                    
+                                    <field name="internal_ref" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="payment_ref" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="bill_ref" readonly="1" force_save="1" optional="hide"/>
+
+                                </tree>
+                          </field>
+                          <group>
+                            <group>
+                                <field name="discount_type" attrs="{'readonly': ['|',('state', 'not in', ['draft']),('amount_extra', '&gt;', 0.0)]}"/>
+                                <field name="discount_amt" attrs="{'readonly': ['|',('state', 'not in', ['draft']),('amount_extra', '&gt;', 0.0)]}"/>
+                                <field name="discount_account_id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                <field name="discount_note" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            </group>
+                            <group>
+                                <field name="amt_payment" string="Payment Amt(MMK)"/>
+                                <field name="amt_discount" string="Discount Amt(MMK)"/>
+                                <field name="amount_extra" string="Extra Payment"/>
+                                <field name="amount_total" class="oe_subtotal_footer_separator" invisible="0"/>
+                            </group>
+                            </group>
+
+                        </page>
+                  </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_multi_payment_invoice" model="ir.actions.act_window">
+        <field name="name">Multi Payment Invoice</field>
+        <field name="res_model">multi.invoice.reconcile</field>
+        <field name="view_id" ref="tree_view_multi_payment" />
+        <field name="domain">[('payment_type', '=', 'receive')]</field> 
+        <field name="context">{'default_payment_type': 'receive','default_customer_rank': True,'default_supplier_rank': False}</field>
+        <field name="view_mode">tree,form</field>   
+    </record>
+
+    <record id="action_multi_payment_bill" model="ir.actions.act_window">
+        <field name="name">Multi Payment Bill</field>
+        <field name="res_model">multi.invoice.reconcile</field>          
+        <field name="view_id" ref="tree_view_multi_payment" /> 
+        <field name="domain">[('payment_type', '=', 'sent')]</field> 
+         <field name="context">{'default_payment_type': 'sent','default_customer_rank': False,'default_supplier_rank': True}</field>
+        <field name="view_mode">tree,form</field>   
+    </record>
+
+    <menuitem id="menu_multi_payment_invoice" name="Multi Payment Invoice" parent="account.menu_finance_receivables" action="action_multi_payment_invoice" sequence="111" />
+    <menuitem id="menu_multi_payment_bill" name="Multi Payment Bill" parent="account.menu_finance_payables" action="action_multi_payment_bill" sequence="201" />
+
+</odoo>

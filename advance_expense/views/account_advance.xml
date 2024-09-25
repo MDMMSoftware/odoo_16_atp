@@ -450,6 +450,7 @@
                     <label for="advance_account_id" string="Transfer Account" attrs="{'invisible': [('is_transfer', '=', False)]}"/>
                     <field name="advance_account_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}" readonly="1" nolabel="1"/>
                     <field name="prepaid_id" readonly="1"/>
+                    <field name="multi_id" string="Multi Payment Reference" readonly="1"/>
                 </xpath>
                 <xpath expr="//field[@name='date']" position="after">
                     <field name="bank_reference" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>
