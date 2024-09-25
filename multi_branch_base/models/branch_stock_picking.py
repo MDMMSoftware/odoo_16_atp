@@ -21,7 +21,7 @@
 #############################################################################
 
 from odoo import models, fields, api
-
+from odoo.exceptions import UserError
 
 class StockPicking(models.Model):
     """inherited stock.picking"""
@@ -42,17 +42,18 @@ class StockPicking(models.Model):
     branch_id = fields.Many2one("res.branch", string='Branch',
                                 readonly=False, store=True,
                                 compute="_compute_branch_id",
-                                default=_get_default_branch_id)
+                                default=_get_default_branch_id,tracking=True)
 
     @api.depends('sale_id', 'purchase_id')
     def _compute_branch_id(self):
         """methode to compute branch"""
         for record in self:
-            record.branch_id = False
+            # record.branch_id = False
             if record.sale_id.branch_id:
                 record.branch_id = record.sale_id.branch_id
             if record.purchase_id.branch_id:
                 record.branch_id = record.purchase_id.branch_id
+                
 
 
 class StockPickingTypes(models.Model):

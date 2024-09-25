@@ -61,26 +61,37 @@
 
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='product_uom_qty']" position="attributes">
                     <attribute name="attrs">{'readonly': [('can_be_unit', '!=', False)]}</attribute>
-
                 </xpath>
-                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
-                    <attribute name="domain">[]</attribute>
-
-                </xpath> -->
-
+                <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="before">
+                    <div>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <button name="action_import_order" string="Generate Data From Excel" type="object" class="btn btn-outline-info" states="draft"/>
+                                </tr> 
+                            </tbody>
+                        </table>
+                    </div>    
+                </xpath>
                 <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="attributes">
                     <attribute name="attrs">{'readonly': [('state', 'not in', ('draft','sent'))]}</attribute>
                 </xpath>
+
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="attributes">
                     <attribute name="style">white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;</attribute>
                 </xpath>
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='product_uom_qty']" position="before">
                     <field name="remaining_stock" readonly="1"/>
                 </xpath>
+
+                <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="replace">
+                    <field name="name"/> 
+                </xpath>
+
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='name']" position="after">
-                    <field name="available_lot_ids" invisible="1" />
+                    <field name="available_lot_ids" optional="hide" invisible="1" />
                     <field name="serial_no_id" optional="hide" options="{'no_quick_create': True, 'no_create_edit' : True}"/>
-                    <field name="product_variant_ids" optional="hide" widget="many2many_tags"/>
+                    <field name="product_variant_ids" widget="many2many_tags"/>
                     <field name="can_be_unit" invisible="1" />
                     <field name="division_id" domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)],'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/> 
                 </xpath>
@@ -88,7 +99,6 @@
 					<field name="remark"/>
                 </xpath>
                 <xpath expr="//sheet//group[@name='partner_details']//field[@name='partner_id']" position="before">
-                    
                     <field name="sale_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
                     <field name="term_type" required="1" attrs="{'readonly':[('state','in',['sale','done','cancel'])]}"/>
                     <field name="allow_division_feature" invisible="1"/>
@@ -115,6 +125,13 @@
                 <xpath expr="//sheet//group[@name='order_details']//field[@name='date_order'][1]" position="replace">
                     <field name="date_order" nolabel="1" attrs="{'invisible': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
                 </xpath>    
+                <xpath expr="//sheet//group[@name='order_details']//field[@name='payment_term_id']" position="attributes">
+                    <attribute name="attrs">{"readonly": [('state','not in', ['draft','sent'])] }</attribute>
+                </xpath>     
+                <xpath expr="//sheet//group[@name='order_details']//field[@name='payment_term_id']" position="after">
+                    <field name='data'  attrs="{'readonly':[('state','not in',['draft','sent'])]}"  filename="import_fname"/>
+                    <field name="import_fname" invisible="1" class="oe_inline oe_right" />                    
+                </xpath>                                   
                 <xpath expr="//notebook//page[@name='order_lines']//tree//field[@name='analytic_distribution']" position="attributes">
                     <attribute name="optional">show</attribute>
                 </xpath>      						

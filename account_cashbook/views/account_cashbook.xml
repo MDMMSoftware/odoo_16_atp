@@ -42,7 +42,7 @@
                         <button name="validate_cashbook" string ="Validate" type="object" class="oe_highlight btn-info"
                             attrs="{'invisible':[('state','in',['draft','done','cancel'])]}"/>
                         <button name="reset_cashbook" string ="Reset to Draft" type="object" class="oe_highlight btn-warning"
-                            attrs="{'invisible':[('state','not in',['submit'])]}"/>
+                            attrs="{'invisible':[('state','in',['draft','cancel'])]}"/>
                         <button name="cancel_cashbook" string ="Cancel" type="object" class="oe_highlight btn-danger"
                             attrs="{'invisible':[('state','in',['draft','cancel'])]}"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,submit,done,cancel"/>
@@ -86,12 +86,12 @@
                                 
                                 <field name="line_ids" nolabel="1" attrs="{'readonly':[('state','!=','draft')]}">
                                     <tree editable="buttom" >
-        
                                         <field name="name"  />
                                         <field name="account_id"  force_save="1"/>     
                                         <field name="division_id" domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)],'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"   options="{'no_create':True,'no_create_edit': True}"/>                                  
                                         <field name="analytic_distribution"  attrs="{'required': [('parent.allow_division_feature','=',True)]}"  widget="analytic_distribution" groups="base.group_no_one" optional="hide"/>
                                         <field name="employee_id" options="{'no_create':True,'no_create_edit': True}" />
+                                        <field name="currency_id"  invisible="1"/> 
                                         <field name="amount"  sum="amount"/> 
                                         <field name="job_code_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
                                         <field name="report_remark_id" optional="hide"  options="{'no_create':True,'no_create_edit': True}" />
@@ -99,7 +99,6 @@
                                         <field name="voucher_date"  optional="hide"/>
                                         <field name="voucher_no"  optional="hide"/>    
                                         <field name="remark"  optional="hide"/> 
-
                                     </tree>
                                 </field>
                             </page>
@@ -156,12 +155,19 @@
                 <tree string="Cash Book List" decoration-muted="state in ('done','cancel')">
                     <field name="date" />
                     <field name="name" />
+                    <field name="origin" optional="hide"/>
                     <field name="account_id" string="From"/>
-                    <field name="amount_total"/>
                     <field name="branch_ids" optional="show"/>
                     <field name="department_id" optional="show"/>
                     <field name="company_id"/>
-                    <field name="state"/>
+                    <field name="amount_total" sum="amount_total"/>
+                    <field name="state" 
+                        decoration-muted="state == 'draft'"
+                        decoration-info="state == 'submit'"
+                        decoration-danger="state == 'cancel'"
+                        decoration-success="state == 'done'"
+                        widget="badge"
+                    />
                 </tree>
             </field>
         </record>

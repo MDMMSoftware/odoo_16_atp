@@ -453,6 +453,23 @@ class AccountPayment(models.Model):
     advance_user_ids = fields.Many2many('res.partner', 'advance_users_rel',
                                 compute='_compute_advance_user_ids')
     
+    def action_transfer_to_reconcile_wizard(self):      
+        self.ensure_one()
+        view_id = self.env['ir.model.data']._xmlid_to_res_id('advance_expense.view_reconcile_transfer_wizard_form')
+        return {
+            'name':_("Reconcile Transfer"),
+            'view_mode': 'form',
+            'view_id': view_id,
+            'view_type': 'form',
+            'res_model': 'account.reconcile.transfer',
+            'type': 'ir.actions.act_window',
+            'nodestroy': True,
+            'target': 'new',
+            'domain': '[]',
+                'context': dict(self.env.context, default_payment_id=self.id,group_by=False),
+            }
+
+    
     def _compute_advance_user_ids(self):
         for record in self:
             record.advance_user_ids = self.env['res.partner'].search([('partner_type','=','advance')]).ids

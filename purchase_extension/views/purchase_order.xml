@@ -42,8 +42,23 @@
                 <xpath expr="//field[@name='date_order']" position="after">
                     <field name="allow_division_feature" invisible="1"/>
                 </xpath>
+                <xpath expr="//field[@name='purchase_team_id']" position="after">
+                    <field name='data'  attrs="{'readonly':[('state','not in',['draft','sent'])]}"  filename="import_fname"/>
+                    <field name="import_fname" invisible="1" class="oe_inline oe_right" />  
+                </xpath>  
+                <xpath expr="//page[@name='products']//field[@name='order_line']" position="before">
+                    <div>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <button name="action_import_order" string="Generate Data From Excel" type="object" class="btn btn-outline-info" states="draft"/>
+                                </tr> 
+                            </tbody>
+                        </table>
+                    </div>   
+                </xpath>                              
                 <xpath expr="//page[@name='products']//tree//field[@name='name']" position="replace">
-                    <field name="name" widget="section_and_note_text" optional="hide"/>
+                    <field name="name"  optional="hide"/>
                     <field name="product_variant_ids" widget="many2many_tags" optional="hide"/>
                     <field name="division_id"  domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/>
                 </xpath>

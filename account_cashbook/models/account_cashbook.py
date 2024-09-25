@@ -94,14 +94,12 @@ class AccountCashBook(models.Model):
     def _compute_amount_cashbook(self):
         for cashbook in self:
             cashbook.amount_total = sum(cashbook.line_ids.mapped("amount"))
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        if not vals_list[0].get('name'):
-            vals_list[0]['name'] = 'Draft'
-        
-        return super().create(vals_list)
     
+    @api.onchange('journal_id')
+    def onchange_account(self):
+        self.account_id = self.journal_id.default_account_id and self.journal_id.default_account_id.id or False
+        self.currency_id =  self.journal_id.currency_id or self.journal_id.company_id.currency_id
+            
     @api.onchange('branch_ids')
     def onchange_branch_id(self):
         """onchange method"""
@@ -164,7 +162,8 @@ class AccountCashBook(models.Model):
                 'credit': debit_amt/(1/self.exchange_rate),
                 'cashbook_id':self.id,
                 'currency_id':self.currency_id.id,
-                'currency_rate':1/self.exchange_rate
+                'currency_rate':1/self.exchange_rate,
+                'name': self.desc,
                 # 'analytic_distribution':distribution
             }
             move_lines.append(vals)
@@ -281,11 +280,14 @@ class AccountCashBook(models.Model):
                 self.move_ids.button_cancel()
                 
         self.write({'state':'cancel'})
-
-    @api.onchange('journal_id')
-    def onchange_account(self):
-        self.account_id = self.journal_id.default_account_id and self.journal_id.default_account_id.id or False
-
+        
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not vals_list[0].get('name'):
+            vals_list[0]['name'] = 'Draft'
+        
+        return super().create(vals_list)
+        
     def unlink(self):
         for rec in self:
             if rec.state != 'draft' or (rec.name and rec.name != 'Draft'):

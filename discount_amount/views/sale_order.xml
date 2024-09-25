@@ -25,7 +25,7 @@
                     <field name="invisible_commercial" invisible="1"/>					
                 </xpath>
                 <xpath expr="//field[@name='currency_id']" position="after">
-                    <field name="global_discount"/>
+                    <field name="global_discount"  attrs="{'readonly':[('state','not in',['draft','sent'])]}" />
                 </xpath>
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='discount']" position="replace">
                     <!-- <field name="discount_type"  attrs="{'column_invisible': [('parent.global_discount', '=', True)]}"/>

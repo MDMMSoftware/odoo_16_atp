@@ -142,7 +142,7 @@ class PurchaseOrder(models.Model):
 
     def _prepare_invoice(self):
         result = super(PurchaseOrder, self)._prepare_invoice()        
-        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or False,'line_discount_account_id':self.line_discount_account_id and self.line_discount_account_id.id or False})
+        result.update({'discount':self.discount,'discount_type':self.discount_type,'global_discount':self.global_discount,'discount_account_id':self.discount_account_id and self.discount_account_id.id or False,'line_discount_account_id':self.line_discount_account_id and self.line_discount_account_id.id or False,'invoice_date':self.date_order})
         return result
 
                 

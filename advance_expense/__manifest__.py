@@ -14,6 +14,7 @@
         'security/ir.model.access.csv',
         'views/account_advance.xml',
         'views/account_expense.xml',
+        'views/reconcile_transfer.xml',
         'report/account_invoice_report.xml',        
         'views/multi_invoice_reconcile.xml',
         'wizard/advance_wizard.xml',

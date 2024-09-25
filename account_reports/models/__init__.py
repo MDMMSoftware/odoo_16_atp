@@ -29,4 +29,4 @@ from . import executive_summary_report
 from . import bank_rec_widget
 
 from . import account_partner_ledger_inherit
-from . import account_general_ledger_inherit
+from . import account_general_ledger_inherit_no_project

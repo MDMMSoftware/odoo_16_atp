@@ -1,10 +1,8 @@
 from odoo import models, fields, api,_
-from ...generate_code import generate_code
-from odoo.exceptions import UserError
-from xlrd import open_workbook
-import base64
+from ...generate_code import generate_code,data_import
+from odoo.exceptions import UserError, ValidationError
 
-HEADER_FIELDS_REQ = ['item code','description','quantity']
+HEADER_FIELDS = ['item code','description','quantity']
 PICKING_STATE_DCT = {'draft':'Draft','waiting': 'Waiting Another Operation',
                     'confirmed' : 'Waiting', 'assigned': 'Ready',
                     'done': 'Done','cancel' : 'Cancelled'}
@@ -27,8 +25,9 @@ class Requisition(models.Model):
     def _compute_function_for_other_fields(self):
         for res in self:
             res.issue_status = ''
-            if res.picking_ids:
-                for picking in res.picking_ids:
+            picking_ids = self.env['stock.picking'].sudo().search([('requisition_id','=',res.id)])
+            if picking_ids:
+                for picking in picking_ids:
                     res.issue_status += PICKING_STATE_DCT.get(picking.state,"Draft") + ', '
                 res.issue_status = res.issue_status[:-2]
             res.computed_field = False
@@ -325,96 +324,17 @@ class Requisition(models.Model):
                 raise UserError("Are you doing something fraudly! Why do you want to delete some records?? 🤔 ")
         return super().unlink()
     
-    # # # import file
-    
-    # Load excel data file
-    def get_excel_datas(self, sheets):
-        result = []
-        for s in sheets:
-            headers = []
-            header_row = 0
-            for hcol in range(0, s.ncols):
-                headers.append(s.cell(header_row, hcol).value)
-                            
-            result.append(headers)
-            
-            for row in range(header_row + 1, s.nrows):
-                values = []
-                for col in range(0, s.ncols):
-                    values.append(s.cell(row, col).value)
-                result.append(values)
-        return result
-    
-    # Check excel row headers with HEADER_FIELDS_REQ and define header indexes for database fields
-    def get_headers(self, line):
-        if line[0].strip().lower() not in HEADER_FIELDS_REQ:
-            raise UserError("Error while processing the header line %s.\n\nPlease check your Excel separator as well as the column header fields" % line)
-        else:
-            for header in HEADER_FIELDS_REQ:
-                HEADER_INDEXES[header] = -1  
-                     
-            col_count = 0
-            for ind in range(len(line)):
-                if line[ind] == '':
-                    col_count = ind
-                    break
-                elif ind == len(line) - 1:
-                    col_count = ind + 1
-                    break
-            
-            for i in range(col_count):                
-                header = line[i].strip().lower()
-                if header not in HEADER_FIELDS_REQ:
-                    raise UserError('Invalid Excel File, Header Field %s is not supported !'% header)
-                else:
-                    HEADER_INDEXES[header] = i
-                                
-            for header in HEADER_FIELDS_REQ:
-                if HEADER_INDEXES[header] < 0:  
-                    raise UserError('Invalid Excel File, Header Field %s is missing !'% header)         
-    
-    # Fill excel row data into list to import to database
-    def get_line_data(self, line):
-        result = {}
-        for header in HEADER_FIELDS_REQ:                        
-            result[header] = line[HEADER_INDEXES[header]]
-    
     # main function
-    def action_import_order(self):   
-        if self.data:   
-            if '.xls' not in self.import_fname and '.xlsx'  not in self.import_fname:
-                raise UserError("Invalid Excel file format")
+    def action_import_order(self):  
+        for res in self:
+            all_datas = data_import.read_and_validate_datas(res,HEADER_FIELDS,HEADER_INDEXES)  
             product_obj = self.env['product.product']       
-            order_line_obj = self.env['requisition.line']
-
-            import_file = self.data                
-
-            header_line = True
-            lines = base64.decodestring(import_file)
-            wb = open_workbook(file_contents=lines)
-            excel_rows = self.get_excel_datas(wb.sheets())
-            all_data = []  
-            
-            for line in excel_rows:
-                if not line or line and line[0] and line[0] in ['', '#']:
-                    continue            
-                if header_line:
-                    self.get_headers(line)
-                    header_line = False                           
-                elif line and line[0] and line[0] not in ['#', '']:
-                    import_vals = {}                
-                    for header in HEADER_FIELDS_REQ:    
-                        import_vals[header] = line[HEADER_INDEXES[header]]              
-                    all_data.append(import_vals)
-
-            
-            for data in all_data:
-                excel_row = all_data.index(data) + 2  
-
+            order_line_obj = self.env['requisition.line'] 
+            for data in all_datas:
+                excel_row = all_datas.index(data) + 2  
                 item_code = data['item code'].strip().encode('utf-8')
                 item_description = data['description'].strip().encode('utf-8')
                 quantity = data['quantity']
-                
                 if not item_code:
                     raise UserError('Item Code must not be blank in excel Line %s.'% str(excel_row))
                 product_id = product_obj.search([('product_code', '=', item_code),('company_id','=', self.company_id.id)])
@@ -424,6 +344,9 @@ class Requisition(models.Model):
                     raise UserError('Duplicate item code found.')  
                 if abs(quantity) <= 0.0:
                     raise UserError('Invalid Quantity')
+                line_id = order_line_obj.search([('requisition_id', '=', self.id), ('product_id', '=', product_id.id), ('qty', '=', quantity)],limit=1)
+                if line_id:
+                    raise ValidationError("Duplicate product and quantity in order liness!!!")                 
                 if not item_description:
                     item_description = product_id.name
                 vals = {
@@ -433,10 +356,7 @@ class Requisition(models.Model):
                         'qty': quantity,
                         'requisition_id':self.id,
                     }
-                order_line_obj.create(vals)
-
-        else:
-            raise UserError('Please First Upload Your File.')       
+                order_line_obj.create(vals)   
 
 class RequisitionLine(models.Model):
     _name = "requisition.line"
@@ -519,3 +439,12 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     requisition_id = fields.Many2one('requisition','Material Requisition')
+    
+    def _create_backorder(self):
+        backorders = super()._create_backorder()
+        for backorder in backorders:
+            if self.branch_id:
+                backorder.write({"branch_id":self.branch_id.id})
+            if backorder.requisition_id:
+                backorder.requisition_id.sudo().write({'picking_ids':[(4,backorder.id)]})
+        return backorders

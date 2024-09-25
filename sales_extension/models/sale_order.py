@@ -1,15 +1,16 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
-from ...generate_code import generate_code
+from ...generate_code import generate_code,data_import
 from odoo.tests import Form
 from collections import Counter
-from datetime import datetime
 
 READONLY_FIELD_STATES = {
     state: [('readonly', True)]
     for state in {'sale', 'done', 'cancel'}
 }
+HEADER_FIELDS = ['item code','description','quantity','unit price']
+HEADER_INDEXES = {}
 
 class SaleOrder(models.Model):
     """inherited sale order"""
@@ -30,7 +31,6 @@ class SaleOrder(models.Model):
             self.env.ref("base.group_user").id
         ))
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
-
     partner_id = fields.Many2one(
         comodel_name='res.partner',
         string="Customer",
@@ -38,6 +38,8 @@ class SaleOrder(models.Model):
         tracking=1,
         states=READONLY_FIELD_STATES, domain=lambda self:self._get_partner_domain())
     quotation_ref = fields.Char()
+    data = fields.Binary('File',track_visibility='onchange')
+    import_fname = fields.Char(string='Filename')
     
     def _get_partner_domain(self):
         if self.env.company.allow_partner_domain_feature:
@@ -75,10 +77,12 @@ class SaleOrder(models.Model):
     def _compute_payment_term_id(self):
         for order in self:
             order = order.with_company(order.company_id)
-            if not order.term_type == 'direct':
+            if order.term_type == 'direct':
                 term_id = self.env['account.payment.term'].search([('name', '=', 'Immediate Payment')],limit=1)
                 if term_id:
-                    self.payment_term_id = term_id.id      
+                    self.payment_term_id = term_id.id  
+            else:
+                self.payment_term_id = self.partner_id.property_payment_term_id.id
         
     @api.onchange('term_type')
     def onchange_payment_term_id(self):
@@ -190,6 +194,46 @@ class SaleOrder(models.Model):
                     dis = line.discount
                     line.discount = dis - 1
                     line.discount = dis
+                                        
+    def action_import_order(self):
+        for res in self:
+            all_datas = data_import.read_and_validate_datas(res,HEADER_FIELDS,HEADER_INDEXES)    
+            product_obj = self.env['product.product']       
+            order_line_obj = self.env['sale.order.line']                         
+            for data in all_datas:
+                excel_row = all_datas.index(data) + 2  
+
+                item_code = data['item code'].strip().encode('utf-8')
+                item_description = data['description'].strip().encode('utf-8')
+                unit_price = data['unit price']
+                quantity = data['quantity']
+
+                if not item_code:
+                    raise ValidationError('Item Code must not be blank in excel Line %s.'% str(excel_row))
+                product_id = product_obj.search([('product_code', '=', item_code),('company_id', '=', res.company_id.id)])
+                if not product_id:
+                    raise ValidationError('Item code not found.')
+                if len(product_id) > 1:
+                    raise ValidationError('Duplicate item code found.')  
+                if abs(quantity) <= 0.0:
+                    raise ValidationError('Invalid Quantity')
+                if unit_price < 0.0:
+                    raise ValidationError('Invalid Unit Price')
+                line_id = order_line_obj.search([('order_id', '=', self.id), ('product_id', '=', product_id.id), ('product_uom_qty', '=', quantity)],limit=1)
+                if line_id:
+                    raise ValidationError("Duplicate product and quantity in order liness!!!")                 
+                if not item_description:
+                    item_description = product_id.name
+                vals = {
+                        'product_id': product_id.id,
+                        'product_uom':product_id.uom_id.id,
+                        'name': item_description,
+                        'product_uom_qty': quantity,
+                        'order_id':self.id,
+                    }
+                if unit_price > 0.0:
+                    vals.update({'price_unit': unit_price,})
+                order_line_obj.create(vals)       
                 
         
 class SaleOrderLine(models.Model):
@@ -204,6 +248,10 @@ class SaleOrderLine(models.Model):
     serial_no_id = fields.Many2one('stock.lot', string="Serial Number", domain="[('product_id', '=', product_id), ('id', 'in', available_lot_ids)]")
     available_lot_ids = fields.Many2many('stock.lot', compute='_compute_available_lot_ids')
     remaining_stock = fields.Float('On hand',compute="compute_remaining_stock")
+    name = fields.Char(
+        string="Description",
+        compute='_compute_name',
+        store=True, readonly=False, required=True, precompute=True)
     
     @api.depends('product_id','order_id.location_id')
     @api.onchange('product_id')    
