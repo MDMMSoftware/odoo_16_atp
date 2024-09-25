@@ -1433,7 +1433,8 @@ class AccountReport(models.Model):
                     }
                     for record in records
                 ]
-                column_headers.append(header_level)
+                if header_level:
+                    column_headers.append(header_level)
 
         options['column_headers'] = column_headers
 

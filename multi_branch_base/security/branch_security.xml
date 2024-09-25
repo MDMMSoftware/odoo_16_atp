@@ -163,7 +163,13 @@
             <field name="name">Product Pricelist multi-branch</field>
             <field name="model_id" ref="model_product_pricelist"/>
             <field name="domain_force">['|',('branch_id','=',False),('branch_id', 'in', user.branch_ids.ids)]</field>
-        </record>        
+        </record>       
+
+        <record id="account_report_horizontal_group_branch_rule" model="ir.rule">
+            <field name="name">Horizontal Group multi-branch</field>
+            <field name="model_id" ref="model_account_report_horizontal_group"/>
+            <field name="domain_force">['|',('branch_id','=',False),('branch_id', 'in', user.branch_ids.ids),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+        </record>              
 
         <!-- <delete model="ir.rule" id="purchase.purchase_order_comp_rule"/> -->
 

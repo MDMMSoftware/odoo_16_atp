@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <odoo>
     <data>
+
         <record id="view_account_form_branch_inherit" model="ir.ui.view">
         	<field name="name">view.account.form.inherit</field>
         	<field name="model">account.account</field>
@@ -15,6 +15,7 @@
 				</xpath>
 			</field>
         </record>
+
 		<record id="view_account_list_inherit" model="ir.ui.view">
             <field name="name">view.account.list.inherit</field>
             <field name="model">account.account</field>
@@ -25,6 +26,7 @@
                 </field>
             </field>
         </record>
+
         <record id="view_account_search_inherit" model="ir.ui.view">
 			<field name="name">.view.account.search.inherit</field>
 			<field name="model">account.account</field>
@@ -35,5 +37,25 @@
 				</xpath>
 			</field>
 		</record>
+
+        <record id="account_report_horizontal_group_form_branch_inherit" model="ir.ui.view">
+			<field name="name">account.report.horizontal.group.form.inherited.branch</field>
+			<field name="model">account.report.horizontal.group</field>
+			<field name="inherit_id" ref="account_reports.account_report_horizontal_group_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//form//sheet//group[1]" position="replace">
+                    <group>
+                        <group>
+                            <field name="report_ids" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="company_id" options="{'no_create_edit':True, 'no_create':True}"/>
+                            <field name="branch_id" options="{'no_create_edit':True, 'no_create':True}"/>
+                        </group>                        
+                    </group>
+				</xpath>
+			</field>
+		</record>        
+
     </data>
 </odoo>

@@ -133,7 +133,7 @@
         <record id="account_move_com_rule_own_doc" model="ir.rule">
             <field name="name">Branch Account Own Entry</field>
             <field name="model_id" ref="account.model_account_move"/> 
-            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids)]</field>
+            <field name="domain_force">[('create_uid','=', user.id),'|',('company_id','=',False),('company_id','in',company_ids),'|',('branch_id','in',user.branch_ids.ids),('branch_id','=',False)]</field>
             <field name="groups" eval="[(4,ref('advance_expense.group_advance_expense_user'))]"/>
         </record>
 

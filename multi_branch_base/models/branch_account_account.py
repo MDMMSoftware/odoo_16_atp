@@ -44,3 +44,9 @@ class Pricelist(models.Model):
     _inherit = "product.pricelist"
 
     branch_id = fields.Many2one('res.branch', string="Branch")
+    
+class AccountReportHorizontalGroup(models.Model):
+    _inherit = "account.report.horizontal.group"
+    
+    branch_id = fields.Many2one('res.branch', string="Branch")
+    company_id = fields.Many2one('res.company', string="Company")
