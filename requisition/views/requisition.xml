@@ -66,7 +66,15 @@
 					</group>
 					<notebook>
 						<page name="product_line" string="Product Line">
-                            <button name="action_import_order" string ="Generate Data From Excel" type="object" class="btn btn-outline-info" states="draft"/>
+                            <div>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <button name="action_import_order" string="Generate Data From Excel" type="object" class="btn btn-outline-info" states="draft"/>
+                                        </tr> 
+                                    </tbody>
+                                </table>
+                            </div>   
 							<field name="requisition_line" attrs="{'readonly': [('state','not in',['draft','confirm','check'])]}">
 								<tree editable="bottom">
 									<field name="state" invisible="1"/>

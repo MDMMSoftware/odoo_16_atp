@@ -25,9 +25,9 @@ class AccountMove(models.Model):
             source_orders = res.line_ids.sale_line_ids.order_id
             source_purchases = res.line_ids.purchase_line_id.order_id
             if source_orders:
-                res.origin_document = source_orders.name
+                res.origin_document = ', '.join(source_orders.mapped('name'))
             elif source_purchases:
-                res.origin_document = source_purchases.name
+                res.origin_document = ', '.join(source_purchases.mapped('name'))
             elif hasattr(res, 'repair_quotation_id'):
                 if res.repair_quotation_id:
                     res.origin_document = res.repair_quotation_id.name
@@ -35,7 +35,6 @@ class AccountMove(models.Model):
                     res.origin_document = False
             else:
                 res.origin_document = False
-            # return True
                 
 
     def action_post(self):
