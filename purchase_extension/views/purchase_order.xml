@@ -62,6 +62,9 @@
                     <field name="product_variant_ids" widget="many2many_tags" optional="hide"/>
                     <field name="division_id"  domain="[('company_id','=',parent.company_id)]"  attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')]}"  options="{'no_create':True,'no_create_edit': True}"/>
                 </xpath>
+                <xpath expr="//page[@name='products']//tree//field[@name='product_qty']" position="attributes">
+                    <attribute name="sum">Total Qty</attribute>
+                </xpath>
                 <xpath expr="//page[@name='products']//tree//field[@name='product_uom'][2]" position="replace">
                     <field name="product_uom" string="UoM"
                         attrs="{
