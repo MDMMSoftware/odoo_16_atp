@@ -86,8 +86,9 @@ class AccountCashBook(models.Model):
         compute='_compute_amount_cashbook', store=True, readonly=True,default=0.0
     )
 
-    transfer_type = fields.Selection([('contra',"Contra"),('income','Income'),('expense','Expense'),('other','Other')], string='Transfer Type',track_visibility='onchange')
+    transfer_type = fields.Selection([('transfer','Cash Transfer'),('contra',"Contra"),('income','Income'),('expense','Expense'),('other','Other')], string='Transfer Type',track_visibility='onchange')
     transfer_company_id = fields.Many2one('transfer.company',track_visibility='onchange')
+    transfer_branch_id = fields.Many2one('transfer.branch',track_visibility='onchange')
     desc = fields.Char(string="Description")
     
     @api.depends("line_ids.amount")
@@ -361,8 +362,8 @@ class AccountCashBookLine(models.Model):
 
     @api.onchange('name')
     def _onchange_account_id(self):
-        if self.cashbook.transfer_company_id:
-            self.account_id = self.cashbook.transfer_company_id.default_account_id.id
+        if self.cashbook.transfer_branch_id:
+            self.account_id = self.cashbook.transfer_branch_id.default_account_id.id
 
 
 class TransferCompany(models.Model):
@@ -382,5 +383,21 @@ class TransferCompany(models.Model):
                 result.append((rec.id,'%s=>%s' %(rec.name,rec.branch_name)))
             if rec.name and not rec.diff_server:
                 result.append((rec.id,'%s' %(rec.name)))
+        return result
+   
+class TransferBranch(models.Model):
+    _name = 'transfer.branch'
+
+    name = fields.Char()
+    default_account_id = fields.Many2one('account.account',required=True)
+    branch_id = fields.Many2one('res.branch',string="Branch")
+    company_id = fields.Many2one('res.company',string="Company",default=lambda self:self.env.company)
+
+
+    def name_get(self):
+        result=[]
+        for rec in self:
+            if rec.name and rec.branch_id:
+                result.append((rec.id,'%s=>%s' %(rec.name,rec.branch_id.name)))
         return result
    

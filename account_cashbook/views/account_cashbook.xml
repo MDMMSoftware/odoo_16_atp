@@ -58,7 +58,8 @@
                                
                                 <field name="cash_type" attrs="{'readonly':[('state','!=','draft')]}"/>
                                 <field name="transfer_type" required="1" attrs="{'readonly':[('state','!=','draft')]}"/>
-                                <field name="transfer_company_id" options="{'no_create_edit':True,'no_create':True}" domain="['|',('company_id','=',company_id),('company_id','=',False)]" attrs="{'readonly':[('state','!=','draft')],'required':[('transfer_type','=','transfer')],'invisible':[('transfer_type','!=','transfer')]}"/>
+                                <!-- <field name="transfer_company_id" options="{'no_create_edit':True,'no_create':True}" domain="['|',('company_id','=',company_id),('company_id','=',False)]" attrs="{'readonly':[('state','!=','draft')],'required':[('transfer_type','=','transfer')],'invisible':[('transfer_type','!=','transfer')]}"/> -->
+                                <field name="transfer_branch_id" options="{'no_create_edit':True,'no_create':True}" domain="['|',('company_id','=',company_id),('company_id','=',False)]" attrs="{'readonly':[('state','!=','draft')],'required':[('transfer_type','=','transfer')],'invisible':[('transfer_type','!=','transfer')]}"/>
                                 <field name="company_id" invisible="1"/>
                                 <field name="allow_division_feature" invisible="1"/>
                                 <field name="desc" attrs="{'readonly':[('state','!=','draft')]}"/>
@@ -247,6 +248,44 @@
         </record>
 
         
+        <record id='transfer_branch_form' model='ir.ui.view'>
+            <field name="name">transfer.branch.form.inherited</field>
+            <field name="model">transfer.branch</field>
+            <field name="arch" type="xml">
+                <form string='Transfer Branch'>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" force_save="1" placeholder="e.g. Branch Name"/>
+                            </h1>   
+                        </div>
+                        <group>
+                            <group>
+                                <field name='default_account_id'/>
+                                <field name='company_id' readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="branch_id" required="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="transfer_branch_tree" model="ir.ui.view">
+                <field name="name">transfer.branch.tree</field>
+                <field name="model">transfer.branch</field>
+                <field name="arch" type="xml">
+                    <tree>                   
+                        <field name='name'/>
+                        <field name="default_account_id"/>
+                        <field name='branch_id'/>
+                    </tree>
+                </field>
+        </record>
+
+        
         <record id="action_transfer_company" model="ir.actions.act_window">
                 <field name="name">Transfer Company</field>
                 <field name="type">ir.actions.act_window</field>
@@ -255,12 +294,20 @@
                 <field name="view_mode">tree,form</field>
         </record>
 
-        
+        <record id="action_transfer_branch" model="ir.actions.act_window">
+            <field name="name">Transfer Branch</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">transfer.branch</field>
+            <field name="view_id" ref="transfer_branch_tree"/>
+            <field name="view_mode">tree,form</field>
+        </record>
+
         <menuitem id="menu_cashbook" name="Cash Book" sequence="1" parent="account.menu_finance_entries"/>
         <menuitem id="menu_transfer_company" name="Transfer Compnay" sequence="2" parent="account.account_account_menu" action="action_transfer_company"/>
-        <menuitem id="menu_payment" name="Payment" sequence="3" parent="menu_cashbook" action="view_cashbook_payment_action"/>
+        <menuitem id="menu_transfer_branch" name="Transfer Branch" sequence="3" parent="account.account_account_menu" action="action_transfer_branch"/>
+        <menuitem id="menu_payment" name="Payment" sequence="4" parent="menu_cashbook" action="view_cashbook_payment_action"/>
 
-        <menuitem id="menu_received" name="Receipt" sequence="4" parent="menu_cashbook" action="view_cashbook_received_action"/>
+        <menuitem id="menu_received" name="Receipt" sequence="5" parent="menu_cashbook" action="view_cashbook_received_action"/>
 
 
 
