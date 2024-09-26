@@ -2,6 +2,7 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_account_cashbook,access_account_cashbook,model_account_cashbook,,1,1,1,1
 access_account_cashbook_line,access_account_cashbook_line,model_account_cashbook_line,,1,1,1,1
 access_transfer_company,access_transfer_company,model_transfer_company,,1,1,1,1
+access_transfer_branch,access_transfer_branch,model_transfer_branch,,1,1,1,1
 access_cashbook_check_xlsx_wizard,access_cashbook_check_xlsx_wizard,model_cashbook_check_xlsx_wizard,,1,1,1,1
 
 access_cashbook_report,access_cashbook_report,model_cashbook_report,,1,1,1,1
