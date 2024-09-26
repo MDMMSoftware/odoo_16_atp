@@ -47,7 +47,7 @@
                     <field name="import_fname" invisible="1" class="oe_inline oe_right" />  
                 </xpath>  
                 <xpath expr="//page[@name='products']//field[@name='order_line']" position="before">
-                    <div>
+                    <div attrs="{'invisible': [('state','!=','draft')]}">
                         <table class="table">
                             <tbody>
                                 <tr>

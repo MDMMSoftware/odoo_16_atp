@@ -63,7 +63,7 @@
                     <attribute name="attrs">{'readonly': [('can_be_unit', '!=', False)]}</attribute>
                 </xpath>
                 <xpath expr="//page[@name='order_lines']//field[@name='order_line']" position="before">
-                    <div>
+                    <div attrs="{'invisible': [('state','!=','draft')]}">
                         <table class="table">
                             <tbody>
                                 <tr>
