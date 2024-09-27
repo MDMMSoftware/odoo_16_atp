@@ -562,6 +562,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
 
         self._cr.execute(query, all_params)
         initial_balance = 0
+        i=0
         for aml_result in self._cr.dictfetchall():
             if aml_result['key'] == 'indirectly_linked_aml':
 
@@ -578,9 +579,17 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                         'balance': -aml_result['balance'],
                     })
             else:
+                if i==0:
+                    init_balance_by_col_group = self._get_initial_balance_values([aml_result['partner_id']], options)[aml_result['partner_id']]
+                    for val in init_balance_by_col_group.values():
+                        if val:
+                            initial_balance = val['balance']
+                        else:
+                            initial_balance =  0
                 aml_result['initial_balance'] = initial_balance
                 rslt[aml_result['partner_id']].append(aml_result)
                 initial_balance = initial_balance+aml_result['balance']
+                i+=1
 
         return rslt
 
