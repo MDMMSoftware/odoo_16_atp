@@ -561,6 +561,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             all_params.append(limit)
 
         self._cr.execute(query, all_params)
+        initial_balance = 0
         for aml_result in self._cr.dictfetchall():
             if aml_result['key'] == 'indirectly_linked_aml':
 
