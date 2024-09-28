@@ -363,13 +363,21 @@
                 <xpath expr="//form//header//button[@name='action_cancel']" position="before">
                     <button name="action_transfer_to_reconcile_wizard" string="Reconcilation  Transfer" type="object" class="oe_highlight"
                                 attrs="{'invisible': [('x_state', 'not in', ['paid'])]}"/>
-                </xpath>                                                
+                </xpath>       
+                <xpath expr="//button[@name='button_open_invoices']" position="after">
+                    <button name="action_open_reconcilation_entry"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-bars" string="Reconcilation Entry"
+                    /> 
+                </xpath>                                         
                 <!-- <xpath expr="//field[@name='partner_id'][1]" position="replace">
                     <field name="partner_id" context="{'default_is_company': True}" string="Customer"
                                        options="{'no_quick_create': True}"
                                        attrs="{'readonly':[('state', '!=', 'draft')],
                                              'invisible':[('partner_type','!=','customer')]}"/>
                 </xpath>
+               
 
                 <xpath expr="//field[@name='partner_id'][2]" position="replace">
                     <field name="partner_id" context="{'default_is_company': True}" string="Vendor"
@@ -417,7 +425,8 @@
                     <field name="destination_account_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>  
                     <field name="transfer_partner_id" invisible="1"/>  
                     <field name="partner_account" invisible="1"/>  
-                    <field name="transfer_partner_account" invisible="1"/>    
+                    <field name="transfer_partner_account" invisible="1"/>   
+                    <field name="reconcilation_move_ids" invisible="1"/>    
                                  
                 </xpath>
                 <xpath expr="//field[@name='payment_type']" position="replace">
