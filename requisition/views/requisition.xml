@@ -83,6 +83,7 @@
 									<field name="division_id"  domain="[('company_id','=',parent.company_id)]"   attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')] , 'readonly': [('state','!=','draft')]}"   options="{'no_create':True,'no_create_edit': True}"/>
 									<field name="qty" />
 									<field name="done_qty" force_save="1"/>
+                                    <field name="from_done_qty" force_save="1" optional="hide"/>
 									<field name="product_name"/>
 									<field name="part_id" optional="hide"/>
 									<field name="product_uom_category_id" invisible="1"/>
