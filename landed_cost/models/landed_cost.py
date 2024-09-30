@@ -195,13 +195,13 @@ class StockLandedCost(models.Model):
                     unit_price = total_cost = invoice_total = 0.0
                     if valuation.cost_line_id and valuation.cost_line_id.id == line.id:
                         if line.split_method == 'by_quantity' and total_qty:
-                            unit_price_valuation = cost.picking_ids.move_ids.filtered(lambda x:x.product_id==valuation.product_id).stock_valuation_layer_ids.filtered(lambda x:x.unit_cost>0)
+                            unit_price_valuation = cost.picking_ids.move_ids.filtered(lambda x:x.product_id==valuation.product_id).stock_valuation_layer_ids
                             if len(unit_price_valuation)>1 or len(unit_price_valuation)==0:
                                 raise ValidationError(_("Product %s has many valuation layers")%(valuation.product_id.name))
                             else:
                                 unit_price = unit_price_valuation.unit_cost
                             total_cost = unit_price * valuation.quantity
-                            invoice_total = sum(cost.picking_ids.move_ids.stock_valuation_layer_ids.filtered(lambda x:not x.stock_landed_cost_id).mapped('value'))
+                            invoice_total = sum(cost.picking_ids.move_ids.stock_valuation_layer_ids.mapped('value'))
                             if not invoice_total:
                                 raise ValidationError(_("There is no Invoice Total to Calculate"))
                             else:
@@ -236,29 +236,6 @@ class StockLandedCost(models.Model):
             AdjustementLines.browse(key).write({'additional_landed_cost': value})
         return True
                     
-                    
-    def get_valuation_lines(self):
-        self.ensure_one()
-        lines = []
-
-        for move in self._get_targeted_move_ids():
-            # it doesn't make sense to make a landed cost for a product that isn't set as being valuated in real time at real cost
-            if move.product_id.cost_method not in ('fifo', 'average') or move.state == 'cancel' or not move.product_qty:
-                continue
-            vals = {
-                'product_id': move.product_id.id,
-                'move_id': move.id,
-                'quantity': move.product_qty,
-                'former_cost': sum(move.stock_valuation_layer_ids.filtered(lambda x:not x.stock_landed_cost_id).mapped('value')),
-                'weight': move.product_id.weight * move.product_qty,
-                'volume': move.product_id.volume * move.product_qty
-            }
-            lines.append(vals)
-            
-        if not lines:
-            target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
-            raise UserError(_("You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.", target_model_descriptions[self.target_model]))
-        return lines
                     
                     
     # def compute_landed_cost(self):
