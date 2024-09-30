@@ -125,6 +125,7 @@ class ReconcilePaymentTransfer(models.Model):
             }
             move_id = self.env['account.move'].create(move_vals)
             move_id._post()
+            payment_id.reconcilation_move_ids = [(4, move_id.id)]
             msg = 'Reconciliation Transfer: '+ str(move_id.name) + ' is created.'
             payment_id.message_post(body=msg)
             arap_id = self.env['account.move.line'].search([('move_id','=',payment_id.move_id.id),('account_id','=',payment_id.destination_account_id.id)],limit=1)
@@ -166,6 +167,7 @@ class ReconcilePaymentTransfer(models.Model):
             }
             move_id = self.env['account.move'].create(move_vals)
             move_id._post()
+            payment_id.reconcilation_move_ids = [(4, move_id.id)]
             msg = 'Reconciliation Transfer: '+ str(move_id.name) + ' is created.'
             payment_id.message_post(body=msg)
 

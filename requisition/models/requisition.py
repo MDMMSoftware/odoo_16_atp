@@ -367,6 +367,7 @@ class RequisitionLine(models.Model):
     product_name = fields.Char('Description')
     qty = fields.Float('Qty')
     done_qty = fields.Float('Done Qty',readonly=True)
+    from_done_qty = fields.Float('From Done Qty',readonly=True,store=True)
     product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id')
     uom_id = fields.Many2one('uom.uom',string='Unit',related="product_id.uom_id",domain="[('category_id', '=', product_uom_category_id)]")
     remaining_from = fields.Float(string='Remaining Stock(From)',compute=False,store=True)
@@ -381,7 +382,17 @@ class RequisitionLine(models.Model):
     production_move_id = fields.Many2one('stock.move')
 
     def _compute_all_remaining_quantity(self):
+        total_dct = {}
+        for picking in self.requisition_id.picking_ids:
+            if picking.location_id.id != self.requisition_id.src_location_id.id or picking.state != 'done':
+                continue
+            for move_id in picking.move_ids:
+                if move_id.product_id.id in total_dct:
+                    total_dct[move_id.product_id.id] += move_id.quantity_done
+                else:
+                    total_dct[move_id.product_id.id] = move_id.quantity_done        
         for res in self:
+            res.from_done_qty = total_dct.get(res.product_id.id,0)
             res.remaining_from = res.compute_remaining_stock(res.requisition_id.src_location_id)
             res.remaining_to = res.compute_remaining_stock(res.requisition_id.location_id)
             res.remaining_transit = res.compute_remaining_stock(res.requisition_id.transit_location_id)

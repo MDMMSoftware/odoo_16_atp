@@ -66,7 +66,7 @@
 					</group>
 					<notebook>
 						<page name="product_line" string="Product Line">
-                            <div>
+                            <div attrs="{'invisible': [('state','!=','draft')]}">
                                 <table class="table">
                                     <tbody>
                                         <tr>
@@ -83,6 +83,7 @@
 									<field name="division_id"  domain="[('company_id','=',parent.company_id)]"   attrs="{'column_invisible':[('parent.allow_division_feature','=',False)], 'required': [('parent.allow_division_feature','=','this_must_be_changed_with_boolean_True')] , 'readonly': [('state','!=','draft')]}"   options="{'no_create':True,'no_create_edit': True}"/>
 									<field name="qty" />
 									<field name="done_qty" force_save="1"/>
+                                    <field name="from_done_qty" force_save="1" optional="hide"/>
 									<field name="product_name"/>
 									<field name="part_id" optional="hide"/>
 									<field name="product_uom_category_id" invisible="1"/>
@@ -131,11 +132,11 @@
 			<search string="Requisition Search">
 				<field name="name" filter_domain="[('name', 'ilike', self)]"/>
 				<field name="request_person_id" filter_domain="[('request_person_id', 'ilike', self)]"/>
-				<field name="department_id" filter_domain="[('department_id', 'ilike', self)]"/>
+				<!-- <field name="department_id" filter_domain="[('department_id', 'ilike', self)]"/> -->
 				<field name="required_date" filter_domain="[('required_date', 'ilike', self)]"/>
 				<group expand="0" string="Group By">
 					<filter name="request_person_id" domain="[]" context="{'group_by':'request_person_id'}"/>
-					<filter name="department_id" domain="[]" context="{'group_by':'department_id'}"/>
+					<!-- <filter name="department_id" domain="[]" context="{'group_by':'department_id'}"/> -->
 					<filter name="order_date" string="Order Date:" domain="[]" context="{'group_by':'order_date'}"/>
 					<filter name="required_date" domain="[]" context="{'group_by':'required_date'}"/>
 					<filter name="state" domain="[]" context="{'group_by':'state'}"/>

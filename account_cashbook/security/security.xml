@@ -15,6 +15,12 @@
             <field name="domain_force">['|',('branch_ids','=',False),('branch_ids', 'in', user.branch_ids.ids)]</field>
         </record>
 
+        <record model="ir.rule" id="tranfer_branch_branch_rule">
+            <field name="name">Transfer Branch Rule</field>
+            <field name="model_id" ref="model_transfer_branch"/>
+            <field name="domain_force">['|',('branch_id','=',False),('branch_id', 'in', user.branch_ids.ids)]</field>
+        </record>        
+
         
 
     </data>

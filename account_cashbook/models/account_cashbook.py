@@ -105,10 +105,17 @@ class AccountCashBook(models.Model):
     def onchange_branch_id(self):
         """onchange method"""
         for res in self:
-            if not res.branch_ids:
-                res.branch_ids = self.env.user.branch_id
             if not res.journal_id:
                 res.journal_id = self.env.user.payment_journal_id
+            if not res.branch_ids:
+                res.branch_ids = self.env.user.branch_id
+            return {"domain": {"transfer_branch_id": [('branch_id','=',res.branch_ids.id)]}}
+        
+    @api.onchange("cash_type")
+    def _onchange_cash_type(self):
+        for res in self:
+            res.transfer_type = 'expense' if res.cash_type == 'pay' else 'income'
+                
     
     def submit_cashbook(self):
         if not (self.env.user.has_group('account.group_account_user') or self.env.user.has_group('account.group_account_manager')):
@@ -394,10 +401,10 @@ class TransferBranch(models.Model):
     company_id = fields.Many2one('res.company',string="Company",default=lambda self:self.env.company)
 
 
-    def name_get(self):
-        result=[]
-        for rec in self:
-            if rec.name and rec.branch_id:
-                result.append((rec.id,'%s=>%s' %(rec.name,rec.branch_id.name)))
-        return result
+    # def name_get(self):
+    #     result=[]
+    #     for rec in self:
+    #         if rec.name and rec.branch_id:
+    #             result.append((rec.id,'%s=>%s' %(rec.name,rec.branch_id.name)))
+    #     return result
    
