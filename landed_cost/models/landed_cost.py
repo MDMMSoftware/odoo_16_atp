@@ -128,7 +128,7 @@ class StockLandedCost(models.Model):
             cost.write(cost_vals)
             if cost.account_move_id:
                 move._post()
-            cost.reconcile_landed_cost()
+            # cost.reconcile_landed_cost()
         return True
     
     
@@ -260,6 +260,29 @@ class StockLandedCost(models.Model):
             raise UserError(_("You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.", target_model_descriptions[self.target_model]))
         return lines
                     
+                    
+    def get_valuation_lines(self):
+        self.ensure_one()
+        lines = []
+
+        for move in self._get_targeted_move_ids():
+            # it doesn't make sense to make a landed cost for a product that isn't set as being valuated in real time at real cost
+            if move.product_id.cost_method not in ('fifo', 'average') or move.state == 'cancel' or not move.product_qty:
+                continue
+            vals = {
+                'product_id': move.product_id.id,
+                'move_id': move.id,
+                'quantity': move.product_qty,
+                'former_cost': sum(move.stock_valuation_layer_ids.filtered(lambda x:not x.stock_landed_cost_id).mapped('value')),
+                'weight': move.product_id.weight * move.product_qty,
+                'volume': move.product_id.volume * move.product_qty
+            }
+            lines.append(vals)
+            
+        if not lines:
+            target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
+            raise UserError(_("You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.", target_model_descriptions[self.target_model]))
+        return lines
                     
                     
     # def compute_landed_cost(self):
