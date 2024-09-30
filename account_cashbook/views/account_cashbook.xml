@@ -15,7 +15,7 @@
                     <field name="account_id" />
                     <field name="currency_id" />
                     <field name="branch_ids"/>
-                    <field name="department_id"/>
+                    <!-- <field name="department_id"/> -->
                     <group expand="0" string="Group By">
                         <filter name="account_id" string="Account" domain="" context="{'group_by':'account_id'}"/>
                         <filter name="cash_type" string="Cash Type" domain="" context="{'group_by':'cash_type'}"/>
@@ -23,7 +23,7 @@
                         <filter name="journal_id" string="Journal" domain="" context="{'group_by':'journal_id'}"/>
                         <filter name="state" string="Status" domain="" context="{'group_by':'state'}"/>
                         <filter name="branch_ids" string="Branch" domain="" context="{'group_by':'branch_ids'}"/>
-                        <filter name="department_id" string="Department" domain="" context="{'group_by':'department_id'}"/>
+                        <!-- <filter name="department_id" string="Department" domain="" context="{'group_by':'department_id'}"/> -->
                         <filter string="Payment" name="payment_type" domain="[('cash_type','=','pay')]"/>
                         <filter string="Receive" name="receive_type" domain="[('cash_type','=','receive')]"/>
                     </group>
@@ -78,7 +78,7 @@
                                 <field name="exchange_rate" attrs="{'readonly':[('state','in',['done','cancel','submit'])]}" options="{'no_create':True,'no_create_edit': True}"/>
                                 <field name="currency_id" attrs="{'readonly':[('state','in',['done','cancel','submit'])]}" options="{'no_create':True,'no_create_edit': True}"/>
                                 <field name="branch_ids" attrs="{'readonly':[('state','!=','draft')]}"/>
-                                <field name="department_id" domain="[('company_id','=',company_id)]" attrs="{'readonly':[('state','!=','draft')]}" required="0" />
+                                <!-- <field name="department_id" domain="[('company_id','=',company_id)]" attrs="{'readonly':[('state','!=','draft')]}" required="0" /> -->
                                 <field name="origin" attrs="{'readonly':[('state','in',['done','cancel'])]}"/>
                             </group>
                         </group>
@@ -159,7 +159,7 @@
                     <field name="origin" optional="hide"/>
                     <field name="account_id" string="From"/>
                     <field name="branch_ids" optional="show"/>
-                    <field name="department_id" optional="show"/>
+                    <!-- <field name="department_id" optional="show"/> -->
                     <field name="company_id"/>
                     <field name="amount_total" sum="amount_total"/>
                     <field name="state" 

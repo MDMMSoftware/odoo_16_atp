@@ -43,9 +43,9 @@
                     <field name="amount_add"/>
 
                 </xpath>
-                <xpath expr="//button[@name='action_post']" position="after">   
+                <!-- <xpath expr="//button[@name='action_post']" position="after">   
                     <button name="fix_old_datas_of_discount"   string="Fix Discount Auto" class="oe_highlight btn-info" type="object" /> 
-                </xpath>                
+                </xpath>                 -->
                               
             </field>   
         </record>

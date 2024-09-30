@@ -66,7 +66,7 @@
                             <field name="serial_no" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" />
                             <field name="capacity_weight" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" />
                             <field name="user_id" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
-                            <field name="department_id" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
+                            <!-- <field name="department_id" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" /> -->
                             <field name="location_id" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
                             <field name="fleet_id" attrs="{'invisible':[('asset_type','in',('expense','sale'))]}" class="oe_inline" options="{'no_quick_create': true, 'no_create_edit':true}" />
                         </group>
