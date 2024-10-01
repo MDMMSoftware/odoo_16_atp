@@ -49,6 +49,7 @@
                     <field name="date_order" string="Quotation Date" widget="date"/>
                     <field name="sale_type" string="Type" optional="hide"/>
                     <field name="term_type" string="Payment Type" optional="hide"/>
+                    <field name="intenal_ref" string="Internal Ref." optional="hide"/>
                 </xpath> 
             </field>
         </record>         
