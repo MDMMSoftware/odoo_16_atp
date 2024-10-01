@@ -84,8 +84,8 @@ class RequisitionPartial(models.TransientModel):
 
     def _create_returns(self):       
         flag = True
-        if not self.product_return_moves or sum(self.product_return_moves.mapped('quantity'))==0:
-            raise UserError(_("There is No Line for Requisition"))
+        if not self.product_return_moves or sum(self.product_return_moves.mapped('quantity')) <= 0:
+            raise UserError(_("The prepared quantities of requisition line should be greater than zero!!"))
         for val in self.product_return_moves:
             if val.requisition_line.qty-val.requisition_line.done_qty<val.quantity:
                 raise UserError(_("Transfer Qty is not matched with Requisition's Quantity"))
