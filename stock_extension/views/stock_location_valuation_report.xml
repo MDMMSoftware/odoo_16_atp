@@ -10,7 +10,7 @@
                     <field name="report_type"/>         
                     <field name='company_id'/>
                     <field name="branch_id"/>  
-                    <field name="department_id"/>                  
+                    <!-- <field name="department_id"/>                   -->
                     <field name="by_location"/>
                     <field name="report_date" />
                     <field name="ref" />
@@ -58,7 +58,7 @@
                             <group>
                                 <field name="by_location" readonly="1" force_save="1"/>
                                 <field name="branch_id" readonly="1" force_save="1"/>
-                                <field name="department_id" readonly="1" force_save="1"/>
+                                <!-- <field name="department_id" readonly="1" force_save="1"/> -->
                                 <field name="location_dest_id"  readonly="1" force_save="1"/>
                                 <field name="seq"  readonly="1" force_save="1"/>
                                 <field name="product_name"  readonly="1" force_save="1"/>

@@ -138,7 +138,7 @@
                                 <field name="branch_ids" options="{'no_creat_edit':True,'no_create':True}" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}" />
                                 <field name="allow_division_feature" invisible="1"/>
                                 <field name="division_id" domain="[('company_id','=',company_id)]"  attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('allow_division_feature', '=', False)], 'required': [('allow_division_feature','=','this_must_be_changed_with_boolean_True')] }" options="{'no_creat_edit':True,'no_create':True}" />
-                                <field name="department_id" readonly="0" options="{'no_creat_edit':True,'no_create':True}" required="0" />
+                                <!-- <field name="department_id" readonly="0" options="{'no_creat_edit':True,'no_create':True}" required="0" /> -->
                                 <field name="journal_id" options="{'no_creat_edit':True,'no_create':True}" domain="[('type', 'in', ('bank', 'cash'))]" attrs="{'readonly': [('state', 'not in', ['draft','check'])]}"/>
                                 <field name="payment_method_line_id" required="1" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="move_ids" widget="many2many_tags"/>

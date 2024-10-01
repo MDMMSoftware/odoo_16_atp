@@ -396,6 +396,8 @@ class StockPicking(models.Model):
             if move_line.location_id!=self.location_id or move_line.location_dest_id!=self.location_dest_id:
                 raise UserError(_("Source Location or Destination Location doesn't match with Move Lines"))
         for move in self.move_ids:
+            if hasattr(move, "branch_id") and move.picking_id and move.picking_id.branch_id:
+                move.branch_id = move.picking_id.branch_id            
             if move.location_id!=self.location_id or move.location_dest_id!=self.location_dest_id:
                 raise UserError(_("Source Location or Destination Location doesn't match with Lines"))
         if hasattr(self, 'duty_line_id') and self.duty_line_id:

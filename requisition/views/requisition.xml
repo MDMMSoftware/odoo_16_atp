@@ -132,11 +132,11 @@
 			<search string="Requisition Search">
 				<field name="name" filter_domain="[('name', 'ilike', self)]"/>
 				<field name="request_person_id" filter_domain="[('request_person_id', 'ilike', self)]"/>
-				<field name="department_id" filter_domain="[('department_id', 'ilike', self)]"/>
+				<!-- <field name="department_id" filter_domain="[('department_id', 'ilike', self)]"/> -->
 				<field name="required_date" filter_domain="[('required_date', 'ilike', self)]"/>
 				<group expand="0" string="Group By">
 					<filter name="request_person_id" domain="[]" context="{'group_by':'request_person_id'}"/>
-					<filter name="department_id" domain="[]" context="{'group_by':'department_id'}"/>
+					<!-- <filter name="department_id" domain="[]" context="{'group_by':'department_id'}"/> -->
 					<filter name="order_date" string="Order Date:" domain="[]" context="{'group_by':'order_date'}"/>
 					<filter name="required_date" domain="[]" context="{'group_by':'required_date'}"/>
 					<filter name="state" domain="[]" context="{'group_by':'state'}"/>

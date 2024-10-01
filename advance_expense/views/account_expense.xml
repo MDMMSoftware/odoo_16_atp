@@ -19,7 +19,7 @@
                 <xpath expr="//field[@name='invoice_date']" position="after">
                     <field name="branch_id" options="{'no_create': True}" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')]}"/>
                     <field name="allow_division_feature" invisible="1"/>
-                    <field name="department_id" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')], 'required':[('allow_division_feature','=',True)]}" domain="[('company_id','=',company_id)]"   options="{'no_create': True}"/>
+                    <!-- <field name="department_id" attrs="{'readonly': ['|',('state','!=','draft'),('x_state','!=','draft')], 'required':[('allow_division_feature','=',True)]}" domain="[('company_id','=',company_id)]"   options="{'no_create': True}"/> -->
                 </xpath>    
                 <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='account_id']" position="attributes">
                     <attribute name="domain">[('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable', 'liability_payable')), ('company_id', '=', parent.company_id), ('is_off_balance', '=', False), '|', ('branch_id', '=', parent.branch_id),('branch_id', '=', False)]</attribute>
@@ -214,9 +214,9 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_tree"/>
             <field name="arch" type="xml">
-                <xpath expr="//tree//field[@name='company_id']" position="after">
+                <!-- <xpath expr="//tree//field[@name='company_id']" position="after">
                     <field name="department_id"/>
-                </xpath>  
+                </xpath>   -->
                 <xpath expr="//tree//field[@name='ref']" position="after">
                     <field name="desc"/>
                 </xpath>                                                 
@@ -231,7 +231,7 @@
                     <field name="company_currency_id" invisible="1"/>
                     <field name="made_sequence_hole" invisible="1"/>
                     <field name="branch_id"/>
-                    <field name="department_id"/>
+                    <!-- <field name="department_id"/> -->
                     <field name="date"/>
                     <field name="name" decoration-danger="made_sequence_hole"/>
                     <field name="partner_id" optional="show"/>

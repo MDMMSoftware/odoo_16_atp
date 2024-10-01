@@ -63,7 +63,7 @@
                         <group>
                             <field name="location_id" attrs="{'readonly':[('state','!=','draft')]}"/>
                             <field name="branch_ids" attrs="{'readonly':[('state','!=','draft')]}"/>
-                            <field name="department_id" attrs="{'readonly':[('state','!=','draft')]}" required="0" options="{'no_create':True,'no_create_edit':True}"  domain="[('company_id','=',company_id)]"  />
+                            <!-- <field name="department_id" attrs="{'readonly':[('state','!=','draft')]}" required="0" options="{'no_create':True,'no_create_edit':True}"  domain="[('company_id','=',company_id)]"  /> -->
                             <field name="ref" attrs="{'readonly':[('state','!=','draft')]}"/>
                             <field name="origin_returned_adjust_id" force_save="1"  attrs="{'readonly':[('state','!=','draft')]}"/>
                             <field name="has_refund"  attrs="{'readonly':[('state','!=','draft')]}"/>

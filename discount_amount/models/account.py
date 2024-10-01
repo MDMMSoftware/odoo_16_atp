@@ -645,15 +645,15 @@ class AccountMove(models.Model):
                     line.update({'account_id':line.product_id.categ_id.account_sale_return_id.id or False})
         return res
     
-    def fix_old_datas_of_discount(self):
-        target_id = self.id
-        self.env.cr.execute(f""" 
-                        SELECT aml.id,aml.account_id
-                            FROM account_move_line aml
-                        INNER JOIN account_move am ON aml.move_id = am.id
-                        WHERE am.discount_amt_currency = ABS(aml.balance)
-                            AND aml.display_type = 'epd'
-                            AND am.id = {int(target_id)}                          
-                        """)
-        aml_datas = self.env.cr.fetchall()
+    # def fix_old_datas_of_discount(self):
+    #     target_id = self.id
+    #     self.env.cr.execute(f""" 
+    #                     SELECT aml.id,aml.account_id
+    #                         FROM account_move_line aml
+    #                     INNER JOIN account_move am ON aml.move_id = am.id
+    #                     WHERE am.discount_amt_currency = ABS(aml.balance)
+    #                         AND aml.display_type = 'epd'
+    #                         AND am.id = {int(target_id)}                          
+    #                     """)
+    #     aml_datas = self.env.cr.fetchall()
         
