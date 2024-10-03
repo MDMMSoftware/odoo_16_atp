@@ -205,7 +205,7 @@ class StockLandedCost(models.Model):
                             if not invoice_total:
                                 raise ValidationError(_("There is no Invoice Total to Calculate"))
                             else:
-                                value = round((line.price_unit/invoice_total)*total_cost,0)
+                                value = (line.price_unit/invoice_total)*total_cost
                             # per_unit = (line.price_unit / total_qty)
                             # value = valuation.quantity * per_unit
                         elif line.split_method == 'by_weight' and total_weight:
