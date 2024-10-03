@@ -157,6 +157,8 @@ class StockValuationLayer(models.Model):
                     #     'UPDATE account_move SET date=%s WHERE id=%s',
                     #     (move.adjust_id.date,entry.id,)
                     # ) 
+                    if hasattr(entry, 'branch_id') and not entry.branch_id and entry.stock_move_id:
+                        entry.branch_id = entry.stock_move_id.branch_id.id                    
                     if entry and move.adjust_id.origin_returned_adjust_id:
                         if move.adjustment_line_id.origin_returned_adjust_line_id.unit_cost!=move.adjustment_line_id.unit_cost:
                             account_move_line_dct_two = {
@@ -255,6 +257,8 @@ class StockValuationLayer(models.Model):
                     #     'UPDATE account_move SET date=%s WHERE id=%s',
                     #     (move.adjust_id.date,entry.id,)
                     # ) 
+                    if hasattr(entry, 'branch_id') and not entry.branch_id and entry.stock_move_id:
+                        entry.branch_id = entry.stock_move_id.branch_id.id
                     if entry and move.adjust_id.origin_returned_adjust_id:
                         if move.adjustment_line_id.origin_returned_adjust_line_id.unit_cost!=move.adjustment_line_id.unit_cost:
                             account_move_line_dct_five = {
@@ -732,6 +736,8 @@ class StockMove(models.Model):
             am_val['department_id'] = move.department_id.id
             if move.adjust_id:
                 am_val['date'] = move.adjust_id.date
+            if hasattr(move, 'branch_id'):
+                am_val['branch_id'] = move.branch_id.id or False
             
         return am_vals
 
@@ -792,8 +798,11 @@ class StockMove(models.Model):
         if hasattr(self, 'repair_object_id'):
             svl_dct['repair_object_id'] = self.repair_object_id.id or False
         if hasattr(self, 'branch_id'):
-            svl_dct['branch_id'] = self.picking_id.branch_id.id or False
-            self.branch_id = self.picking_id.branch_id.id or False
+            branch_id = self.picking_id.branch_id.id or False
+            if not branch_id:
+                branch_id = self.branch_id.id or False
+            svl_dct['branch_id'] = branch_id
+            self.branch_id = branch_id
 
         return svl_dct
     

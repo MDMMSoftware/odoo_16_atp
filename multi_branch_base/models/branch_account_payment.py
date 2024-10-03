@@ -36,6 +36,7 @@ class AccountMove(models.Model):
         domain="[('account_type', 'in', ('asset_receivable', 'liability_payable')), ('company_id', '=', company_id), "
                "'|', ('branch_id', '=', branch_id), ('branch_id', '=', False)]",
         check_company=True)
+    branch_id = fields.Many2one('res.branch',string="Branch",required=True,default=False)
 
     @api.constrains('branch_id')
     def _check_payment_branch_id(self):
@@ -47,6 +48,8 @@ class AccountMove(models.Model):
                     "Your payment belongs to  '%s' branch whereas the account"
                     " belongs to '%s' branch.", payment.branch_id.name,
                     branch.name))
+            if not payment.branch_id:
+                raise ValidationError("Branch is required")
 
     @api.depends('journal_id', 'branch_id', 'partner_id', 'partner_type',
                  'is_internal_transfer', 'destination_journal_id')
