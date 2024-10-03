@@ -217,6 +217,9 @@
                 <xpath  expr="//tree//field[@name='name']" position="before">
                     <field name="product_code"/>
                 </xpath> 
+                <xpath  expr="//tree//field[@name='qty_available']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
                 <xpath  expr="//tree//field[@name='name']" position="after">
                     <field name="custom_category_id"/>
                     <field name="group_class_id"/>
@@ -224,6 +227,7 @@
                     <field name="custom_model_no_id"/>
                     <field name="custom_stock_code"/>
                     <field name="custom_part"/>
+                    <field name="qty_available"/>
                 </xpath>
             </field>
         </record> 

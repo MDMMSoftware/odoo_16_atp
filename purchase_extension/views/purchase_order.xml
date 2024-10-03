@@ -98,5 +98,16 @@
             </field>
         </record>
 
+        <record id="purchase_order_view_search_inherited" model="ir.ui.view">
+            <field name="name">purchase.order.search.inherited</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+            <field name="arch" type="xml">
+                <field name="origin" position="after">
+                    <field name="internal_ref"/>
+                </field>
+            </field>
+        </record>   
+
     </data>
 </odoo>
