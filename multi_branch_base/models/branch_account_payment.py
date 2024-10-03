@@ -27,6 +27,13 @@ from odoo.exceptions import ValidationError
 class AccountMove(models.Model):
     """inherited account payment"""
     _inherit = "account.payment"
+    
+    def _default_get_branch(self):
+        branch_id = False
+        if self.env.user.branch_ids:
+            branch_id = self.env.user.branch_ids.filtered(lambda x:x.company_id==self.env.company)
+            return branch_id[0]
+        return branch_id
 
     destination_account_id = fields.Many2one(
         comodel_name='account.account',
@@ -36,7 +43,7 @@ class AccountMove(models.Model):
         domain="[('account_type', 'in', ('asset_receivable', 'liability_payable')), ('company_id', '=', company_id), "
                "'|', ('branch_id', '=', branch_id), ('branch_id', '=', False)]",
         check_company=True)
-    branch_id = fields.Many2one('res.branch',string="Branch",required=True,default=False)
+    branch_id = fields.Many2one('res.branch',string="Branch",required=True,default=_default_get_branch)
 
     @api.constrains('branch_id')
     def _check_payment_branch_id(self):
