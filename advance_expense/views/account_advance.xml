@@ -420,6 +420,7 @@
                 </xpath>  
                 <xpath expr="//field[@name='branch_id']" position="attributes"> 
                     <attribute name="attrs">{'readonly': [('x_state', '!=', 'draft')]}</attribute>
+                    <attribute name="required">1</attribute>
                 </xpath>                                                                                     
                 <xpath expr="//field[@name='partner_id'][2]" position="after">
                     <field name="destination_account_id" attrs="{'readonly': [('x_state', '!=', 'draft')]}"/>  
