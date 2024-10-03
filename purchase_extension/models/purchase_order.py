@@ -111,7 +111,10 @@ class PurchaseOrder(models.Model):
     
     def action_import_order(self):
         product_obj = self.env['product.product']       
-        order_line_obj = self.env['purchase.order.line']        
+        order_line_obj = self.env['purchase.order.line']   
+        already_product_dct = []
+        for order_line in self.order_line:
+             already_product_dct.append(f"{order_line.product_id.id}|{round(order_line.product_qty,2)}")
         for res in self:
             all_datas = data_import.read_and_validate_datas(res,HEADER_FIELDS,HEADER_INDEXES)   
             for data in all_datas:
@@ -131,8 +134,9 @@ class PurchaseOrder(models.Model):
                     raise ValidationError('Invalid Quantity')
                 if unit_price < 0.0:
                     raise ValidationError('Invalid Unit Price')
-                line_id = order_line_obj.search([('order_id', '=', self.id), ('product_id', '=', product_id.id), ('product_qty', '=', quantity)],limit=1)
-                if line_id:
+                if f"{product_id.id}|{round(quantity,2)}" in already_product_dct:
+                # line_id = order_line_obj.search([('order_id', '=', self.id), ('product_id', '=', product_id.id), ('product_qty', '=', quantity)],limit=1)
+                # if line_id:
                     raise ValidationError("Duplicate product and quantity in order liness!!!")                
                 if not item_description:
                     item_description = product_id.name
