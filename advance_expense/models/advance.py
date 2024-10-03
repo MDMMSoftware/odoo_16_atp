@@ -631,7 +631,7 @@ class AccountPayment(models.Model):
         for res in self:
             if not res.branch_id:
                 user_obj = self.env.user
-                res.branch_id = user_obj.branch_id
+                # res.branch_id = user_obj.branch_id
                 res.journal_id = user_obj.payment_journal_id
                 
     def action_transfer_to_reconcile_wizard(self):      
