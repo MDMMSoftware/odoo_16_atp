@@ -139,6 +139,7 @@ class ProductProduct(models.Model):
                                            'product_product_id','warehouse_valuation_id',ondelete='cascade',readonly=True)    
     can_be_unit = fields.Boolean(related='product_tmpl_id.can_be_unit', store=True)
     custom_brand_id = fields.Many2one('custom.brand', related= "product_tmpl_id.custom_brand_id")
+    product_code = fields.Char(string="Product Code",related="product_tmpl_id.product_code",store=True)
 
     def name_get(self):
         return [(rec.id,'%s' %(rec.product_code)) for rec in self] 
@@ -259,3 +260,8 @@ class DeadStockRemark(models.Model):
     _sql_constraints = [
         ('uniq_custom_product_dead_stock', 'unique(name)', 'Product Dead Stock Remark must be unique.'),
     ]           
+    
+class AcccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
+    
+    product_label = fields.Char(string="Product Label",related="product_id.product_code")
