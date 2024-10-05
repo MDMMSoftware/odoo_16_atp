@@ -1,6 +1,15 @@
 from odoo import models, fields, api,_
 from ...generate_code import generate_code,data_import
 from odoo.exceptions import UserError, ValidationError
+import io
+try:
+    from odoo.tools.misc import xlsxwriter
+except ImportError:
+    # TODO saas-17: remove the try/except to directly import from misc
+    import xlsxwriter
+import logging
+import os
+import tempfile
 
 HEADER_FIELDS = ['item code','description','quantity']
 PICKING_STATE_DCT = {'draft':'Draft','waiting': 'Waiting Another Operation',
@@ -362,6 +371,79 @@ class Requisition(models.Model):
                         'requisition_id':self.id,
                     }
                 order_line_obj.create(vals)   
+                
+    def action_export_requisition_transaction(self):
+        output = io.BytesIO()
+        file_name = os.path.join(tempfile.gettempdir(), 'Requisition Export.xlsx')
+        workbook = xlsxwriter.Workbook(file_name)
+        sheet = workbook.add_worksheet("Duty Transactions Export")
+        banner_format_small = workbook.add_format({'font_name': 'Arial','bold': True, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,'border':True})
+        header_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','bold': True,'border':True,'bg_color': '#AAAAAA'})
+        text_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter'})
+        date_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','num_format': 'dd/mm/yy'})
+        time_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','num_format': 'hh:mm'}) 
+
+        y_offset = 0
+        x_offset = 0
+
+        sheet.write(x_offset,0,"Reference",header_format)
+        sheet.write(x_offset,1,"Order Date",header_format)
+        sheet.write(x_offset,2,"Required Date",header_format)
+        sheet.write(x_offset,3,"Request Person",header_format)
+        sheet.write(x_offset,4,"From Branch",header_format)
+        sheet.write(x_offset,5,"To Branch",header_format)
+        sheet.write(x_offset,6,"Main Location",header_format)
+        sheet.write(x_offset,7,"To Location",header_format)
+        sheet.write(x_offset,8,"Transist Location",header_format)
+        sheet.write(x_offset,9,"Product Code",header_format)
+        sheet.write(x_offset,10,"Product Name",header_format)
+        sheet.write(x_offset,11,"Qty",header_format)
+        sheet.write(x_offset,12,"Done Qty",header_format)
+        sheet.write(x_offset,13,"Description",header_format)
+        sheet.write(x_offset,14,"From Remaining Stock",header_format)
+        sheet.write(x_offset,15,"To Remaining Stock",header_format)
+        sheet.write(x_offset,16,"Transist Remaining Stock",header_format)
+        sheet.write(x_offset,17,"Remark",header_format)
+        
+        
+        x_offset+=1
+        active_ids = self.env.context.get('active_ids')
+        branch_obj = self.env['res.branch'].sudo()
+        requisition_lines = self.env['requisition.line'].sudo().search([('requisition_id','in',active_ids)])
+        for line in requisition_lines:
+            sheet.write(x_offset,0,line.requisition_id.name or "",text_format)
+            sheet.write(x_offset,1,line.requisition_id.order_date or "",date_format)
+            sheet.write(x_offset,2,line.requisition_id.required_date or "",date_format)
+            sheet.write(x_offset,3,line.requisition_id.request_person_id and  line.requisition_id.request_person_id.name  or "",text_format)
+            sheet.write(x_offset,4,branch_obj.browse(int(line.requisition_id.from_branch)).name  or "",text_format)
+            sheet.write(x_offset,5,branch_obj.browse(int(line.requisition_id.to_branch)).name or "",text_format)
+            sheet.write(x_offset,6,line.requisition_id.src_location_id and line.requisition_id.src_location_id.name or "",text_format)
+            sheet.write(x_offset,7,line.requisition_id.location_id and line.requisition_id.location_id.name or "",text_format)
+            sheet.write(x_offset,8,line.requisition_id.transit_location_id and line.requisition_id.transit_location_id.name or "",text_format)
+            sheet.write(x_offset,9,line.product_id and line.product_id.product_code or "",text_format)
+            sheet.write(x_offset,10,line.product_id and line.product_id.name or "",text_format)
+            sheet.write(x_offset,11,line.qty  or 0,text_format)
+            sheet.write(x_offset,12,line.done_qty  or 0,text_format)
+
+            sheet.write(x_offset,13,line.product_name or "",text_format)
+            sheet.write(x_offset,14,line.remaining_from or 0,text_format)
+            sheet.write(x_offset,15,line.remaining_to or 0,text_format)
+            sheet.write(x_offset,44,line.remaining_transit or 0,text_format)
+            sheet.write(x_offset,45,line.remark or "",text_format)
+        
+            x_offset+=1
+            
+        workbook.close()
+        output.seek(0)
+        return self.download_excel_file(file_name)
+        
+
+    def download_excel_file(self, file_name):
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f"/web/binary/download_document?model=requisition&id=%s&file_name=%s" % (self.id, file_name),
+            'close': True,
+        }                
 
 class RequisitionLine(models.Model):
     _name = "requisition.line"
