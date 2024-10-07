@@ -17,7 +17,7 @@
 
     <menuitem id="account_ledger_menu" name="Ledgers" parent="account.menu_finance_entries" sequence="20">
         <menuitem id="menu_action_account_report_general_ledger" name="General Ledger" action="action_account_report_general_ledger" groups="account.group_account_readonly"/>
-        <menuitem id="menu_action_account_ledger_report_partner_ledger" name="Partner Ledger" action="action_account_report_partner_ledger" groups="account.group_account_readonly"/>
+        <!-- <menuitem id="menu_action_account_ledger_report_partner_ledger" name="Partner Ledger" action="action_account_report_partner_ledger" groups="account.group_account_readonly"/> -->
     </menuitem>
 
     <menuitem id="menu_action_account_report_gt" name="Tax Report" action="action_account_report_gt" parent="account.account_reports_legal_statements_menu" sequence="50"/>
