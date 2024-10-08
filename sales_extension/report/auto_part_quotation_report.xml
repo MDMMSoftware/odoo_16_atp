@@ -92,7 +92,7 @@
                             <td><span class="text-end"><t t-esc="line.product_uom_qty"/></span></td>
                             <td><span class="text-end"><t t-esc="line.product_uom.name"/></span></td>
                             <td><span class="text-end"><t t-esc="'{0:,.2f}'.format(int(line.price_unit))"/></span></td>
-                            <t t-if="line.discount_amt">
+                            <t t-if="display_discount_amt">
                               <td>
                               
                                 <t t-if="line.discount_amt &gt; 0">
@@ -232,10 +232,7 @@
         </style>
         
     </div>
-<<<<<<< HEAD
-=======
 
->>>>>>> 37a7a0c (fix qweb quotation report)
 </template>
 
 
