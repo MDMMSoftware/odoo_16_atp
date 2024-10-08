@@ -88,11 +88,11 @@
                         <tr>
                             <td><span><t t-esc="counter"/></span></td>
                             <td style="width: 20%;"><span><t t-esc="line.product_template_id.product_code"/></span></td>
-                            <td style="white-space: nowrap; text-overflow:ellipsis; overflow: hidden; max-width:1px;"><span><t t-esc="line.name"/></span><span t-raw="line._get_sale_description_report()"/></td>
+                            <td><span><t t-esc="line.name"/></span><span t-raw="line._get_sale_description_report()"/></td>
                             <td><span class="text-end"><t t-esc="line.product_uom_qty"/></span></td>
                             <td><span class="text-end"><t t-esc="line.product_uom.name"/></span></td>
                             <td><span class="text-end"><t t-esc="'{0:,.2f}'.format(int(line.price_unit))"/></span></td>
-                            <t t-if="display_discount_amt">
+                            <t t-if="line.discount_amt">
                               <td>
                               
                                 <t t-if="line.discount_amt &gt; 0">
@@ -232,6 +232,10 @@
         </style>
         
     </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 37a7a0c (fix qweb quotation report)
 </template>
 
 
