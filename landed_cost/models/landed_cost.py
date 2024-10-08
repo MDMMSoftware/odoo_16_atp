@@ -205,7 +205,7 @@ class StockLandedCost(models.Model):
                             if not invoice_total:
                                 raise ValidationError(_("There is no Invoice Total to Calculate"))
                             else:
-                                value = round((line.price_unit/invoice_total)*total_cost,0)
+                                value = (line.price_unit/invoice_total)*total_cost
                             # per_unit = (line.price_unit / total_qty)
                             # value = valuation.quantity * per_unit
                         elif line.split_method == 'by_weight' and total_weight:
@@ -235,8 +235,8 @@ class StockLandedCost(models.Model):
         for key, value in towrite_dict.items():
             AdjustementLines.browse(key).write({'additional_landed_cost': value})
         return True
-                    
-                    
+    
+    
     def get_valuation_lines(self):
         self.ensure_one()
         lines = []
@@ -259,6 +259,7 @@ class StockLandedCost(models.Model):
             target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
             raise UserError(_("You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.", target_model_descriptions[self.target_model]))
         return lines
+                    
                     
                     
     # def compute_landed_cost(self):

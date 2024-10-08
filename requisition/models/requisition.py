@@ -1,6 +1,15 @@
 from odoo import models, fields, api,_
 from ...generate_code import generate_code,data_import
 from odoo.exceptions import UserError, ValidationError
+import io
+try:
+    from odoo.tools.misc import xlsxwriter
+except ImportError:
+    # TODO saas-17: remove the try/except to directly import from misc
+    import xlsxwriter
+import logging
+import os
+import tempfile
 
 HEADER_FIELDS = ['item code','description','quantity']
 PICKING_STATE_DCT = {'draft':'Draft','waiting': 'Waiting Another Operation',
@@ -105,33 +114,34 @@ class Requisition(models.Model):
                     raise UserError("There is no configured pricelist for the customer - ",self.partner_id.name)
                 order_line_lst = []
                 for res in partial_line:
-                    pricelist_product_id = self.env['product.pricelist'].search([])[2].item_ids.filtered(lambda x:x.date_start.date() <= self.required_date <= x.date_end.date() and x.product_id.id == res.product_id.id)
-                    unit_price = pricelist_product_id[0].fixed_price if pricelist_product_id else 0.0
-                    analytic_dct = {}
-                    if hasattr(res.requisition_line, 'project_id') and res.requisition_line.project_id.analytic_project_id:
-                        analytic_dct[res.requisition_line.project_id.analytic_project_id.id] = 100
-                    if res.requisition_line.fleet_id.analytic_fleet_id:
-                        analytic_dct[res.requisition_line.fleet_id.analytic_fleet_id.id] = 100
-                    if res.requisition_line.division_id.analytic_account_id:
-                        analytic_dct[res.requisition_line.division_id.analytic_account_id.id] = 100
-                    values =    (0, 0, 
-                                        {
-                                            'product_id': res.product_id.id,
-                                            'name':res.product_id.name,
-                                            'custom_part':res.product_id.custom_part,
-                                            'fleet_id':res.requisition_line.fleet_id.id  or False  ,  
-                                            'division_id':res.requisition_line.division_id.id or False ,
-                                            'analytic_distribution':analytic_dct,
-                                            'product_uom_qty': res.quantity, 
-                                            'product_uom':res.requisition_line.uom_id.id,
-                                            'price_unit':unit_price,
-                                            'remark':res.requisition_line.remark,
-                                        })     
-                    if hasattr(res.requisition_line, 'project_id'):
-                        values[2]['project_id'] = res.requisition_line.project_id.id 
-                    if hasattr(res.requisition_line, 'repair_object_id'):
-                        values[2]['repair_object_id'] = res.requisition_line.repair_object_id.id 
-                    order_line_lst.append(values)     
+                    if res.quantity  > 0:
+                        pricelist_product_id = self.env['product.pricelist'].search([])[2].item_ids.filtered(lambda x:x.date_start.date() <= self.required_date <= x.date_end.date() and x.product_id.id == res.product_id.id)
+                        unit_price = pricelist_product_id[0].fixed_price if pricelist_product_id else 0.0
+                        analytic_dct = {}
+                        if hasattr(res.requisition_line, 'project_id') and res.requisition_line.project_id.analytic_project_id:
+                            analytic_dct[res.requisition_line.project_id.analytic_project_id.id] = 100
+                        if res.requisition_line.fleet_id.analytic_fleet_id:
+                            analytic_dct[res.requisition_line.fleet_id.analytic_fleet_id.id] = 100
+                        if res.requisition_line.division_id.analytic_account_id:
+                            analytic_dct[res.requisition_line.division_id.analytic_account_id.id] = 100
+                        values =    (0, 0, 
+                                            {
+                                                'product_id': res.product_id.id,
+                                                'name':res.product_id.name,
+                                                'custom_part':res.product_id.custom_part,
+                                                'fleet_id':res.requisition_line.fleet_id.id  or False  ,  
+                                                'division_id':res.requisition_line.division_id.id or False ,
+                                                'analytic_distribution':analytic_dct,
+                                                'product_uom_qty': res.quantity, 
+                                                'product_uom':res.requisition_line.uom_id.id,
+                                                'price_unit':unit_price,
+                                                'remark':res.requisition_line.remark,
+                                            })     
+                        if hasattr(res.requisition_line, 'project_id'):
+                            values[2]['project_id'] = res.requisition_line.project_id.id 
+                        if hasattr(res.requisition_line, 'repair_object_id'):
+                            values[2]['repair_object_id'] = res.requisition_line.repair_object_id.id 
+                        order_line_lst.append(values)     
                 so_id = self.env['sale.order'].create({
                     "partner_id": self.partner_id.id,
                     "location_id": self.src_location_id and self.src_location_id.id or False,
@@ -148,33 +158,34 @@ class Requisition(models.Model):
             else:
                 adjustment_line_lst = []
                 for res in partial_line:
-                    analytic_dct = {}
-                    if hasattr(res.requisition_line, 'project_id') and res.requisition_line.project_id.analytic_project_id:
-                        analytic_dct[res.requisition_line.project_id.analytic_project_id.id] = 100
-                    if res.requisition_line.fleet_id.analytic_fleet_id:
-                        analytic_dct[res.requisition_line.fleet_id.analytic_fleet_id.id] = 100
-                    if res.requisition_line.division_id.analytic_account_id:
-                        analytic_dct[res.requisition_line.division_id.analytic_account_id.id] = 100
-                    warehouse_valuation = res.product_id.warehouse_valuation.filtered(lambda x:x.location_id.id == self.src_location_id.id)
-                    unit_price = warehouse_valuation and warehouse_valuation[0].location_cost or 0.0
-                    values =    (0, 0, 
-                                        {
-                                                    'product_id': res.product_id.id,
-                                                    'uom_id':res.product_id.uom_id.id,
-                                                    'desc':res.product_id.name,
-                                                    'quantity': -res.quantity,
-                                                    'unit_cost':unit_price,
-                                                    'fleet_id':res.requisition_line.fleet_id.id,
-                                                    'division_id':res.requisition_line.division_id.id,
-                                                    'analytic_distribution':analytic_dct,
-                                                    'description':res.requisition_line.product_name,
-                                        }
-                                    )     
-                    if hasattr(res.requisition_line, 'project_id'):
-                        values[2]['project_id'] = res.requisition_line.project_id.id 
-                    if hasattr(res.requisition_line, 'repair_object_id'):
-                        values[2]['repair_object_id'] = res.requisition_line.repair_object_id.id                         
-                    adjustment_line_lst.append(values)    
+                    if res.quantity  > 0:
+                        analytic_dct = {}
+                        if hasattr(res.requisition_line, 'project_id') and res.requisition_line.project_id.analytic_project_id:
+                            analytic_dct[res.requisition_line.project_id.analytic_project_id.id] = 100
+                        if res.requisition_line.fleet_id.analytic_fleet_id:
+                            analytic_dct[res.requisition_line.fleet_id.analytic_fleet_id.id] = 100
+                        if res.requisition_line.division_id.analytic_account_id:
+                            analytic_dct[res.requisition_line.division_id.analytic_account_id.id] = 100
+                        warehouse_valuation = res.product_id.warehouse_valuation.filtered(lambda x:x.location_id.id == self.src_location_id.id)
+                        unit_price = warehouse_valuation and warehouse_valuation[0].location_cost or 0.0
+                        values =    (0, 0, 
+                                            {
+                                                        'product_id': res.product_id.id,
+                                                        'uom_id':res.product_id.uom_id.id,
+                                                        'desc':res.product_id.name,
+                                                        'quantity': -res.quantity,
+                                                        'unit_cost':unit_price,
+                                                        'fleet_id':res.requisition_line.fleet_id.id,
+                                                        'division_id':res.requisition_line.division_id.id,
+                                                        'analytic_distribution':analytic_dct,
+                                                        'description':res.requisition_line.product_name,
+                                            }
+                                        )     
+                        if hasattr(res.requisition_line, 'project_id'):
+                            values[2]['project_id'] = res.requisition_line.project_id.id 
+                        if hasattr(res.requisition_line, 'repair_object_id'):
+                            values[2]['repair_object_id'] = res.requisition_line.repair_object_id.id                         
+                        adjustment_line_lst.append(values)    
                 adjust = self.env['stock.inventory.adjustment'].create(
                                     {   
                                         'location_id':self.src_location_id.id,
@@ -193,20 +204,21 @@ class Requisition(models.Model):
                 from_picking = self._create_requisition_picking(self.src_location_id,self.transit_location_id,from_picking_type,branch=int(self.from_branch))
                 from_picking_move_ids_lst = []
                 for res in partial_line:
-                    values =    (0, 0, 
-                                        {
-                                            'product_id': res.product_id.id,
-                                            'name':res.product_id.name,
-                                            'product_uom_qty': res.quantity,
-                                            'location_id':self.src_location_id.id,
-                                            'location_dest_id':self.transit_location_id.id,
-                                            'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
-                                            'fleet_id':res.requisition_line.fleet_id.id  or False  ,  
-                                            'division_id':res.requisition_line.division_id.id or False ,        
-                                        })
-                    if hasattr(res.requisition_line, 'project_id'):
-                        values[2]['project_id'] = res.requisition_line.project_id.id or False
-                    from_picking_move_ids_lst.append(values)
+                    if res.quantity  > 0:
+                        values =    (0, 0, 
+                                            {
+                                                'product_id': res.product_id.id,
+                                                'name':res.product_id.name,
+                                                'product_uom_qty': res.quantity,
+                                                'location_id':self.src_location_id.id,
+                                                'location_dest_id':self.transit_location_id.id,
+                                                'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
+                                                'fleet_id':res.requisition_line.fleet_id.id  or False  ,  
+                                                'division_id':res.requisition_line.division_id.id or False ,        
+                                            })
+                        if hasattr(res.requisition_line, 'project_id'):
+                            values[2]['project_id'] = res.requisition_line.project_id.id or False
+                        from_picking_move_ids_lst.append(values)
                 from_picking.write({
                                     'branch_id':int(self.from_branch) and int(self.from_branch) or False,
                                     'internal_ref': self.internal_ref,
@@ -217,21 +229,22 @@ class Requisition(models.Model):
                 to_picking = self._create_requisition_picking(self.transit_location_id,self.location_id,to_picking_type,branch=int(self.to_branch))
                 to_picking_move_ids_lst = []
                 for res in partial_line:
-                    values = ( 0 , 0 ,
-                                {
-                                    'product_id': res.product_id.id,
-                                    'name':res.product_id.name,
-                                    'product_uom_qty': res.quantity,
-                                    'location_id':self.transit_location_id.id ,
-                                    'location_dest_id':self.location_id.id,
-                                    'branch_id':int(self.to_branch) and int(self.to_branch) or False,
-                                    'fleet_id':res.requisition_line.fleet_id.id or False,  
-                                    'division_id':res.requisition_line.division_id.id or False , 
-                                }    
-                            )
-                    if hasattr(res.requisition_line, 'project_id'):
-                        values[2]['project_id'] = res.requisition_line.project_id.id or False
-                    to_picking_move_ids_lst.append(values)                
+                    if res.quantity  > 0:
+                        values = ( 0 , 0 ,
+                                    {
+                                        'product_id': res.product_id.id,
+                                        'name':res.product_id.name,
+                                        'product_uom_qty': res.quantity,
+                                        'location_id':self.transit_location_id.id ,
+                                        'location_dest_id':self.location_id.id,
+                                        'branch_id':int(self.to_branch) and int(self.to_branch) or False,
+                                        'fleet_id':res.requisition_line.fleet_id.id or False,  
+                                        'division_id':res.requisition_line.division_id.id or False , 
+                                    }    
+                                )
+                        if hasattr(res.requisition_line, 'project_id'):
+                            values[2]['project_id'] = res.requisition_line.project_id.id or False
+                        to_picking_move_ids_lst.append(values)                
                 to_picking.write({  
                                     'branch_id':int(self.to_branch) and int(self.to_branch) or False,
                                     'internal_ref': self.internal_ref,
@@ -245,22 +258,23 @@ class Requisition(models.Model):
                 picking = self._create_requisition_picking(self.src_location_id,self.location_id,picking_type,branch=int(self.to_branch))
                 picking_move_ids_lst = []
                 for res in partial_line:
-                    values = (0, 0,
-                                {
-                                    'product_id': res.product_id.id,
-                                    'name':res.product_id.name,
-                                    'product_uom_qty': res.quantity,
-                                    'location_id':self.src_location_id.id ,
-                                    'location_dest_id':self.location_id.id,
-                                    'fleet_id':res.requisition_line.fleet_id.id or False,  
-                                    'division_id': res.requisition_line.division_id.id or False, 
-                                    'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
-                        
-                                }  
-                            )
-                    if hasattr(res.requisition_line, 'project_id'):
-                        values[2]['project_id'] = res.requisition_line.project_id.id or False 
-                    picking_move_ids_lst.append(values)               
+                    if res.quantity  > 0:
+                        values = (0, 0,
+                                    {
+                                        'product_id': res.product_id.id,
+                                        'name':res.product_id.name,
+                                        'product_uom_qty': res.quantity,
+                                        'location_id':self.src_location_id.id ,
+                                        'location_dest_id':self.location_id.id,
+                                        'fleet_id':res.requisition_line.fleet_id.id or False,  
+                                        'division_id': res.requisition_line.division_id.id or False, 
+                                        'branch_id':int(self.from_branch) and int(self.from_branch) or False ,
+                            
+                                    }  
+                                )
+                        if hasattr(res.requisition_line, 'project_id'):
+                            values[2]['project_id'] = res.requisition_line.project_id.id or False 
+                        picking_move_ids_lst.append(values)               
                 picking.write(
                                 { 
                                     'internal_ref': self.internal_ref,
@@ -352,11 +366,84 @@ class Requisition(models.Model):
                 vals = {
                         'product_id': product_id.id,
                         'uom_id':product_id.uom_id.id,
-                        'product_name': item_description,
+                        'product_desc': item_description,
                         'qty': quantity,
                         'requisition_id':self.id,
                     }
                 order_line_obj.create(vals)   
+                
+    def action_export_requisition_transaction(self):
+        output = io.BytesIO()
+        file_name = os.path.join(tempfile.gettempdir(), 'Requisition Export.xlsx')
+        workbook = xlsxwriter.Workbook(file_name)
+        sheet = workbook.add_worksheet("Duty Transactions Export")
+        banner_format_small = workbook.add_format({'font_name': 'Arial','bold': True, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,'border':True})
+        header_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','bold': True,'border':True,'bg_color': '#AAAAAA'})
+        text_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter'})
+        date_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','num_format': 'dd/mm/yy'})
+        time_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','num_format': 'hh:mm'}) 
+
+        y_offset = 0
+        x_offset = 0
+
+        sheet.write(x_offset,0,"Reference",header_format)
+        sheet.write(x_offset,1,"Order Date",header_format)
+        sheet.write(x_offset,2,"Required Date",header_format)
+        sheet.write(x_offset,3,"Request Person",header_format)
+        sheet.write(x_offset,4,"From Branch",header_format)
+        sheet.write(x_offset,5,"To Branch",header_format)
+        sheet.write(x_offset,6,"Main Location",header_format)
+        sheet.write(x_offset,7,"To Location",header_format)
+        sheet.write(x_offset,8,"Transist Location",header_format)
+        sheet.write(x_offset,9,"Product Code",header_format)
+        sheet.write(x_offset,10,"Product Name",header_format)
+        sheet.write(x_offset,11,"Qty",header_format)
+        sheet.write(x_offset,12,"Done Qty",header_format)
+        sheet.write(x_offset,13,"Description",header_format)
+        sheet.write(x_offset,14,"From Remaining Stock",header_format)
+        sheet.write(x_offset,15,"To Remaining Stock",header_format)
+        sheet.write(x_offset,16,"Transist Remaining Stock",header_format)
+        sheet.write(x_offset,17,"Remark",header_format)
+        
+        
+        x_offset+=1
+        active_ids = self.env.context.get('active_ids')
+        branch_obj = self.env['res.branch'].sudo()
+        requisition_lines = self.env['requisition.line'].sudo().search([('requisition_id','in',active_ids)])
+        for line in requisition_lines:
+            sheet.write(x_offset,0,line.requisition_id.name or "",text_format)
+            sheet.write(x_offset,1,line.requisition_id.order_date or "",date_format)
+            sheet.write(x_offset,2,line.requisition_id.required_date or "",date_format)
+            sheet.write(x_offset,3,line.requisition_id.request_person_id and  line.requisition_id.request_person_id.name  or "",text_format)
+            sheet.write(x_offset,4,branch_obj.browse(int(line.requisition_id.from_branch)).name  or "",text_format)
+            sheet.write(x_offset,5,branch_obj.browse(int(line.requisition_id.to_branch)).name or "",text_format)
+            sheet.write(x_offset,6,line.requisition_id.src_location_id and line.requisition_id.src_location_id.name or "",text_format)
+            sheet.write(x_offset,7,line.requisition_id.location_id and line.requisition_id.location_id.name or "",text_format)
+            sheet.write(x_offset,8,line.requisition_id.transit_location_id and line.requisition_id.transit_location_id.name or "",text_format)
+            sheet.write(x_offset,9,line.product_id and line.product_id.product_code or "",text_format)
+            sheet.write(x_offset,10,line.product_id and line.product_id.name or "",text_format)
+            sheet.write(x_offset,11,line.qty  or 0,text_format)
+            sheet.write(x_offset,12,line.done_qty  or 0,text_format)
+
+            sheet.write(x_offset,13,line.product_name or "",text_format)
+            sheet.write(x_offset,14,line.remaining_from or 0,text_format)
+            sheet.write(x_offset,15,line.remaining_to or 0,text_format)
+            sheet.write(x_offset,44,line.remaining_transit or 0,text_format)
+            sheet.write(x_offset,45,line.remark or "",text_format)
+        
+            x_offset+=1
+            
+        workbook.close()
+        output.seek(0)
+        return self.download_excel_file(file_name)
+        
+
+    def download_excel_file(self, file_name):
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f"/web/binary/download_document?model=requisition&id=%s&file_name=%s" % (self.id, file_name),
+            'close': True,
+        }                
 
 class RequisitionLine(models.Model):
     _name = "requisition.line"
