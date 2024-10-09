@@ -208,7 +208,7 @@ class OTImport(models.Model):
                                 
                                     print("Helo",create_count)
                         else:
-                            skipped_data.append(requisition.name+code)
+                            skipped_data.append(requisition.name+' '+code)
                             skipped_count +=1
                         
                     else:
