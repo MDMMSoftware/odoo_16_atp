@@ -478,7 +478,7 @@ class StockPicking(models.Model):
                         else:
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                             amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                        new_std_price = ((amount_unit * product_tot_qty_available) + (valuation_ids.location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
+                        new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                         
                         if not valuation_ids:
                             new_std_price = ((amount_unit * move.product_qty)) / (move.product_qty)
