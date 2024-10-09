@@ -103,6 +103,7 @@ class MultiCurrencyCashbook(models.Model):
                 'line_ids': m_line,
                 'currency_id': self.f_currency_id.id,
                 'exchange_rate': self.f_exchange_rate,
+                'branch_id':self.branch_id.id,
             }
             move_id = self.env['account.move'].create(move_vals)
             # move_id.post()
@@ -118,6 +119,7 @@ class MultiCurrencyCashbook(models.Model):
                 'line_ids': m_line2,
                 'currency_id': self.t_currency_id.id,
                 'exchange_rate': self.t_exchange_rate,
+                'branch_id':self.branch_id.id,
             }
             move_id2 = self.env['account.move'].create(move_vals2)
             move_id2.line_ids.write({'branch_id':self.branch_id.id})
