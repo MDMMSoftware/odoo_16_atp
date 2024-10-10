@@ -441,7 +441,7 @@ class StockPicking(models.Model):
         valuation_report = self.env['stock.location.valuation.report']
         if self.state=='done' and self.picking_type_id.code=='internal':
             if self.requisition_id:
-                from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal')
+                from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
                 if from_req.state!='done':
                     raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
@@ -479,7 +479,8 @@ class StockPicking(models.Model):
 
                     else:
                         valuation_ids = True
-                        # if move.location_id.usage!='transit':
+                        if move.location_id.usage!='transit' and move.origin_returned_move_id:
+                            amount_unit = valuation.search([('stock_move_id','=',move.origin_returned_move_id.id)])[0].unit_cost
                         #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
                         #     amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
                         if move.location_dest_id.usage!='transit' :
@@ -521,8 +522,8 @@ class StockPicking(models.Model):
                 else:
                     warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
                 if move.picking_id.requisition_id and move.picking_id.requisition_id.transit_location_id:
-                    if move.origin_returned_move_id:
-                        raise ValidationError(_("Return Case Currently Not Available"))
+                    # if move.origin_returned_move_id:
+                    #     raise ValidationError(_("Return Case Currently Not Available"))
                     svl_in_vals = {
                         'company_id': move.company_id.id,
                         'product_id': move.product_id.id,
