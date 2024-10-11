@@ -201,6 +201,10 @@ class OTImport(models.Model):
                     valuations = valuation.search([('stock_move_id','=',req_move.id)])
                     for val in valuations:
                         val.write({'unit_cost':cost,'value':cost*val.quantity})
+                    valuations_report=report.search([('stock_move_id','in',req_move.ids)])
+                    for val in valuations_report:
+                        val.write({'unit_cost':cost,'total_amt':val.balance*cost})
+                        
                     
             # for data in all_data:
                 # record_value = {}
