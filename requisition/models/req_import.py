@@ -138,81 +138,145 @@ class OTImport(models.Model):
             err = self.err_log
             self.write({'note': err,'state': 'error'})
         else:
-            for data in all_data:
-                record_value = {}
-                record_line_value = {}
+            requisition = self.env['requisition'].search([('name','in',('AMG/REQ/000015',
+                'AMG/REQ/000016',
+                'AMG/REQ/000017',
+                'BYN/REQ/000171',
+                'BYN/REQ/000178',
+                'BYN/REQ/000181',
+                'BYN/REQ/000183',
+                'BYN/REQ/000186',
+                'BYN/REQ/000189',
+                'BYN/REQ/000190',
+                'BYN/REQ/000192',
+                'BYN/REQ/000196',
+                'BYN/REQ/000197',
+                'BYN/REQ/000216',
+                'BYN/REQ/000217',
+                'BYN/REQ/000218',
+                'BYN/REQ/000219',
+                'BYN/REQ/000220',
+                'BYN/REQ/000221',
+                'BYN/REQ/000223',
+                'BYN/REQ/000224',
+                'MDY/REQ/000020',
+                'MY/REQ/000018',
+                'NPT/REQ/000006',
+                'SPT/REQ/000251',
+                'SPT/REQ/000257',
+                'SPT/REQ/000260',
+                'SPT/REQ/000264',
+                'SPT/REQ/000265',
+                'SPT/REQ/000266',
+                'SPT/REQ/000268',
+                'SPT/REQ/000282',
+                'SPT/REQ/000286',
+                'SPT/REQ/000287',
+                'SPT/REQ/000289',
+                'SPT/REQ/000291',
+                'SPT/REQ/000292',
+                'SPT/REQ/000293',
+                'SPT/REQ/000294',
+                'SPT/REQ/000295',
+                'SPT/REQ/000296',
+                'SPT/REQ/000297',
+                'SPT/REQ/000299',
+                'TGI/REQ/000015',
+                'TGI/REQ/000017',
+                'TGI/REQ/000018',
+                'TGI/REQ/000020',
+                'TWN/REQ/000003',
+                'TWN/REQ/000010',
+                'TWN/REQ/000012',
+                'TWN/REQ/000013',
+                'TWN/REQ/000014',
+                'TWN/REQ/000020',
+                'TWN/REQ/000021'))])
+            valuation = self.env['stock.valuation.layer']
+            report =  self.env['stock.location.valuation.report']
+            for req in requisition:
+                req_picking = req.picking_ids.filtered(lambda x:x.location_id.usage!='transit' and x.state=='done')
+                for req_move in req_picking.move_ids:
+                    cost = req_move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==req_move.location_id).location_cost or 0
+                    valuations = valuation.search([('stock_move_id','=',req_move.id)])
+                    for val in valuations:
+                        val.write({'unit_cost':cost,'value':cost*val.quantity})
+                    
+            # for data in all_data:
+                # record_value = {}
+                # record_line_value = {}
                 
-                overtime_date = str(data['date']).strip()
-                if overtime_date:
-                    excel_date = overtime_date
-                    excel_date = float(excel_date)
-                    dt_2 = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
-                    hour, minute, second = self.floatHourToTime(excel_date % 1)
-                    overtime_date = dt_2.replace(hour=hour, minute=minute, second=second)
-                else:
-                    overtime_date = None
-                balance = str(data['balance']).strip()
-                location = str(data['location']).strip()
-                code = str(data['code']).strip()
-                price = str(data['price']).strip()
-                sequence = str(data['sequence']).strip()
-                valuation = self.env['stock.valuation.layer']
-                report =  self.env['stock.location.valuation.report']
+                # overtime_date = str(data['date']).strip()
+                # if overtime_date:
+                #     excel_date = overtime_date
+                #     excel_date = float(excel_date)
+                #     dt_2 = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
+                #     hour, minute, second = self.floatHourToTime(excel_date % 1)
+                #     overtime_date = dt_2.replace(hour=hour, minute=minute, second=second)
+                # else:
+                #     overtime_date = None
+                # balance = str(data['balance']).strip()
+                # location = str(data['location']).strip()
+                # code = str(data['code']).strip()
+                # price = str(data['price']).strip()
+                # sequence = str(data['sequence']).strip()
+                # valuation = self.env['stock.valuation.layer']
+                # report =  self.env['stock.location.valuation.report']
                 
-                if code: 
-                    product = self.env['product.template'].search([('product_code','=',code)])
-                    if product:
-                        requisition = self.env['requisition'].search([('name','=',sequence)])
-                        req_location = (requisition.location_id+requisition.src_location_id).ids
-                        # if not report.search([('report_date','>',overtime_date.date()),('product_id','=',product.product_variant_id.id),'|',('location_id','in',req_location),('location_dest_id','in',req_location)]):
-                        if requisition:
-                            move_ids = requisition.picking_ids.move_ids.filtered(lambda x:x.product_id==product.product_variant_id and not x.origin_returned_move_id)
-                            valuations=valuation.search([('stock_move_id','in',move_ids.ids)])
-                            location_ids = valuations.location_id.filtered(lambda x:x.usage=='transit')
-                            neg_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity<0)
-                            pos_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity>0)
-                            if len(neg_valuation)>1 or len(pos_valuation)>1:
-                                skipped_data.append(requisition.name+code)
-                                skipped_count +=1
-                            else:
-                                neg_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity<0)
-                                pos_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity>0)
-                                pos_valuation.write({'unit_cost':neg_valuation.unit_cost,'value':-1*neg_valuation.value})
-                                neg_valuation_dec.write({'unit_cost':pos_valuation_dec.unit_cost,'value':-1*pos_valuation_dec.value})
-                                # product.product_variant_id.warehouse_valuation.filtered(lambda x:x.location_id==neg_valuation_dec.location_id).write({'location_cost':pos_valuation_dec.unit_cost})
-                                valuations_report=report.search([('stock_move_id','in',move_ids.ids)])
-                                location_ids = valuations_report.location_id.filtered(lambda x:x.usage=='transit')
-                                neg_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance<0)
-                                pos_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance>0)
-                                neg_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance<0)
-                                pos_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance>0)
-                                pos_valuation_report.write({'unit_cost':neg_valuation_report.unit_cost,'total_amt':-1*neg_valuation_report.total_amt})
-                                neg_valuation_dec_report.write({'unit_cost':pos_valuation_dec_report.unit_cost,'total_amt':-1*pos_valuation_dec_report.total_amt})
-                                pos_valuation.account_move_id.button_draft()
-                                for line in pos_valuation.account_move_id.line_ids:
-                                    if line.credit:
-                                        query = """
-                                            UPDATE account_move_line
-                                                SET credit = %s where id IN %s
-                                        """
-                                        self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
-                                    if line.debit:
-                                        query = """
-                                            UPDATE account_move_line
-                                                SET debit = %s where id IN %s
-                                        """
-                                        self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
-                                pos_valuation.account_move_id.action_post()
+                # if code: 
+                #     product = self.env['product.template'].search([('product_code','=',code)])
+                #     if product:
+                #         requisition = self.env['requisition'].search([('name','=',sequence)])
+                #         req_location = (requisition.location_id+requisition.src_location_id).ids
+                #         # if not report.search([('report_date','>',overtime_date.date()),('product_id','=',product.product_variant_id.id),'|',('location_id','in',req_location),('location_dest_id','in',req_location)]):
+                #         if requisition:
+                #             move_ids = requisition.picking_ids.move_ids.filtered(lambda x:x.product_id==product.product_variant_id and not x.origin_returned_move_id)
+                #             valuations=valuation.search([('stock_move_id','in',move_ids.ids)])
+                #             location_ids = valuations.location_id.filtered(lambda x:x.usage=='transit')
+                #             neg_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity<0)
+                #             pos_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity>0)
+                #             if len(neg_valuation)>1 or len(pos_valuation)>1:
+                #                 skipped_data.append(requisition.name+code)
+                #                 skipped_count +=1
+                #             else:
+                #                 neg_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity<0)
+                #                 pos_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity>0)
+                #                 pos_valuation.write({'unit_cost':neg_valuation.unit_cost,'value':-1*neg_valuation.value})
+                #                 neg_valuation_dec.write({'unit_cost':pos_valuation_dec.unit_cost,'value':-1*pos_valuation_dec.value})
+                #                 # product.product_variant_id.warehouse_valuation.filtered(lambda x:x.location_id==neg_valuation_dec.location_id).write({'location_cost':pos_valuation_dec.unit_cost})
+                #                 valuations_report=report.search([('stock_move_id','in',move_ids.ids)])
+                #                 location_ids = valuations_report.location_id.filtered(lambda x:x.usage=='transit')
+                #                 neg_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance<0)
+                #                 pos_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance>0)
+                #                 neg_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance<0)
+                #                 pos_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance>0)
+                #                 pos_valuation_report.write({'unit_cost':neg_valuation_report.unit_cost,'total_amt':-1*neg_valuation_report.total_amt})
+                #                 neg_valuation_dec_report.write({'unit_cost':pos_valuation_dec_report.unit_cost,'total_amt':-1*pos_valuation_dec_report.total_amt})
+                #                 pos_valuation.account_move_id.button_draft()
+                #                 for line in pos_valuation.account_move_id.line_ids:
+                #                     if line.credit:
+                #                         query = """
+                #                             UPDATE account_move_line
+                #                                 SET credit = %s where id IN %s
+                #                         """
+                #                         self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
+                #                     if line.debit:
+                #                         query = """
+                #                             UPDATE account_move_line
+                #                                 SET debit = %s where id IN %s
+                #                         """
+                #                         self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
+                #                 pos_valuation.account_move_id.action_post()
                                 
-                                update_count += 1  
+                #                 update_count += 1  
                             
-                                print("Helo",create_count)
-                    else:
-                        skipped_data.append(requisition.name+' '+code)
-                        skipped_count +=1
+                #                 print("Helo",create_count)
+                #     else:
+                #         skipped_data.append(requisition.name+' '+code)
+                #         skipped_count +=1
                         
-                else:
-                    raise ValidationError(_("Code %s doesn't exist")%code)    
+                # else:
+                #     raise ValidationError(_("Code %s doesn't exist")%code)    
                     
                 create_count +=1        
                           
