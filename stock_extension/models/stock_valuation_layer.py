@@ -448,11 +448,17 @@ class StockPicking(models.Model):
                 
                 rounding = move.product_id.uom_id.rounding
                 layers = self.env['stock.valuation.layer'].search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
+                report_layers = self.env['stock.location.valuation.report'].search([('product_id','=',move.product_id.id),('by_location','=',move.location_dest_id.id)])
                 product_tot_qty_available = 0
                 amount_tot_qty_available = 0
-                if layers:
-                    product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
-                    amount_tot_qty_available += sum(layers.mapped('remaining_value')) or 0
+                # if layers:
+                #     product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
+                #     amount_tot_qty_available += sum(layers.mapped('remaining_value')) or 0
+                if report_layers:
+                    product_tot_qty_available += sum(report_layers.mapped('balance')) or 0
+                else:
+                    if layers:
+                        product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
                 valued_move_lines = move._get_in_move_lines()
                 qty_done = 0
                 for valued_move_line in valued_move_lines:
@@ -480,14 +486,22 @@ class StockPicking(models.Model):
                     else:
                         valuation_ids = True
                         if move.location_id.usage!='transit' and move.origin_returned_move_id:
-                            amount_unit = valuation.search([('stock_move_id','=',move.origin_returned_move_id.id)])[0].unit_cost
+                            amount_unit = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
                             
                         if move.location_id.usage!='transit' and not move.origin_returned_move_id:
                             
                         #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
                             amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
-                        if move.location_dest_id.usage!='transit' :
+                        if move.location_dest_id.usage!='transit' and not move.origin_returned_move_id:
                             
+                            valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
+                            # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
+                            from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                            amount_unit = valuation.search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                            new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
+                            
+                        if move.location_dest_id.usage!='transit' and  move.origin_returned_move_id:
+                            from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                             # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
                             from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
