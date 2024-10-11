@@ -485,7 +485,7 @@ class StockPicking(models.Model):
                         if move.location_id.usage!='transit' and not move.origin_returned_move_id:
                             
                         #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
-                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
+                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
                         if move.location_dest_id.usage!='transit' :
                             
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
