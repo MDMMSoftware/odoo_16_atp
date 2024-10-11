@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+
+    	<record id="view_req_import_form" model="ir.ui.view">
+            <field name="name">req Import Form</field>
+            <field name="model">req.import</field>
+            <field name="arch" type="xml">
+                <form string="req Import" version="7.0">
+					<header>
+						<button name="import_data" string="Import req Import" type="object"
+							class="oe_highlight" />
+						<field name="state" widget="statusbar" statusbar_visible="draft,completed,error" />
+					</header>
+					<sheet>
+						<group>
+							<group name="group_left" >
+								<field name="name" style="width:90%%;"/>
+								<field name="import_date" style="width:50%%;" />
+								<field name="import_file" filename="import_fname" style="width:90%%;"/>
+							</group>
+							<group name="group_right" >
+								<field name="import_fname" invisible="1" class="oe_inline oe_right" style="width:50%%;" />
+								<field name="note" style="width:90%%;"/>
+							</group>
+						</group>
+					</sheet>
+				</form>
+            </field>
+         </record>
+       
+		<record id="view_hr_req_import_tree" model="ir.ui.view">
+			<field name="name">Data Import req Tree</field>
+			<field name="model">req.import</field>
+			<field name="arch" type="xml">
+				<tree string="Data Import req">
+					<field name="import_date" />
+					<field name="name" />
+					<field name="import_fname" />
+					<field name="note" />
+					<field name="state" />
+				</tree>
+			</field>
+		</record>
+
+		<!-- Action -->
+		<record id="action_hr_req_import" model="ir.actions.act_window">
+			<field name="name">req Import</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">req.import</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_id" ref="view_hr_req_import_tree" />
+		</record>
+		
+
+		<!-- First level menu -->
+		<menuitem action="action_hr_req_import" id="hr_req_import" parent="pr_operation_menu" name="Req Import" sequence="5"/>
+
+    </data>
+</odoo>

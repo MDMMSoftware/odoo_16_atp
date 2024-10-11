@@ -440,6 +440,10 @@ class StockPicking(models.Model):
         valuation = self.env['stock.valuation.layer']
         valuation_report = self.env['stock.location.valuation.report']
         if self.state=='done' and self.picking_type_id.code=='internal':
+            if self.requisition_id:
+                from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
+                if from_req.state!='done':
+                    raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
                 
                 rounding = move.product_id.uom_id.rounding
@@ -460,25 +464,32 @@ class StockPicking(models.Model):
                 #     new_std_price = move._get_price_unit()
 
                 location_cost = 0
+                amount_unit = 0
                 # else:
                 if not move.picking_id.requisition_id:
                     amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id).location_cost
                     location_cost =move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost or 0
                     new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
                 else:
+                    
                     if not move.picking_id.requisition_id.transit_location_id:
                         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id).location_cost
                         location_cost =move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost or 0
                         new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
 
                     else:
-                        if move.location_id.usage!='transit':
-                            valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
-                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
-                        else:
+                        valuation_ids = True
+                        if move.location_id.usage!='transit' and move.origin_returned_move_id:
+                            amount_unit = valuation.search([('stock_move_id','=',move.origin_returned_move_id.id)])[0].unit_cost
+                        #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
+                        #     amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
+                        if move.location_dest_id.usage!='transit' :
+                            
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                        new_std_price = ((amount_unit * product_tot_qty_available) + (valuation_ids.location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
+                            # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
+                            from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                            amount_unit = valuation.search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                            new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                         
                         if not valuation_ids:
                             new_std_price = ((amount_unit * move.product_qty)) / (move.product_qty)
@@ -511,15 +522,20 @@ class StockPicking(models.Model):
                 else:
                     warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
                 if move.picking_id.requisition_id and move.picking_id.requisition_id.transit_location_id:
+                    # if move.origin_returned_move_id:
+                    #     raise ValidationError(_("Return Case Currently Not Available"))
                     svl_in_vals = {
                         'company_id': move.company_id.id,
                         'product_id': move.product_id.id,
                         'description': "Internal Transfer",
                         'remaining_qty': move.product_qty,
-                        'remaining_value':location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
-                        'value': location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
+                        # 'remaining_value':location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
+                        # 'value': location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
+                        'remaining_value': amount_unit * move.product_qty,
+                        'value':amount_unit * move.product_qty,
                         'quantity':move.product_qty,
-                        'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                        # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                        'unit_cost':amount_unit,
                         'stock_move_id': move.id,
                         'by_location':move.location_dest_id.id,
                         'location_id':move.location_id.id,
@@ -551,9 +567,11 @@ class StockPicking(models.Model):
                         'description': "Internal Transfer",
                         'remaining_qty': 0,
                         'remaining_value':0,
-                        'value': location_cost*-abs(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*-abs(move.product_qty)) or (new_std_price*-abs(move.product_qty))),
+                        # 'value': location_cost*-abs(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*-abs(move.product_qty)) or (new_std_price*-abs(move.product_qty))),
+                        'value':amount_unit * -abs(move.product_qty),
                         'quantity':-(move.product_qty),
-                        'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                        # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                        'unit_cost':amount_unit,
                         'stock_move_id': move.id,
                         'by_location':move.location_id.id,                        
                         'location_dest_id':move.location_id.id,
