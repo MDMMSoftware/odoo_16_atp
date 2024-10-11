@@ -442,8 +442,8 @@ class StockPicking(models.Model):
         if self.state=='done' and self.picking_type_id.code=='internal':
             if self.requisition_id:
                 from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
-                if from_req.state!='done':
-                    raise ValidationError(_("Please Validate From Requisition First"))
+                # if from_req.state!='done':
+                #     raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
                 
                 rounding = move.product_id.uom_id.rounding
