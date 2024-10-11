@@ -164,57 +164,57 @@ class OTImport(models.Model):
                     if product:
                         requisition = self.env['requisition'].search([('name','=',sequence)])
                         req_location = (requisition.location_id+requisition.src_location_id).ids
-                        if not report.search([('report_date','>',overtime_date.date()),('product_id','=',product.product_variant_id.id),'|',('location_id','in',req_location),('location_dest_id','in',req_location)]):
-                            if requisition:
-                                move_ids = requisition.picking_ids.move_ids.filtered(lambda x:x.product_id==product.product_variant_id)
-                                valuations=valuation.search([('stock_move_id','in',move_ids.ids)])
-                                location_ids = valuations.location_id.filtered(lambda x:x.usage=='transit')
-                                neg_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity<0)
-                                pos_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity>0)
-                                if len(neg_valuation)>1 or len(pos_valuation)>1:
-                                    skipped_data.append(requisition.name+code)
-                                    skipped_count +=1
-                                else:
-                                    neg_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity<0)
-                                    pos_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity>0)
-                                    pos_valuation.write({'unit_cost':neg_valuation.unit_cost,'value':-1*neg_valuation.value})
-                                    neg_valuation_dec.write({'unit_cost':pos_valuation_dec.unit_cost,'value':-1*pos_valuation_dec.value})
-                                    product.product_variant_id.warehouse_valuation.filtered(lambda x:x.location_id==neg_valuation_dec.location_id).write({'location_cost':pos_valuation_dec.unit_cost})
-                                    valuations_report=report.search([('stock_move_id','in',move_ids.ids)])
-                                    location_ids = valuations_report.location_id.filtered(lambda x:x.usage=='transit')
-                                    neg_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance<0)
-                                    pos_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance>0)
-                                    neg_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance<0)
-                                    pos_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance>0)
-                                    pos_valuation_report.write({'unit_cost':neg_valuation_report.unit_cost,'total_amt':-1*neg_valuation_report.total_amt})
-                                    neg_valuation_dec_report.write({'unit_cost':pos_valuation_dec_report.unit_cost,'total_amt':-1*pos_valuation_dec_report.total_amt})
-                                    pos_valuation.account_move_id.button_draft()
-                                    for line in pos_valuation.account_move_id.line_ids:
-                                        if line.credit:
-                                            query = """
-                                                UPDATE account_move_line
-                                                    SET credit = %s where id IN %s
-                                            """
-                                            self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
-                                        if line.debit:
-                                            query = """
-                                                UPDATE account_move_line
-                                                    SET debit = %s where id IN %s
-                                            """
-                                            self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
-                                    pos_valuation.account_move_id.action_post()
-                                    
-                                    update_count += 1  
+                        # if not report.search([('report_date','>',overtime_date.date()),('product_id','=',product.product_variant_id.id),'|',('location_id','in',req_location),('location_dest_id','in',req_location)]):
+                        if requisition:
+                            move_ids = requisition.picking_ids.move_ids.filtered(lambda x:x.product_id==product.product_variant_id and not x.origin_returned_move_id)
+                            valuations=valuation.search([('stock_move_id','in',move_ids.ids)])
+                            location_ids = valuations.location_id.filtered(lambda x:x.usage=='transit')
+                            neg_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity<0)
+                            pos_valuation = valuations.filtered(lambda x:x.location_id==location_ids and x.quantity>0)
+                            if len(neg_valuation)>1 or len(pos_valuation)>1:
+                                skipped_data.append(requisition.name+code)
+                                skipped_count +=1
+                            else:
+                                neg_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity<0)
+                                pos_valuation_dec = valuations.filtered(lambda x:x.location_dest_id==location_ids and x.quantity>0)
+                                pos_valuation.write({'unit_cost':neg_valuation.unit_cost,'value':-1*neg_valuation.value})
+                                neg_valuation_dec.write({'unit_cost':pos_valuation_dec.unit_cost,'value':-1*pos_valuation_dec.value})
+                                # product.product_variant_id.warehouse_valuation.filtered(lambda x:x.location_id==neg_valuation_dec.location_id).write({'location_cost':pos_valuation_dec.unit_cost})
+                                valuations_report=report.search([('stock_move_id','in',move_ids.ids)])
+                                location_ids = valuations_report.location_id.filtered(lambda x:x.usage=='transit')
+                                neg_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance<0)
+                                pos_valuation_report = valuations_report.filtered(lambda x:x.location_id==location_ids and x.balance>0)
+                                neg_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance<0)
+                                pos_valuation_dec_report = valuations_report.filtered(lambda x:x.location_dest_id==location_ids and x.balance>0)
+                                pos_valuation_report.write({'unit_cost':neg_valuation_report.unit_cost,'total_amt':-1*neg_valuation_report.total_amt})
+                                neg_valuation_dec_report.write({'unit_cost':pos_valuation_dec_report.unit_cost,'total_amt':-1*pos_valuation_dec_report.total_amt})
+                                pos_valuation.account_move_id.button_draft()
+                                for line in pos_valuation.account_move_id.line_ids:
+                                    if line.credit:
+                                        query = """
+                                            UPDATE account_move_line
+                                                SET credit = %s where id IN %s
+                                        """
+                                        self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
+                                    if line.debit:
+                                        query = """
+                                            UPDATE account_move_line
+                                                SET debit = %s where id IN %s
+                                        """
+                                        self.env.cr.execute(query, [pos_valuation.value,tuple(line.ids)])
+                                pos_valuation.account_move_id.action_post()
                                 
-                                    print("Helo",create_count)
-                        else:
-                            skipped_data.append(requisition.name+' '+code)
-                            skipped_count +=1
-                        
+                                update_count += 1  
+                            
+                                print("Helo",create_count)
                     else:
-                        raise ValidationError(_("Code %s doesn't exist")%code)    
+                        skipped_data.append(requisition.name+' '+code)
+                        skipped_count +=1
+                        
+                else:
+                    raise ValidationError(_("Code %s doesn't exist")%code)    
                     
-                    create_count +=1        
+                create_count +=1        
                           
                 skipped_data_str = ''
                 for sk in skipped_data:
