@@ -234,8 +234,29 @@ class SaleOrder(models.Model):
                 if unit_price > 0.0:
                     vals.update({'price_unit': unit_price,})
                 order_line_obj.create(vals)       
-                
         
+    def export_birt_quotation(self,filename):
+        # filename = self.env.context.get('filename')
+        if not filename:
+            raise ValidationError('Filename Not found!!!')
+        birt_suffix = self.env['ir.config_parameter'].sudo().get_param('birt.report.url.suffix','')
+        birt = self.env['ir.config_parameter'].sudo().get_param('birt.report.url','')
+        discount = 'false'
+        if self.line_discount > 0:
+            discount = 'true'
+        quo_type = 'Quotation'
+        if self.state not in ['draft','sent']:
+            quo_type = 'Sale Order'
+        branch_name = self.branch_id.name
+        if branch_name and birt:
+            url = birt + str(filename) + str(birt_suffix) + '.rptdesign&sale_order_id=' + str(self.id) + '&discount=' + discount + '&branch=' + str(branch_name) + '&quotation_type=' + str(quo_type)
+            return {
+                'type' : 'ir.actions.act_url',
+                'url' : url,
+                'target': 'new',
+            }            
+        else:
+            raise ValidationError('Report Not Not Found')          
 class SaleOrderLine(models.Model):
     """inherited sale order"""
     _inherit = 'sale.order.line'
