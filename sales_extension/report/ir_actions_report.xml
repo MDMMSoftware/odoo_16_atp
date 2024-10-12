@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record model="ir.actions.server" id="action_birt_quotation_atp">
+        <field name="name">Quotation Report</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.export_birt_quotation(filename='mmm_atp_quotation')
+        </field>
+    </record>
+
     <record id="action_report_saleorder_tanz" model="ir.actions.report">
         <field name="name">Quotation (Tanz)</field>
         <field name="model">sale.order</field>
