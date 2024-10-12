@@ -235,8 +235,8 @@ class SaleOrder(models.Model):
                     vals.update({'price_unit': unit_price,})
                 order_line_obj.create(vals)       
         
-    def export_birt_quotation(self,filename):
-        # filename = self.env.context.get('filename')
+    def export_birt_quotation(self):
+        filename = self.env.context.get('filename')
         if not filename:
             raise ValidationError('Filename Not found!!!')
         birt_suffix = self.env['ir.config_parameter'].sudo().get_param('birt.report.url.suffix','')
