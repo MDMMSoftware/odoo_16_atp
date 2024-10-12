@@ -99,5 +99,17 @@
         
         <menuitem id="menu_valuation_report" name="Stock Location Valuation Report" parent="stock.menu_warehouse_report" action="action_valuation_report" sequence="105" />
 
+
+        <record id="ir_cron_recalculate_costing_for_transfer" model="ir.cron">
+            <field name="name">Recalculate Costing for Wrong Transfer</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="nextcall" eval="(DateTime.now().replace(hour=2, minute=0) + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')" />
+            <field name="doall" eval="False"/>
+            <field name="model_id" ref="model_stock_location_valuation_report"/>
+            <field name="code">model.recalculate_costing_for_wrong_transfer()</field>
+            <field name="state">code</field>
+        </record>
     </data>
 </odoo>
