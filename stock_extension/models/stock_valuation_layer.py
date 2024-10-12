@@ -54,7 +54,7 @@ class StockValuationLayer(models.Model):
                            
         for am in am_vals:
             move = self.env['stock.move'].browse(am['stock_move_id'])
-            svl = self.env['stock.valuation.layer'].search([('stock_move_id','=',am['stock_move_id'])])
+            svl = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',am['stock_move_id'])])
             journal_id, acc_src, acc_dest, acc_valuation = move._get_accounting_data_for_valuation()
             if move.picking_type_id.code=='outgoing' and move.origin_returned_move_id:
                 
@@ -82,7 +82,7 @@ class StockValuationLayer(models.Model):
                         'account_id':acc_src,
                     }))
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
-                origin_unit_cost = self.env['stock.valuation.layer'].search([('stock_move_id','=',move.origin_returned_move_id.id)])
+                origin_unit_cost = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
                 if abs(abs(svl.value)-abs(svl.quantity*unit_cost)) >0:
                     # for am in am_vals:
@@ -375,7 +375,7 @@ class SaleOrder(models.Model):
         for move_line in self.picking_ids.move_line_ids:
             if move_line.move_id.sale_line_id.analytic_distribution:
                 analytic_distribution_ids = [ int(x) for x in list(move_line.move_id.sale_line_id.analytic_distribution.keys())]
-                lot_id = self.env['stock.lot'].search([('product_id','=',move_line.move_id.product_id.id),('analytic_account_id','in',analytic_distribution_ids)],limit=1).id
+                lot_id = self.env['stock.lot'].sudo().search([('product_id','=',move_line.move_id.product_id.id),('analytic_account_id','in',analytic_distribution_ids)],limit=1).id
                 if move_line.move_id.product_id.can_be_unit:
                     move_line.write({'lot_id':lot_id})
 
@@ -405,7 +405,7 @@ class StockPicking(models.Model):
             if move.location_id!=self.location_id or move.location_dest_id!=self.location_dest_id:
                 raise UserError(_("Source Location or Destination Location doesn't match with Lines"))
         if hasattr(self, 'duty_line_id') and self.duty_line_id:
-            quant = self.env['stock.quant'].search([('location_id','=',self.location_id.id),('product_id','=',self.duty_line_id.duty_id.fuel_product_id.id)])  
+            quant = self.env['stock.quant'].sudo().search([('location_id','=',self.location_id.id),('product_id','=',self.duty_line_id.duty_id.fuel_product_id.id)])  
             if not quant:
                 raise ValidationError(f"Stock quant is not found with location - {self.location_id.name} and product - {self.duty_line_id.duty_id.fuel_product_id.name} ") 
             calculated_qty = sum([move_id.product_uom_qty for move_id in self.move_ids])
@@ -441,14 +441,14 @@ class StockPicking(models.Model):
         valuation_report = self.env['stock.location.valuation.report']
         if self.state=='done' and self.picking_type_id.code=='internal':
             if self.requisition_id:
-                from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
+                from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
                 # if from_req.state!='done':
                 #     raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
                 
                 rounding = move.product_id.uom_id.rounding
-                layers = self.env['stock.valuation.layer'].search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
-                report_layers = self.env['stock.location.valuation.report'].search([('product_id','=',move.product_id.id),('by_location','=',move.location_dest_id.id)])
+                layers = self.env['stock.valuation.layer'].sudo().search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
+                report_layers = self.env['stock.location.valuation.report'].sudo().search([('product_id','=',move.product_id.id),('by_location','=',move.location_dest_id.id)])
                 product_tot_qty_available = 0
                 amount_tot_qty_available = 0
                 # if layers:
@@ -497,15 +497,15 @@ class StockPicking(models.Model):
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                             # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
                             from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
-                            amount_unit = valuation.search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                            amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
                             new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                             
                         if move.location_dest_id.usage!='transit' and  move.origin_returned_move_id:
-                            from_req = self.requisition_id.picking_ids.filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
+                            from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
                             valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                             # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
                             from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
-                            amount_unit = valuation.search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                            amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
                             new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                         
                         if not valuation_ids:
@@ -850,7 +850,7 @@ class StockMove(models.Model):
         """
         svlr_values = []
         for svl_val in svl_values:
-            stock_move = self.search([('id','=',svl_val['stock_move_id'])])
+            stock_move = self.sudo().search([('id','=',svl_val['stock_move_id'])])
             qty_in , qty_out = 0 , 0
             svl_qty = svl_val['quantity']
             desc = stock_move.adjustment_line_id.description if stock_move.adjustment_line_id else stock_move.picking_id.internal_ref
@@ -917,7 +917,7 @@ class StockMove(models.Model):
             # product_tot_qty_available = move.product_id.sudo().with_company(move.company_id).quantity_svl + tmpl_dict[move.product_id.id]
             rounding = move.product_id.uom_id.rounding
             product_tot_qty_available = 0
-            layers = self.env['stock.valuation.layer'].search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
+            layers = self.env['stock.valuation.layer'].sudo().search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
             if layers:
                 product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
             valued_move_lines = move._get_in_move_lines()
