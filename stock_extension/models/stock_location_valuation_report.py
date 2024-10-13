@@ -129,7 +129,10 @@ class StockLocationValuationReport(models.Model):
                     val_cost += layer.balance*layer.unit_cost
                     val_qty += layer.balance
                     if layer.balance>0:
-                        product_cost=val_cost/val_qty
+                        if val_qty:
+                            product_cost=val_cost/val_qty
+                        else:
+                            product_cost = val_cost
                         warehouse_valuation_ids = product.warehouse_valuation.filtered(lambda x:x.location_id==location)
                 
                         if not warehouse_valuation_ids:
