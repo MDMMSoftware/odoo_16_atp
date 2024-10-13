@@ -114,7 +114,7 @@ class StockLocationValuationReport(models.Model):
     def recalculate_costing_for_wrong_transfer(self):
         
         product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
-        # product_ids = self.env['product.product'].search([('product_code','=','ESSP1044STH')])
+        # product_ids = self.env['product.product'].search([('product_code','=','K-2240-AFI')])
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
@@ -164,8 +164,16 @@ class StockLocationValuationReport(models.Model):
                                             self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
                                     svl.account_move_id.action_post()
                     
-                                if val_cost:
-                                    if len(svl)==1:
-                                        if not svl.account_move_id:
-                                            svl.filtered(lambda x:x.quantity>0)._validate_accounting_entries()
+                    if layer.unit_cost:
+                        if layer.report_type == 'transfer':
+                            pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
+                            if pos_svl:
+                                if not pos_svl.account_move_id:
+                                    pos_svl._validate_accounting_entries()
+                                    
+                        else:
+                                
+                            if len(svl_vals)==1:
+                                if not svl_vals.account_move_id:
+                                    svl_vals._validate_accounting_entries()
                     
