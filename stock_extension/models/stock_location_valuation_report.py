@@ -114,7 +114,7 @@ class StockLocationValuationReport(models.Model):
     def recalculate_costing_for_wrong_transfer(self):
         
         product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
-        # product_ids = self.env['product.product'].search([('product_code','=','K-2240-AFI')])
+        product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
