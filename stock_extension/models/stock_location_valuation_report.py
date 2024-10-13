@@ -119,6 +119,7 @@ class StockLocationValuationReport(models.Model):
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
             location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
+            product.product_tmpl_id.write({'can_be_recalculate' : True})
             for location in location_ids:
                 product_cost = 0
                 val_qty = 0
@@ -164,6 +165,7 @@ class StockLocationValuationReport(models.Model):
                                             self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
                                     svl.account_move_id.action_post()
                     
+
                     if layer.unit_cost:
                         if layer.report_type == 'transfer':
                             pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
@@ -176,4 +178,6 @@ class StockLocationValuationReport(models.Model):
                             if len(svl_vals)==1:
                                 if not svl_vals.account_move_id:
                                     svl_vals._validate_accounting_entries()
+                                    
+            
                     
