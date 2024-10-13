@@ -143,7 +143,7 @@ class StockLocationValuationReport(models.Model):
                                 product.write({'warehouse_valuation':[(4,vals.id)]})
                         else:
                             warehouse_valuation_ids.write({'location_cost':product_cost})
-                    else:
+                    if layer.balance<0:
                         if layer.unit_cost!=abs(product_cost):
                             layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
                             for svl in svl_vals:
