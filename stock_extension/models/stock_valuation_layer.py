@@ -445,219 +445,220 @@ class StockPicking(models.Model):
                 # if from_req.state!='done':
                 #     raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
+                if move.quantity_done:
                 
-                rounding = move.product_id.uom_id.rounding
-                layers = self.env['stock.valuation.layer'].sudo().search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
-                report_layers = self.env['stock.location.valuation.report'].sudo().search([('product_id','=',move.product_id.id),('by_location','=',move.location_dest_id.id)])
-                product_tot_qty_available = 0
-                amount_tot_qty_available = 0
-                # if layers:
-                #     product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
-                #     amount_tot_qty_available += sum(layers.mapped('remaining_value')) or 0
-                if report_layers:
-                    product_tot_qty_available += sum(report_layers.mapped('balance')) or 0
-                else:
-                    if layers:
-                        product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
-                valued_move_lines = move._get_in_move_lines()
-                qty_done = 0
-                for valued_move_line in valued_move_lines:
-                    qty_done += valued_move_line.product_uom_id._compute_quantity(valued_move_line.qty_done, move.product_id.uom_id)
-                # if float_is_zero(product_tot_qty_available, precision_rounding=rounding):
-                #     new_std_price = move._get_price_unit()
-                # elif float_is_zero(product_tot_qty_available + move.product_qty, precision_rounding=rounding) or \
-                #         float_is_zero(product_tot_qty_available + qty_done, precision_rounding=rounding):
-                #     new_std_price = move._get_price_unit()
+                    rounding = move.product_id.uom_id.rounding
+                    layers = self.env['stock.valuation.layer'].sudo().search([('product_id','=',move.product_id.id),('location_dest_id','=',move.location_dest_id.id),('remaining_qty','>',0)])
+                    report_layers = self.env['stock.location.valuation.report'].sudo().search([('product_id','=',move.product_id.id),('by_location','=',move.location_dest_id.id)])
+                    product_tot_qty_available = 0
+                    amount_tot_qty_available = 0
+                    # if layers:
+                    #     product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
+                    #     amount_tot_qty_available += sum(layers.mapped('remaining_value')) or 0
+                    if report_layers:
+                        product_tot_qty_available += sum(report_layers.mapped('balance')) or 0
+                    else:
+                        if layers:
+                            product_tot_qty_available += sum(layers.mapped('remaining_qty')) or 0
+                    valued_move_lines = move._get_in_move_lines()
+                    qty_done = 0
+                    for valued_move_line in valued_move_lines:
+                        qty_done += valued_move_line.product_uom_id._compute_quantity(valued_move_line.qty_done, move.product_id.uom_id)
+                    # if float_is_zero(product_tot_qty_available, precision_rounding=rounding):
+                    #     new_std_price = move._get_price_unit()
+                    # elif float_is_zero(product_tot_qty_available + move.product_qty, precision_rounding=rounding) or \
+                    #         float_is_zero(product_tot_qty_available + qty_done, precision_rounding=rounding):
+                    #     new_std_price = move._get_price_unit()
 
-                location_cost = 0
-                amount_unit = 0
-                # else:
-                if not move.picking_id.requisition_id:
-                    amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id).location_cost
-                    location_cost =move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost or 0
-                    new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
-                else:
-                    
-                    if not move.picking_id.requisition_id.transit_location_id:
+                    location_cost = 0
+                    amount_unit = 0
+                    # else:
+                    if not move.picking_id.requisition_id:
                         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id).location_cost
                         location_cost =move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost or 0
                         new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
-
                     else:
-                        valuation_ids = True
-                        if move.location_id.usage!='transit' and move.origin_returned_move_id:
-                            amount_unit = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
-                            
-                        if move.location_id.usage!='transit' and not move.origin_returned_move_id:
-                            
-                        #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
-                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
-                        if move.location_dest_id.usage!='transit' and not move.origin_returned_move_id:
-                            
-                            valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                            # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                            from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
-                            amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
-                            new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
-                            
-                        if move.location_dest_id.usage!='transit' and  move.origin_returned_move_id:
-                            from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
-                            valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                            # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                            from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
-                            amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
-                            new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                         
-                        if not valuation_ids:
-                            new_std_price = ((amount_unit * move.product_qty)) / (move.product_qty)
-                    # if not move.origin_returned_move_id:
-                    #     amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
-                    #     location_cost = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost or 0
-                    #     new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
-                    # else:
-                    #     # if move.transit_location_id:
-                    #         # need to check trnasit return
-                        
-                    #     if move.location_id.usage!='transit':
-                    #         valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
-                    #         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
-                    #     else:
-                    #         valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                    #         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                    #     new_std_price = ((amount_unit * product_tot_qty_available) + (valuation_ids.location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
-                if move.location_dest_id.usage == 'internal':
-                    warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                    if not warehouse_valuation_ids:
-                        vals = self.env['warehouse.valuation'].create({'location_id':move.location_dest_id.id,
-                                                                    'location_cost':new_std_price})
-                        if vals:
-                            move.product_id.write({'warehouse_valuation':[(4,vals.id)]})
+                        if not move.picking_id.requisition_id.transit_location_id:
+                            amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id).location_cost
+                            location_cost =move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost or 0
+                            new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
+
+                        else:
+                            valuation_ids = True
+                            if move.location_id.usage!='transit' and move.origin_returned_move_id:
+                                amount_unit = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
+                                
+                            if move.location_id.usage!='transit' and not move.origin_returned_move_id:
+                                
+                            #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
+                                amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
+                            if move.location_dest_id.usage!='transit' and not move.origin_returned_move_id:
+                                
+                                valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
+                                # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                                amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                                new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
+                                
+                            if move.location_dest_id.usage!='transit' and  move.origin_returned_move_id:
+                                from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
+                                valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
+                                # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                                amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                                new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
+                            
+                            if not valuation_ids:
+                                new_std_price = ((amount_unit * move.product_qty)) / (move.product_qty)
+                        # if not move.origin_returned_move_id:
+                        #     amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
+                        #     location_cost = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id) and move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost or 0
+                        #     new_std_price = ((amount_unit * product_tot_qty_available) + (location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
+                        # else:
+                        #     # if move.transit_location_id:
+                        #         # need to check trnasit return
+                            
+                        #     if move.location_id.usage!='transit':
+                        #         valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
+                        #         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.location_id).location_cost
+                        #     else:
+                        #         valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
+                        #         amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
+                        #     new_std_price = ((amount_unit * product_tot_qty_available) + (valuation_ids.location_cost * move.product_qty)) / (product_tot_qty_available + move.product_qty)
+                    if move.location_dest_id.usage == 'internal':
+                        warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
+                        if not warehouse_valuation_ids:
+                            vals = self.env['warehouse.valuation'].create({'location_id':move.location_dest_id.id,
+                                                                        'location_cost':new_std_price})
+                            if vals:
+                                move.product_id.write({'warehouse_valuation':[(4,vals.id)]})
+                        else:
+                            warehouse_valuation_ids.write({'location_cost':new_std_price})
+                    if move.location_id.usage=='transit' and move.picking_id.requisition_id:
+                        warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                     else:
-                        warehouse_valuation_ids.write({'location_cost':new_std_price})
-                if move.location_id.usage=='transit' and move.picking_id.requisition_id:
-                    warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
-                else:
-                    warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
-                if move.picking_id.requisition_id and move.picking_id.requisition_id.transit_location_id:
-                    # if move.origin_returned_move_id:
-                    #     raise ValidationError(_("Return Case Currently Not Available"))
-                    svl_in_vals = {
-                        'company_id': move.company_id.id,
-                        'product_id': move.product_id.id,
-                        'description': "Internal Transfer",
-                        'remaining_qty': move.product_qty,
-                        # 'remaining_value':location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
-                        # 'value': location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
-                        'remaining_value': amount_unit * move.product_qty,
-                        'value':amount_unit * move.product_qty,
-                        'quantity':move.product_qty,
-                        # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
-                        'unit_cost':amount_unit,
-                        'stock_move_id': move.id,
-                        'by_location':move.location_dest_id.id,
-                        'location_id':move.location_id.id,
-                        'location_dest_id':move.location_dest_id.id,
-                        'fleet_id':move.fleet_id.id or False,
-                        'division_id': move.division_id.id or False,
-                        'department_id':move.department_id.id or False,
-                        'fleet_location_id':move.fleet_location_id.id or False,
-                    }
-                    if hasattr(move, 'project_id'):
-                        svl_in_vals['project_id'] = move.project_id.id or False
-                    if hasattr(move, 'repair_object_id'):
-                        svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
-                    if hasattr(move, 'branch_id'):
-                        svl_in_vals['branch_id'] = move.branch_id.id or False
-                    in_valuation = valuation.create(svl_in_vals)
-                    # report_values
-                    svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
-                    valuation_report.sudo().create(svl_report_vals)
-                    # report_values 
-                    self.env.cr.execute(
-                        'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
-                        (move.picking_id.scheduled_date,in_valuation.id,)
-                    )
-                    in_valuation._validate_accounting_entries()
-                    svl_out_vals = {
-                        'company_id': move.company_id.id,
-                        'product_id': move.product_id.id,
-                        'description': "Internal Transfer",
-                        'remaining_qty': 0,
-                        'remaining_value':0,
-                        # 'value': location_cost*-abs(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*-abs(move.product_qty)) or (new_std_price*-abs(move.product_qty))),
-                        'value':amount_unit * -abs(move.product_qty),
-                        'quantity':-(move.product_qty),
-                        # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
-                        'unit_cost':amount_unit,
-                        'stock_move_id': move.id,
-                        'by_location':move.location_id.id,                        
-                        'location_dest_id':move.location_id.id,
-                        'location_id':move.location_dest_id.id,
-                        'fleet_id':move.fleet_id.id or False,
-                        'division_id':move.division_id.id or False,
-                        'department_id':move.department_id.id or False,
-                        'fleet_location_id':move.fleet_location_id.id or False,
-                    }
-                    if hasattr(move, 'project_id'):
-                        svl_out_vals['project_id'] = move.project_id.id or False
-                    if hasattr(move, 'repair_object_id'):
-                        svl_out_vals['repair_object_id'] = move.repair_object_id.id or False
-                    if hasattr(move, 'branch_id'):
-                        svl_out_vals['branch_id'] = move.branch_id.id or False
+                        warehouse_valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
+                    if move.picking_id.requisition_id and move.picking_id.requisition_id.transit_location_id:
+                        # if move.origin_returned_move_id:
+                        #     raise ValidationError(_("Return Case Currently Not Available"))
+                        svl_in_vals = {
+                            'company_id': move.company_id.id,
+                            'product_id': move.product_id.id,
+                            'description': "Internal Transfer",
+                            'remaining_qty': move.product_qty,
+                            # 'remaining_value':location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
+                            # 'value': location_cost*(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*move.product_qty) or (new_std_price*move.product_qty)),
+                            'remaining_value': amount_unit * move.product_qty,
+                            'value':amount_unit * move.product_qty,
+                            'quantity':move.product_qty,
+                            # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                            'unit_cost':amount_unit,
+                            'stock_move_id': move.id,
+                            'by_location':move.location_dest_id.id,
+                            'location_id':move.location_id.id,
+                            'location_dest_id':move.location_dest_id.id,
+                            'fleet_id':move.fleet_id.id or False,
+                            'division_id': move.division_id.id or False,
+                            'department_id':move.department_id.id or False,
+                            'fleet_location_id':move.fleet_location_id.id or False,
+                        }
+                        if hasattr(move, 'project_id'):
+                            svl_in_vals['project_id'] = move.project_id.id or False
+                        if hasattr(move, 'repair_object_id'):
+                            svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
+                        if hasattr(move, 'branch_id'):
+                            svl_in_vals['branch_id'] = move.branch_id.id or False
+                        in_valuation = valuation.create(svl_in_vals)
+                        # report_values
+                        svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
+                        valuation_report.sudo().create(svl_report_vals)
+                        # report_values 
+                        self.env.cr.execute(
+                            'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
+                            (move.picking_id.scheduled_date,in_valuation.id,)
+                        )
+                        in_valuation._validate_accounting_entries()
+                        svl_out_vals = {
+                            'company_id': move.company_id.id,
+                            'product_id': move.product_id.id,
+                            'description': "Internal Transfer",
+                            'remaining_qty': 0,
+                            'remaining_value':0,
+                            # 'value': location_cost*-abs(move.product_qty) or (valuation_ids and (valuation_ids.location_cost*-abs(move.product_qty)) or (new_std_price*-abs(move.product_qty))),
+                            'value':amount_unit * -abs(move.product_qty),
+                            'quantity':-(move.product_qty),
+                            # 'unit_cost': location_cost or (valuation_ids and valuation_ids.location_cost or new_std_price),
+                            'unit_cost':amount_unit,
+                            'stock_move_id': move.id,
+                            'by_location':move.location_id.id,                        
+                            'location_dest_id':move.location_id.id,
+                            'location_id':move.location_dest_id.id,
+                            'fleet_id':move.fleet_id.id or False,
+                            'division_id':move.division_id.id or False,
+                            'department_id':move.department_id.id or False,
+                            'fleet_location_id':move.fleet_location_id.id or False,
+                        }
+                        if hasattr(move, 'project_id'):
+                            svl_out_vals['project_id'] = move.project_id.id or False
+                        if hasattr(move, 'repair_object_id'):
+                            svl_out_vals['repair_object_id'] = move.repair_object_id.id or False
+                        if hasattr(move, 'branch_id'):
+                            svl_out_vals['branch_id'] = move.branch_id.id or False
 
-                    out_valuation = valuation.create(svl_out_vals)
-                    # report_values
-                    svl_report_vals = move._prepare_common_svl_report_vals([svl_out_vals])
-                    valuation_report.sudo().create(svl_report_vals)
-                    # report_values                     
-                    self.env.cr.execute(
-                        'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
-                        (move.picking_id.scheduled_date,out_valuation.id,)
-                    )
-                else:
-                    svl_in_vals = {
-                        'company_id': move.company_id.id,
-                        'product_id': move.product_id.id,
-                        'description': "Internal Transfer",
-                        'remaining_qty': move.product_qty,
-                        'remaining_value':warehouse_valuation_ids and warehouse_valuation_ids.location_cost*(move.product_qty) or 0,
-                        'value': warehouse_valuation_ids and warehouse_valuation_ids.location_cost*(move.product_qty) or 0,
-                        'quantity':move.product_qty,
-                        'unit_cost': warehouse_valuation_ids and warehouse_valuation_ids.location_cost or 0,
-                        'stock_move_id': move.id,
-                        'by_location':move.location_dest_id.id,
-                        'division_id':move.division_id.id or False,
-                        'location_id':move.location_id.id,
-                        'location_dest_id':move.location_dest_id.id,
-                        'fleet_id':move.fleet_id.id or False,
-                        'department_id':move.department_id.id or False,
-                        'fleet_location_id':move.fleet_location_id.id or False,
-                    }
-                    if hasattr(move, 'project_id'):
-                        svl_in_vals['project_id'] = move.project_id.id or False
-                    if hasattr(move, 'repair_object_id'):
-                        svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
-                    if hasattr(move, 'branch_id'):
-                        svl_in_vals['branch_id'] = move.branch_id.id or False
+                        out_valuation = valuation.create(svl_out_vals)
+                        # report_values
+                        svl_report_vals = move._prepare_common_svl_report_vals([svl_out_vals])
+                        valuation_report.sudo().create(svl_report_vals)
+                        # report_values                     
+                        self.env.cr.execute(
+                            'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
+                            (move.picking_id.scheduled_date,out_valuation.id,)
+                        )
+                    else:
+                        svl_in_vals = {
+                            'company_id': move.company_id.id,
+                            'product_id': move.product_id.id,
+                            'description': "Internal Transfer",
+                            'remaining_qty': move.product_qty,
+                            'remaining_value':warehouse_valuation_ids and warehouse_valuation_ids.location_cost*(move.product_qty) or 0,
+                            'value': warehouse_valuation_ids and warehouse_valuation_ids.location_cost*(move.product_qty) or 0,
+                            'quantity':move.product_qty,
+                            'unit_cost': warehouse_valuation_ids and warehouse_valuation_ids.location_cost or 0,
+                            'stock_move_id': move.id,
+                            'by_location':move.location_dest_id.id,
+                            'division_id':move.division_id.id or False,
+                            'location_id':move.location_id.id,
+                            'location_dest_id':move.location_dest_id.id,
+                            'fleet_id':move.fleet_id.id or False,
+                            'department_id':move.department_id.id or False,
+                            'fleet_location_id':move.fleet_location_id.id or False,
+                        }
+                        if hasattr(move, 'project_id'):
+                            svl_in_vals['project_id'] = move.project_id.id or False
+                        if hasattr(move, 'repair_object_id'):
+                            svl_in_vals['repair_object_id'] = move.repair_object_id.id or False
+                        if hasattr(move, 'branch_id'):
+                            svl_in_vals['branch_id'] = move.branch_id.id or False
 
-                    in_valuation = valuation.create(svl_in_vals)
-                    # report_values
-                    svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
-                    valuation_report.sudo().create(svl_report_vals)
-                    # report_values                     
-                    self.env.cr.execute(
-                        'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
-                        (move.picking_id.scheduled_date,in_valuation.id,)
-                    )
-                    out_valuation = move._create_out_svl(move.product_qty)
-                    self.env.cr.execute(
-                        'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
-                        (move.picking_id.scheduled_date,out_valuation.id,)
-                    )
+                        in_valuation = valuation.create(svl_in_vals)
+                        # report_values
+                        svl_report_vals = move._prepare_common_svl_report_vals([svl_in_vals])
+                        valuation_report.sudo().create(svl_report_vals)
+                        # report_values                     
+                        self.env.cr.execute(
+                            'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
+                            (move.picking_id.scheduled_date,in_valuation.id,)
+                        )
+                        out_valuation = move._create_out_svl(move.product_qty)
+                        self.env.cr.execute(
+                            'UPDATE stock_valuation_layer SET create_date=%s WHERE id=%s',
+                            (move.picking_id.scheduled_date,out_valuation.id,)
+                        )
 
-                if move.picking_id.requisition_id and move.origin_returned_move_id:
-                    move.picking_id.requisition_id.write({'picking_ids':[(4, move.picking_id.id)]})
- 
+                    if move.picking_id.requisition_id and move.origin_returned_move_id:
+                        move.picking_id.requisition_id.write({'picking_ids':[(4, move.picking_id.id)]})
+    
 
                 
 
