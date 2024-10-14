@@ -17,10 +17,10 @@
         'views/sale_detail_wizard.xml',
         'views/credit_limit.xml',
         # 'views/account_tax.xml',
-        'report/quotations_report_template.xml',
-        'report/invoice_report_template_tanz.xml',
-        'report/auto_part_quotation_report.xml',
-        'report/ir_actions_report.xml',
+        # 'report/quotations_report_template.xml',
+        # 'report/invoice_report_template_tanz.xml',
+        # 'report/auto_part_quotation_report.xml',
+        # 'report/ir_actions_report.xml',
     ],
 
 
