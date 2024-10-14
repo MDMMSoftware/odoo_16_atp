@@ -19,6 +19,7 @@
         'security/ir.model.access.csv',
         'wizard/requisition_partial.xml',
         'views/requisition.xml',
+        'views/req_import.xml',
         
     ],
     'images': ['static/description/banner.png'],
