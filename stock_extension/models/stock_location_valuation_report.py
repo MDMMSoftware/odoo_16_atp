@@ -114,11 +114,12 @@ class StockLocationValuationReport(models.Model):
     def recalculate_costing_for_wrong_transfer(self):
         
         product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
-        # product_ids = self.env['product.product'].search([('product_code','=','ESSP1044STH')])
+        product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
             location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
+            product.product_tmpl_id.write({'can_be_recalculate' : True})
             for location in location_ids:
                 product_cost = 0
                 val_qty = 0
@@ -129,7 +130,10 @@ class StockLocationValuationReport(models.Model):
                     val_cost += layer.balance*layer.unit_cost
                     val_qty += layer.balance
                     if layer.balance>0:
-                        product_cost=val_cost/val_qty
+                        if val_qty:
+                            product_cost=val_cost/val_qty
+                        else:
+                            product_cost = val_cost
                         warehouse_valuation_ids = product.warehouse_valuation.filtered(lambda x:x.location_id==location)
                 
                         if not warehouse_valuation_ids:
@@ -139,7 +143,7 @@ class StockLocationValuationReport(models.Model):
                                 product.write({'warehouse_valuation':[(4,vals.id)]})
                         else:
                             warehouse_valuation_ids.write({'location_cost':product_cost})
-                    else:
+                    if layer.balance<0:
                         if layer.unit_cost!=abs(product_cost):
                             layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
                             for svl in svl_vals:
@@ -161,8 +165,19 @@ class StockLocationValuationReport(models.Model):
                                             self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
                                     svl.account_move_id.action_post()
                     
-                                if val_cost:
-                                    if len(svl)==1:
-                                        if not svl.account_move_id:
-                                            svl.filtered(lambda x:x.quantity>0)._validate_accounting_entries()
+
+                    if layer.unit_cost:
+                        if layer.report_type == 'transfer':
+                            pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
+                            if pos_svl:
+                                if not pos_svl.account_move_id:
+                                    pos_svl._validate_accounting_entries()
+                                    
+                        else:
+                                
+                            if len(svl_vals)==1:
+                                if not svl_vals.account_move_id:
+                                    svl_vals._validate_accounting_entries()
+                                    
+            
                     

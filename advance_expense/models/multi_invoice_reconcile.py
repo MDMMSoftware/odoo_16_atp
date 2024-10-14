@@ -117,8 +117,6 @@ class MultiInvoice(models.Model):
         if self.amount_extra > 0.0:
             amount_extra = abs(self.amount_extra)
         payment_amount -= discount_amt
-#         inbound_payment_method_line_ids
-# outbound_payment_method_line_ids
         payment_methods = pay_type == 'inbound' and self.journal_id.inbound_payment_method_line_ids or self.journal_id.outbound_payment_method_line_ids
         vals = {
             'journal_id': self.journal_id.id,
@@ -154,57 +152,123 @@ class MultiInvoice(models.Model):
             ]
 
         domain.append(('id','in',invoice_ids.move_id.line_ids.ids))
-        for multi_line,line in zip(invoice_ids,self.env['account.move.line'].search(domain)):
-            sorted_lines = line
-            sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
-            sorted_lines._all_reconciled_lines()
-            involved_lines = sorted_lines._all_reconciled_lines()
-            partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
-            sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
-            partials = self._create_reconciliation_partials(sorted_lines_ctx,multi_line)
-            multi_line.amount_due = multi_line.move_id.amount_residual
+        create_vals = [] 
+        for line in self.env['account.move.line'].search(domain):
+            for multi_line in invoice_ids:
+                if line.move_id.id == multi_line.move_id.id:
+                    sorted_lines = line
+                    sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
+                    sorted_lines._all_reconciled_lines()
+                    involved_lines = sorted_lines._all_reconciled_lines()
+                    partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
+                    sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
+                    if self.payment_type == 'sent':
+                        vals_list = {
+                        'amount':multi_line.amt * self.exchange_rate,
+                        'debit_amount_currency':multi_line.amt * self.exchange_rate,
+                        'credit_amount_currency':multi_line.amt * self.exchange_rate,
+                        'debit_move_id':sorted_lines_ctx[1].id,# payment
+                        'credit_move_id':sorted_lines_ctx[0].id, #အချေခံ invoice
+                    }
+                    else:
+                        vals_list = {
+                        'amount':multi_line.amt * self.exchange_rate,
+                        'debit_amount_currency':multi_line.amt * self.exchange_rate,
+                        'credit_amount_currency':multi_line.amt * self.exchange_rate,
+                        'debit_move_id':sorted_lines_ctx[0].id,# payment
+                        'credit_move_id':sorted_lines_ctx[1].id, #အချေခံ invoice
+                    }
+                    create_vals.append(vals_list)
+                    multi_line.amount_due = multi_line.total_amt - multi_line.amt
 
-    def _create_reconciliation_partials(self,lines,multi_line):
-        prepare_partial_vals_list = [{
-                            'record': lines[0],
-                            'balance': lines[0].balance,
-                            'amount_currency': lines[0].amount_currency,
-                            'amount_residual': lines[0].amount_residual,
-                            'amount_residual_currency': lines[0].amount_residual_currency,
-                            'company': lines[0].company_id,
-                            'currency': lines[0].currency_id,
-                            'date': lines[0].date,
-                        }]
-        if self.payment_type == 'sent':
-            prepare_partial_vals_list.append({
-                            'record': lines[1],
-                            'balance': (multi_line[0].amt * self.exchange_rate),
-                            'amount_currency': (multi_line[0].amt * self.exchange_rate),
-                            'amount_residual': (multi_line[0].amt * self.exchange_rate),
-                            'amount_residual_currency': (multi_line[0].amt * self.exchange_rate),
-                            'company': lines[1].company_id,
-                            'currency': lines[1].currency_id,
-                            'date': lines[1].date,
-                         })
-        else:
-            prepare_partial_vals_list.append({
-                            'record': lines[1],
-                            'balance': -(multi_line[0].amt * self.exchange_rate),
-                            'amount_currency': -(multi_line[0].amt * self.exchange_rate),
-                            'amount_residual': -(multi_line[0].amt * self.exchange_rate),
-                            'amount_residual_currency': -(multi_line[0].amt * self.exchange_rate),
-                            'company': lines[1].company_id,
-                            'currency': lines[1].currency_id,
-                            'date': lines[1].date,
-                         })
-        partials_vals_list, exchange_data = self.env['account.move.line']._prepare_reconciliation_partials(prepare_partial_vals_list)
-        partials = self.env['account.partial.reconcile'].create(partials_vals_list)
+        # for multi_line,line in zip(invoice_ids,self.env['account.move.line'].search(domain)):
+        #     sorted_lines = line
+        #     sorted_lines += payment_id.move_id.line_ids.filtered(lambda x:x.account_id == line.account_id and not x.reconciled)
+        #     sorted_lines._all_reconciled_lines()
+        #     involved_lines = sorted_lines._all_reconciled_lines()
+        #     partial_no_exch_diff = bool(self.env['ir.config_parameter'].sudo().get_param('account.disable_partial_exchange_diff'))
+        #     sorted_lines_ctx = sorted_lines.with_context(no_exchange_difference=self._context.get('no_exchange_difference') or partial_no_exch_diff)
+        #     # partials = self._create_reconciliation_partials(sorted_lines_ctx,multi_line)
+        #     if self.payment_type == 'sent':
+        #     # bill [0] = debit [1] = credit
+        #     # inv [0] = credot [1] = debit
 
-        # ==== Create exchange difference moves ====
-        for index, exchange_vals in exchange_data.items():
-            partials[index].exchange_move_id = self._create_exchange_difference_move(exchange_vals)
+        #         vals_list = {
+        #         'amount':multi_line.amt * self.exchange_rate,
+        #         'debit_amount_currency':multi_line.amt * self.exchange_rate,
+        #         'credit_amount_currency':multi_line.amt * self.exchange_rate,
+        #         'debit_move_id':sorted_lines_ctx[1].id,# payment
+        #         'credit_move_id':sorted_lines_ctx[0].id, #အချေခံ invoice
+        #     }
+        #     else:
+        #         vals_list = {
+        #         'amount':multi_line.amt * self.exchange_rate,
+        #         'debit_amount_currency':multi_line.amt * self.exchange_rate,
+        #         'credit_amount_currency':multi_line.amt * self.exchange_rate,
+        #         'debit_move_id':sorted_lines_ctx[0].id,# payment
+        #         'credit_move_id':sorted_lines_ctx[1].id, #အချေခံ invoice
+        #     }
+        partials = self.env['account.partial.reconcile'].create(create_vals)
+            
 
-        return partials
+    # def _create_reconciliation_partials(self,lines,multi_line):
+
+    #     prepare_partial_vals_list = [{
+    #                         'record': lines[0],
+    #                         'balance': lines[0].balance,
+    #                         'amount_currency': lines[0].amount_currency,
+    #                         'amount_residual': lines[0].amount_residual,
+    #                         'amount_residual_currency': lines[0].amount_residual_currency,
+    #                         'company': lines[0].company_id,
+    #                         'currency': lines[0].currency_id,
+    #                         'date': lines[0].date,
+    #                     }]
+    #     if self.payment_type == 'sent':
+
+    #         vals_list = [{
+    #         'amount':multi_line[0].amt * self.exchange_rate,
+    #         'debit_amount_currency':multi_line[0].amt * self.exchange_rate,
+    #         'credit_amount_currency':multi_line[0].amt * self.exchange_rate,
+    #         'debit_move_id':lines[1].id,# payment
+    #         'credit_move_id':lines[0].id, #အချေခံ invoice
+    #     }]
+    #         prepare_partial_vals_list.append({
+    #                         'record': lines[1],
+    #                         'balance': (multi_line[0].amt * self.exchange_rate),
+    #                         'amount_currency': (multi_line[0].amt * self.exchange_rate),
+    #                         'amount_residual': (multi_line[0].amt * self.exchange_rate),
+    #                         'amount_residual_currency': (multi_line[0].amt * self.exchange_rate),
+    #                         'company': lines[1].company_id,
+    #                         'currency': lines[1].currency_id,
+    #                         'date': lines[1].date,
+    #                      })
+    #     else:
+    #         vals_list = [{
+    #         'amount':multi_line[0].amt * self.exchange_rate,
+    #         'debit_amount_currency':multi_line[0].amt * self.exchange_rate,
+    #         'credit_amount_currency':multi_line[0].amt * self.exchange_rate,
+    #         'debit_move_id':lines[0].id,# payment
+    #         'credit_move_id':lines[1].id, #အချေခံ invoice
+    #     }]
+    #         prepare_partial_vals_list.append({
+    #                         'record': lines[1],
+    #                         'balance': -(multi_line[0].amt * self.exchange_rate),
+    #                         'amount_currency': -(multi_line[0].amt * self.exchange_rate),
+    #                         'amount_residual': -(multi_line[0].amt * self.exchange_rate),
+    #                         'amount_residual_currency': -(multi_line[0].amt * self.exchange_rate),
+    #                         'company': lines[1].company_id,
+    #                         'currency': lines[1].currency_id,
+    #                         'date': lines[1].date,
+    #                      })
+    #     # partials_vals_list, exchange_data = self.env['account.move.line']._prepare_reconciliation_partials(prepare_partial_vals_list)
+    #     partials = self.env['account.partial.reconcile'].create(vals_list)
+        
+    #     # ==== Create exchange difference moves ====
+    #     # for index, exchange_vals in exchange_data.items():
+    #     #     partials[index].exchange_move_id = self._create_exchange_difference_move(exchange_vals)
+
+    #     return partials
+    
     @api.constrains('amt_discount','discount_account_id')
     def _check_discount_amt(self):
         if (self.amt_discount > 0.0 or self.amount_extra > 0.0) and not self.discount_account_id:

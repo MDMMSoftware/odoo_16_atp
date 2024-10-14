@@ -128,7 +128,7 @@ class StockLandedCost(models.Model):
             cost.write(cost_vals)
             if cost.account_move_id:
                 move._post()
-            cost.reconcile_landed_cost()
+            # cost.reconcile_landed_cost()
         return True
     
     

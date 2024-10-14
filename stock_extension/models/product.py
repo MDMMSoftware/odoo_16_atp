@@ -38,6 +38,7 @@ class ProductTemplate(models.Model):
     # foc_account = fields.Many2one('account.account',string="FOC Account",domain="[('user_type_id.type', '!=', 'view')]")
 
     can_be_unit = fields.Boolean('Can be unit')
+    can_be_recalculate = fields.Boolean('Recalculate')
     tax_ok = fields.Boolean('Exclude from Job Order?')
 
     _sql_constraints = [
@@ -138,6 +139,7 @@ class ProductProduct(models.Model):
     warehouse_valuation = fields.Many2many('warehouse.valuation','product_product_warehouse_valuation_rel',
                                            'product_product_id','warehouse_valuation_id',ondelete='cascade',readonly=True)    
     can_be_unit = fields.Boolean(related='product_tmpl_id.can_be_unit', store=True)
+    can_be_recalculate = fields.Boolean(related='product_tmpl_id.can_be_recalculate', store=True)
     custom_brand_id = fields.Many2one('custom.brand', related= "product_tmpl_id.custom_brand_id")
     product_code = fields.Char(string="Product Code",related="product_tmpl_id.product_code",store=True)
 
