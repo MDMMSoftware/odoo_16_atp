@@ -240,7 +240,7 @@ class SaleOrder(models.Model):
         if not filename:
             raise ValidationError('Filename Not found!!!')
         birt_suffix = self.env['ir.config_parameter'].sudo().get_param('birt.report.url.suffix','')
-        birt = self.env['ir.config_parameter'].sudo().get_param('birt.report.url','')
+        birt = self.env['ir.config_parameter'].sudo().get_param('birt.report.url.html','')
         discount = 'false'
         if self.line_discount > 0:
             discount = 'true'
