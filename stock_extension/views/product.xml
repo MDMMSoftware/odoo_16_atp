@@ -66,6 +66,10 @@
                         <label for="can_be_unit"/>
                     </span>  
                     <span class="d-inline-block">
+                        <field name="can_be_recalculate"/>
+                        <label for="can_be_recalculate"/>
+                    </span>
+                    <span class="d-inline-block">
                         <field name="tax_ok"/>
                         <label for="tax_ok"/>
                     </span>                                                
