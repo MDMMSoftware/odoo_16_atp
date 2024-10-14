@@ -60,7 +60,7 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='payment_action_capture']" position="before">
-                    <button name="export_birt_quotation" class="oe_highlight btn-info" context="{'filename':'mmm_atp_quotation'}" attrs="{'invisible': [('state', 'in', ('draft', 'cancel'))]}" string="Print Form" type="object" groups="stock.group_stock_user"  data-hotkey="p"/>
+                    <button name="export_birt_quotation" class="oe_highlight btn-info" context="{'filename':'mmm_atp_quotation'}" attrs="{'invisible': [('state', 'in', ('cancel'))]}" string="Print Form" type="object" groups="stock.group_stock_user"  data-hotkey="p"/>
                 </xpath>
                 <xpath expr="//page[@name='order_lines']//tree//field[@name='product_uom_qty']" position="attributes">
                     <attribute name="attrs">{'readonly': [('can_be_unit', '!=', False)]}</attribute>
