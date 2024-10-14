@@ -273,6 +273,7 @@ class SaleOrderLine(models.Model):
         string="Description",
         compute='_compute_name',
         store=True, readonly=False, required=True, precompute=True)
+    line_no = fields.Integer("No.",compute="_compute_line_no")
     
     @api.depends('product_id','order_id.location_id')
     @api.onchange('product_id')    
@@ -403,7 +404,11 @@ class SaleOrderLine(models.Model):
     @api.depends('product_id')
     def _compute_name(self):
         for line in self:
-            line.name = line.product_template_id.name 
+            line.name = line.product_template_id.name
+            
+    def _compute_line_no(self):
+        for idx,res in enumerate(self,start=1):
+            res.line_no = idx
 
     def _get_sale_description_report(self):
         self.ensure_one()

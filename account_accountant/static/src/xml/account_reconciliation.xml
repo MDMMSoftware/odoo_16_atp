@@ -177,7 +177,11 @@
                     <td class="o_td_label"><label class="o_form_label">Analytic</label></td>
                     <td class="o_td_field"></td>
                 </tr>
-                <tr class="create_department_id">
+                <tr class="create_branch_id">
+                    <td class="o_td_label"><label class="o_form_label">Branch</label></td>
+                    <td class="o_td_field"></td>
+                </tr>                   
+                <!-- <tr class="create_department_id">
                     <td class="o_td_label"><label class="o_form_label">Department</label></td>
                     <td class="o_td_field"></td>
                 </tr>
@@ -188,7 +192,7 @@
                 <tr class="create_division_id">
                     <td class="o_td_label"><label class="o_form_label">Division</label></td>
                     <td class="o_td_field"></td>
-                </tr>                                                
+                </tr>                                                 -->
             </tbody>
         </table>
         <table class="o_group">
@@ -217,10 +221,10 @@
                     <td class="o_td_label"><label class="o_form_label">To Check</label></td>
                     <td class="o_td_field"></td>
                 </tr>
-                <tr class="create_branch_id">
+                <!-- <tr class="create_branch_id">
                     <td class="o_td_label"><label class="o_form_label">Branch</label></td>
                     <td class="o_td_field"></td>
-                </tr>                
+                </tr>                 -->
             </tbody>
         </table>
     </div>
