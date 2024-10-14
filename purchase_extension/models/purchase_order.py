@@ -161,17 +161,11 @@ class PurchaseOrder(models.Model):
     product_variant_ids = fields.Many2many('product.template.attribute.value','purchase_product_variant_rel',related="product_id.product_template_variant_value_ids")
     name = fields.Char(
         string='Description', required=True, compute='_compute_price_unit_and_date_planned_and_name', store=True, readonly=False)
-
-    @api.onchange('product_template_id')
-    def _onchange_product_id(self):
-        for rec in self:
-            print('i')
-
-
-    @api.onchange('product_id')
-    def _onchange_product_qty(self):
-        for rec in self:
-            print('product_id change')
+    line_no = fields.Integer("No.",compute="_compute_line_no")
+    
+    def _compute_line_no(self):
+        for idx,res in enumerate(self,start=1):
+            res.line_no = idx        
 
     @api.onchange('division_id')
     def _onchage_analytic_by_division(self):
