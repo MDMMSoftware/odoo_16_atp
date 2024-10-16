@@ -195,7 +195,7 @@ class StockLandedCost(models.Model):
                     unit_price = total_cost = invoice_total = 0.0
                     if valuation.cost_line_id and valuation.cost_line_id.id == line.id:
                         if line.split_method == 'by_quantity' and total_qty:
-                            unit_price_valuation = cost.picking_ids.move_ids.filtered(lambda x:x.product_id==valuation.product_id).stock_valuation_layer_ids.filtered(lambda x:x.unit_cost>0)
+                            unit_price_valuation = cost.picking_ids.move_ids.filtered(lambda x:x.product_id==valuation.product_id).stock_valuation_layer_ids.filtered(lambda x:x.unit_cost>0 and x.stock_move_id==valuation.move_id)
                             if len(unit_price_valuation)>1 or len(unit_price_valuation)==0:
                                 raise ValidationError(_("Product %s has many valuation layers")%(valuation.product_id.name))
                             else:
