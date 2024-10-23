@@ -40,8 +40,8 @@ class SaleSummaryReport(models.Model):
                     sale_type = 'direct'
                     if order_id:
                         sale_type = order_id.term_type
-                    if rec.move_id.move_type == 'out_refund':
-                        sale_type += '_return'
+                if rec.move_id.move_type == 'out_refund':
+                    sale_type += '_return'
             rec.type = sale_type
 
 
