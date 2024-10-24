@@ -90,6 +90,17 @@ if records:
            
      </record>
 
+
+     <record model="ir.actions.server" id="action_cogs_adjustment">
+            <field name="name">COGS Adjustment</field>
+            <field name="model_id" ref="account.model_account_move_line"/>
+            <field name="binding_model_id" ref="account.model_account_move_line" />
+            <field name="state">code</field>
+            <field name="groups_id" eval="[(4,ref('account.group_account_user'))]"/>
+            <field name="code">action = records.calculate_cogs_adjustment()</field>
+           
+     </record>
+
     <!-- Invoice Tree Form -->
     <record id="view_invoice_tree_inherit_sales" model="ir.ui.view">
         <field name="name">account.move.tree.inherited.sales</field>
