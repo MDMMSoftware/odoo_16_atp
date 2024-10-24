@@ -30,7 +30,7 @@ class PurchaseSummaryReport(models.Model):
 
     def compute_get_payment_type(self):
         for rec in self:
-            purchase_type = 'direct'
+            purchase_type = 'credit'
             if rec.move_id:
                 order_ids = rec.move_id.line_ids.mapped('purchase_line_id').order_id
                 for order_id in order_ids:

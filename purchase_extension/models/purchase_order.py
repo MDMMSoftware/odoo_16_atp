@@ -25,7 +25,7 @@ class PurchaseOrder(models.Model):
     data = fields.Binary('File',track_visibility='onchange')
     import_fname = fields.Char(string='Filename')    
     global_discount = fields.Boolean(string="Global Discount",default=False)    
-    term_type = fields.Selection([('direct','Cash Purchase'),('credit','Credit Purchase')],string='Payment Type',default="direct") 
+    term_type = fields.Selection([('direct','Cash Purchase'),('credit','Credit Purchase')],string='Payment Type',default="credit") 
 
 
     def _get_partner_domain(self):
