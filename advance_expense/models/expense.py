@@ -36,7 +36,7 @@ class AccountMove(models.Model):
     director_id = fields.Many2one('hr.employee',string="Director")    
     desc = fields.Char(string="Description")
     internal_ref = fields.Char(string="Internal Reference", copy=False)
-    term_type = fields.Selection([('direct','Cash Sales'),('credit','Credit Sales')],string='Payment Type',default='credit')
+    term_type = fields.Selection([('direct','Cash Payment'),('credit','Credit Payment')],string='Payment Type',default='credit')
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
 
     @api.constrains('journal_id', 'move_type')

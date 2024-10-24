@@ -24,6 +24,8 @@ class PurchaseOrder(models.Model):
     partner_id = fields.Many2one('res.partner', string='Vendor', required=True, states=READONLY_STATES, change_default=True, tracking=True, domain=lambda self:self._get_partner_domain())
     data = fields.Binary('File',track_visibility='onchange')
     import_fname = fields.Char(string='Filename')    
+    global_discount = fields.Boolean(string="Global Discount",default=False)    
+    term_type = fields.Selection([('direct','Cash Purchase'),('credit','Credit Purchase')],string='Payment Type',default="direct") 
 
 
     def _get_partner_domain(self):
@@ -93,7 +95,7 @@ class PurchaseOrder(models.Model):
     
     def _prepare_invoice(self):
         invoice_vals = super()._prepare_invoice()
-        invoice_vals.update({"ref":'', "internal_ref":self.internal_ref})
+        invoice_vals.update({"ref":'', "internal_ref":self.internal_ref,"term_type":self.term_type})
         return invoice_vals  
     
     # def _create_stock_moves(self, picking):

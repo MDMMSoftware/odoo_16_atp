@@ -7,7 +7,7 @@ class SaleSummaryReport(models.Model):
     _order = 'id'
 
     internal_ref = fields.Char('Internal Ref.')
-    type = fields.Selection([('direct','Cash Sale'),('credit','Credit Sale'),('direct_return','Cash Sale Return'),('credit_return','Credit Sale Return')],string="Type",compute='compute_get_sale_type')
+    type = fields.Selection([('direct','Cash Sales'),('credit','Credit Sales'),('direct_return','Cash Sales Return'),('credit_return','Credit Sales Return')],string="Type",compute='compute_get_sale_type')
     invoice_date = fields.Date('Invoiced Date',readonly=True)
     year_str = fields.Integer('Year',readonly=True)
     month_str = fields.Integer('Month',readonly=True)
@@ -37,9 +37,7 @@ class SaleSummaryReport(models.Model):
             if rec.move_id:
                 order_ids = rec.move_id.line_ids.mapped('sale_line_ids').order_id
                 for order_id in order_ids:
-                    sale_type = 'direct'
-                    if order_id:
-                        sale_type = order_id.term_type
+                    sale_type = order_id.term_type
                 if rec.move_id.move_type == 'out_refund':
                     sale_type += '_return'
             rec.type = sale_type
