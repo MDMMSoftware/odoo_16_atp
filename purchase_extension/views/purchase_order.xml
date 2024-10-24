@@ -9,30 +9,11 @@
             web_icon="purchase_extension,static/description/purchase.png"
             sequence="135"/>
 
-        <record id="view_purchase_location_form_inherit" model="ir.ui.view">
-        	<field name="name">purchase.location.form.inherit</field>
-        	<field name="model">purchase.order</field>
-        	<field name="inherit_id" ref="purchase.purchase_order_form"/>
-			<field name="arch" type="xml">
-
-                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
-                    <attribute name="domain">[('id','in',vendor_ids)]</attribute>
-                </xpath> -->
-                <xpath expr="//field[@name='picking_type_id']" position="after">
-					<field name="location_id" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}"/>
-                    <field name="purchase_team_id"/>
-				</xpath>
-                <xpath expr="//field[@name='partner_ref']" position="after">
-					<field name="internal_ref" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}" />
-				</xpath>				
-			</field>
-        </record>
-
         <record id="purchase_order_form_inherit_project" model="ir.ui.view">
             <field name="name">purchase.order.form.inherit.project</field>
             <field name="model">purchase.order</field> 
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
-            <field name="arch" type="xml">
+            <field name="arch" type="xml">     
                 <xpath expr="//page[@name='products']//field[@name='order_line']" position="attributes">
                     <attribute name="attrs">{'readonly': [('state', 'in', ('purchase','done','cancel'))]}</attribute>
                 </xpath>
@@ -42,6 +23,18 @@
                 <xpath expr="//field[@name='date_order']" position="after">
                     <field name="allow_division_feature" invisible="1"/>
                 </xpath>
+                <xpath expr="//field[@name='partner_ref']" position="replace">
+                    <field name="term_type" required="1" attrs="{'readonly':[('state','not in',['draft','sent'])]}"/>
+                    <field name="partner_ref"  attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}" />
+                </xpath>
+                <xpath expr="//field[@name='partner_ref']" position="after">
+					<field name="internal_ref" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}" />
+				</xpath>     
+                <xpath expr="//field[@name='picking_type_id']" position="after">
+					<field name="location_id" attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}"/>
+                    <field name="global_discount" attrs="{'readonly':[('state','not in',['draft','sent'])]}" />
+                    <field name="purchase_team_id"  attrs="{'readonly':[('state','in',['purchase','done','cancel'])]}" />
+				</xpath>                                  
                 <xpath expr="//field[@name='purchase_team_id']" position="after">
                     <field name='data'  attrs="{'readonly':[('state','not in',['draft','sent'])]}"  filename="import_fname"/>
                     <field name="import_fname" invisible="1" class="oe_inline oe_right" />  
