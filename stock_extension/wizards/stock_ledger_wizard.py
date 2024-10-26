@@ -183,7 +183,7 @@ class StockLedgerReport(models.TransientModel):
 
                 first += 1
                 sheet.write(x_offset,0,temp['branch'],text_format)
-                sheet.write(x_offset,1,temp['date'],text_format)
+                sheet.write(x_offset,1,temp['date'].strftime("%d-%m-%Y"),text_format)
                 sheet.write(x_offset,2,temp['ref'],text_format)
                 sheet.write(x_offset,3,temp['report_type'],text_format)
                 sheet.write(x_offset,4,temp['by_location'],text_format)
