@@ -30,17 +30,17 @@ class StockLedgerReport(models.TransientModel):
         
     def print_report(self):
         output = io.BytesIO()
-        file_name = os.path.join(tempfile.gettempdir(), 'Stock Card Report.xlsx')
+        file_name = os.path.join(tempfile.gettempdir(), 'Stock Ledger Report.xlsx')
         workbook = xlsxwriter.Workbook(file_name)
-        sheet = workbook.add_worksheet("Stock Card Report")
-        banner_format_small = workbook.add_format({'font_name': 'Arial','bold': True, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,'border':True})
+        sheet = workbook.add_worksheet("Stock Ledger Report")
+        banner_format_small = workbook.add_format({'font_name': 'Arial','font_size':20,'bold': True, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,'border':True})
         header_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter','bold': True,'border':True,'bg_color': '#AAAAAA'})
         text_format = workbook.add_format({'font_name': 'Arial','align': 'left', 'valign': 'vcenter'})
 
         report_by = "location"
         header_width = 6
         product_ids=None
-        first_table_headers = ["Branch","Date","Reference","Type","By Location","From Locataion","To Location","Code","Product Name","UOM","Price","Opening Qty","Opening Amt","In Qty","Out Qty","Balance Qty","Amount","Balance Amt"]
+        first_table_headers = ["Branch","Date","Reference","Type","By Location","From Locataion","To Location","Code","Product Name","UOM","Price","Opening Qty","In Qty","Out Qty","Balance Qty","Amount","Balance Amt"]
         if self.display_all_products or (not self.display_all_products and not self.filter_product_ids):
             product_ids = self.env['product.product'].search([('detailed_type','in',self.detailed_type.split(","))]).ids
         else:
@@ -57,7 +57,7 @@ class StockLedgerReport(models.TransientModel):
         
         sheet.merge_range(0,0,x_offset,y_offset, _("Stock Ledger Report"), banner_format_small)
         x_offset+=1
-        sheet.write(x_offset,0,(_("Business Unit")),header_format)
+        sheet.write(x_offset,0,(_("Company")),header_format)
         sheet.write(x_offset,1,self.company_id.name,header_format)
         sheet.write(x_offset,header_width-2,(_("Start Date")),header_format)
         sheet.write(x_offset,header_width-1,self.start_date.strftime("%d-%m-%Y"),header_format)
@@ -89,7 +89,21 @@ class StockLedgerReport(models.TransientModel):
                         select
                         rb.name as branch,
                         slvr.report_date,slvr.product_id,
-                        slvr.report_type as report_type,
+                        CASE 
+                            WHEN slvr.report_type = 'adjustment' THEN 'Adjustment'
+                            WHEN slvr.report_type = 'adjustment_return' THEN 'Adjustment Return'
+                            WHEN slvr.report_type = 'delivery' THEN 'Delivery'
+                            WHEN slvr.report_type = 'delivery_return' THEN 'Delivery Return'
+                            WHEN slvr.report_type = 'receipt' THEN 'Receipt'
+                            WHEN slvr.report_type = 'receipt_return' THEN 'Receipt Return'
+                            WHEN slvr.report_type = 'transfer' THEN 'Transfer'
+                            WHEN slvr.report_type = 'transfer_return' THEN 'Transfer Return'
+                            WHEN slvr.report_type = 'duty' THEN 'Duty'
+                            WHEN slvr.report_type = 'landed_cost' THEN 'Landed Cost'
+                            WHEN slvr.report_type = 'mrp' THEN 'Manufacturing'
+                            WHEN slvr.report_type = 'unknown' THEN 'Unknown'
+                            ELSE ''
+                        END as report_type,
                         slvr.ref as ref,	
                         slvr.report_date,slvr.product_id,
                         sl_by.name as by_location,
@@ -194,12 +208,12 @@ class StockLedgerReport(models.TransientModel):
                 sheet.write(x_offset,9,temp['uom'],text_format)
                 sheet.write(x_offset,10,temp['price'],text_format)
                 sheet.write(x_offset,11,temp['qty_op'],text_format)
-                sheet.write(x_offset,12,temp['op_amt'],text_format)
-                sheet.write(x_offset,13,temp['qty_in'],text_format)
-                sheet.write(x_offset,14,temp['qty_out'],text_format)
-                sheet.write(x_offset,15,temp['qty_bal'],text_format)
-                sheet.write(x_offset,16,temp['amount'],text_format)
-                sheet.write(x_offset,17,temp['balance'],text_format)
+                # sheet.write(x_offset,12,temp['op_amt'],text_format)
+                sheet.write(x_offset,11,temp['qty_in'],text_format)
+                sheet.write(x_offset,12,temp['qty_out'],text_format)
+                sheet.write(x_offset,13,temp['qty_bal'],text_format)
+                sheet.write(x_offset,14,temp['amount'],text_format)
+                sheet.write(x_offset,15,temp['balance'],text_format)
                 x_offset+=1
 
         workbook.close()
