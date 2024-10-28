@@ -43,7 +43,7 @@ class ExcelWizardCashReport(models.AbstractModel):
         elif form_datas['report_type'] == 'account_group_report':
             account_ids_text = tuple(account_ids) if len(account_ids) > 1 else f"('{account_ids[0]}')"
         
-        currency_query = """ SELECT id,name FROM res_currency AS cur WHERE id IN ( SELECT currency_id FROM account_move GROUP BY currency_id ); """
+        currency_query = """ SELECT id,name,CASE WHEN name = 'MMK' THEN 1 ELSE 0 END AS row_number FROM res_currency AS cur WHERE id IN ( SELECT currency_id FROM account_move GROUP BY currency_id ) ORDER BY row_number DESC; """
         self.env.cr.execute(currency_query)
         currency_datas = {data[0]:data[1] for data in  self.env.cr.fetchall()}
             
@@ -65,42 +65,59 @@ class ExcelWizardCashReport(models.AbstractModel):
         dynamic_sql = ""
         for date in date_range:
             for currency_id,currency_name in currency_datas.items():
-                dynamic_sql += f"""SUM(CASE WHEN aml.date = '{date}' AND aml.currency_id = {int(currency_id)} THEN COALESCE(amount_currency, 0) ELSE 0 END) AS "{date}_{currency_name}","""
+                # dynamic_sql += f"""SUM(CASE WHEN aml.date = '{date}' AND aml.currency_id = {int(currency_id)} THEN COALESCE(amount_currency, 0) ELSE 0 END) AS "{date}_{currency_name}","""
+                dynamic_sql += f"""ROUND(SUM(CASE WHEN aml.currency_id = {int(currency_id)} THEN COALESCE(amount_currency, 0) ELSE 0 END),2) AS "{currency_name}","""
 
-        sql_query = f"""
-			SELECT
-				MAX(aa.code) AS acccount_code,
-				MAX(aa.name) AS account_name,
-				MAX(bank.name) AS bank_name,
-				MAX(aj.type) AS type,
-				{dynamic_sql[:-1]}
-			FROM (
-				SELECT DISTINCT id AS account_id
-				FROM account_account 
-				WHERE id IN {account_ids_text}
-			) AS account_list
-			CROSS JOIN generate_series('{form_datas['start_date']}'::date, '{form_datas['end_date']}'::date, '1 day'::interval) AS g(date)
-			LEFT JOIN 
-				(   SELECT date, amount_currency, account_id, currency_id
-					FROM account_move_line
-					WHERE parent_state IN ('{"','".join(form_datas['entry_type'].split(","))}')
-				) AS aml
-				ON account_list.account_id = aml.account_id AND g.date = aml.date
-			LEFT JOIN account_account AS aa
-				ON aa.id = account_list.account_id
-			LEFT JOIN account_journal AS aj
-				ON aj.default_account_id = aa.id
-			LEFT JOIN res_partner_bank AS bank_t
-				ON bank_t.id = aj.bank_account_id
-			LEFT JOIN res_bank AS bank
-				ON bank.id = bank_t.bank_id
-			GROUP BY aa.id
-			ORDER BY aa.id;
+        # sql_query = f"""
+		# 	SELECT
+		# 		MAX(aa.code) AS acccount_code,
+		# 		MAX(aa.name) AS account_name,
+		# 		MAX(bank.name) AS bank_name,
+		# 		MAX(aj.type) AS type,
+		# 		{dynamic_sql[:-1]}
+		# 	FROM (
+		# 		SELECT DISTINCT id AS account_id
+		# 		FROM account_account 
+		# 		WHERE id IN {account_ids_text}
+		# 	) AS account_list
+		# 	CROSS JOIN generate_series('{form_datas['start_date']}'::date, '{form_datas['end_date']}'::date, '1 day'::interval) AS g(date)
+		# 	LEFT JOIN 
+		# 		(   SELECT date, amount_currency, account_id, currency_id
+		# 			FROM account_move_line
+		# 			WHERE parent_state IN ('{"','".join(form_datas['entry_type'].split(","))}')
+		# 		) AS aml
+		# 		ON account_list.account_id = aml.account_id AND g.date = aml.date
+		# 	LEFT JOIN account_account AS aa
+		# 		ON aa.id = account_list.account_id
+		# 	LEFT JOIN account_journal AS aj
+		# 		ON aj.default_account_id = aa.id
+		# 	LEFT JOIN res_partner_bank AS bank_t
+		# 		ON bank_t.id = aj.bank_account_id
+		# 	LEFT JOIN res_bank AS bank
+		# 		ON bank.id = bank_t.bank_id
+		# 	GROUP BY aa.id
+		# 	ORDER BY aa.id;
+        # """
+        
+        sql_query = f""" 
+				SELECT 
+					MAX(aa.code) AS acccount_code,
+					MAX(aa.name) AS account_name,
+					INITCAP(MAX(aj.type)) AS type,
+					{dynamic_sql[:-1]}
+				FROM account_move_line AS aml	
+				LEFT JOIN account_account AS aa
+					ON aa.id = aml.account_id
+				LEFT JOIN account_journal AS aj
+					ON aj.default_account_id = aa.id
+				WHERE aml.account_id IN {account_ids_text} AND aml.parent_state IN ('{"','".join(form_datas['entry_type'].split(","))}') AND aml.date <= '{form_datas['start_date']}'
+				GROUP BY aa.id
+				ORDER BY aa.id        
         """
 
-        sheet = workbook.add_worksheet("Cash Report")
-
-        header = ['Folio', 'Folio2', 'Bank Name', 'Account Type'] + list(currency_datas.values())
+        sheet = workbook.add_worksheet("Cash & Bank Summary Report")
+        currency_format = workbook.add_format({'num_format': '#,##0.00'})
+        header = ['Account Code', 'Account Name', 'Account Type'] + list(currency_datas.values())
 
         # Write the header row
         for col, header_item in enumerate(header):
@@ -111,7 +128,11 @@ class ExcelWizardCashReport(models.AbstractModel):
         cash_datas = self.env.cr.fetchall()
 
         for row, data_tuple in enumerate(cash_datas):
-            sheet.write_row(row+1, 0, list(data_tuple))
+            for col, data in enumerate(data_tuple):
+                if col >= 3:
+                    sheet.write(row+1, col, data, currency_format)
+                else:
+                    sheet.write(row+1, col, data)
             # row_data = list(data_tuple)
             # row_data[4] = account_opening.get(data_tuple[0], 0.0)
             # temp_data = 0

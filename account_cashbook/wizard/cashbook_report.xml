@@ -30,7 +30,7 @@
    </record>
 
    <record id="action_cashbook_xlsx_report" model="ir.actions.act_window">
-       <field name="name">Cashbook Report</field>
+       <field name="name">Cash &amp; Bank Summary Report</field>
        <field name="res_model">cashbook.report</field>
        <field name="type">ir.actions.act_window</field>
        <field name="view_mode">form</field>
@@ -38,7 +38,7 @@
    </record>
 
     <record id="export_cash_report_xlsx" model="ir.actions.report">
-        <field name="name">Cash Report</field>
+        <field name="name">Cash &amp; Bank Summary Report</field>
         <field name="model">cashbook.report</field>
         <field name="report_type">xlsx</field>
         <field name="report_name">account_cashbook.export_cash_report_xls</field>
