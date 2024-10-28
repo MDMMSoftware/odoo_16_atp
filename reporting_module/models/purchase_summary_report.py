@@ -7,7 +7,7 @@ class PurchaseSummaryReport(models.Model):
     _order = 'id'
 
     internal_ref = fields.Char('Internal Ref.')
-    type = fields.Char('Type',compute='compute_type')
+    type = fields.Selection([('direct','Cash Purchase'),('credit','Credit Purchase'),('direct_return','Cash Purchase Return'),('credit_return','Credit Purchase Return')],string="Type",compute='compute_get_payment_type')
     invoice_date = fields.Date('Invoiced Date',readonly=True)
     year_str = fields.Integer('Year',readonly=True)
     month_str = fields.Integer('Month',readonly=True)
@@ -28,13 +28,21 @@ class PurchaseSummaryReport(models.Model):
     vendor_category_id = fields.Many2one('res.partner.vendor.category',string="Vendor Category",readonly=True)
     move_id = fields.Many2one('account.move',string="Move ID",readonly=True)
 
-    def compute_type(self):
+    def compute_get_payment_type(self):
         for rec in self:
-            type = 'Bill'
+            purchase_type = 'credit'
             if rec.move_id:
+                order_ids = rec.move_id.line_ids.mapped('purchase_line_id').order_id
+                for order_id in order_ids:
+                    purchase_type = order_id.term_type
                 if rec.move_id.move_type == 'in_refund':
-                    type = 'Refund'
-            rec.type = type
+                    purchase_type += '_return'
+            rec.type = purchase_type            
+            # type = 'Bill'
+            # if rec.move_id:
+            #     if rec.move_id.move_type == 'in_refund':
+            #         type = 'Refund'
+            # rec.type = type
 
     def action_enter_move_id(self):
         for rec in self:
@@ -74,10 +82,13 @@ class PurchaseSummaryReport(models.Model):
             ,(case when am.move_type='in_refund' then -1*am.amount_total else am.amount_total end) as net_amt
             ,(case when am.move_type='in_refund' then -1*(am.amount_total-am.amount_residual) else (am.amount_total-am.amount_residual) end) as settled_amt 
             ,(case when am.move_type='in_refund' then -1*am.amount_residual else am.amount_residual end) as balance
-            ,rp.vendor_category_id as vendor_category_id
+            ,MAX(rp.vendor_category_id) as vendor_category_id
             ,am.id as move_id
             from account_move as am
+			inner join account_move_line as aml on aml.move_id = am.id
+			inner join purchase_order_line as pol on aml.purchase_line_id = pol.id            
             left join res_partner rp on rp.id = am.partner_id
             where am.move_type in ('in_invoice','in_refund') and am.state='posted'
+            group by am.id
                 )''' % (self._table,)
         )

@@ -58,7 +58,7 @@ class StockValuationLayer(models.Model):
             journal_id, acc_src, acc_dest, acc_valuation = move._get_accounting_data_for_valuation()
             if move.picking_type_id.code=='outgoing' and move.origin_returned_move_id:
                 
-                if abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())) >0:
+                if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                     # for am in am_vals:
                     am['line_ids'].append((0, 0, {
                         'name': "COGS Adjustment",
@@ -81,6 +81,29 @@ class StockValuationLayer(models.Model):
                         'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
                         'account_id':acc_src,
                     }))
+                else:
+                    am['line_ids'].append((0, 0, {
+                        'name': "COGS Adjustment",
+                        'product_id': svl.product_id.id,
+                        'quantity': svl.quantity,
+                        'product_uom_id': svl.product_id.uom_id.id,
+                        'ref': "COGS Adjustment",
+                        'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                        'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                        'account_id': svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id,
+                    }))
+
+                    am['line_ids'].append((0, 0, {
+                        'name': "COGS Adjustment",
+                        'product_id': svl.product_id.id,
+                        'quantity': svl.quantity,
+                        'product_uom_id': svl.product_id.uom_id.id,
+                        'ref': "COGS Adjustment",
+                        'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                        'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                        'account_id':acc_src,
+                    }))
+                    
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
                 origin_unit_cost = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
@@ -441,7 +464,7 @@ class StockPicking(models.Model):
         valuation_report = self.env['stock.location.valuation.report']
         if self.state=='done' and self.picking_type_id.code=='internal':
             if self.requisition_id:
-                from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
+                from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id),('state','!=','cancel')]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
                 # if from_req.state!='done':
                 #     raise ValidationError(_("Please Validate From Requisition First"))
             for move in self.move_ids:
@@ -505,7 +528,7 @@ class StockPicking(models.Model):
                                 from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
                                 valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                                 # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)                            
                                 amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
                                 new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                             

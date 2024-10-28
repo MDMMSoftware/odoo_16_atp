@@ -7,7 +7,7 @@
         	<field name="inherit_id" ref="purchase.purchase_order_form"/>
 			<field name="arch" type="xml">
                 <xpath expr="//field[@name='currency_id']" position="after">
-                    <field name="global_discount"/>
+                    <field name="global_discount" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='notes']" position="before">
                     <field name="discount_type" attrs="{'invisible': [('global_discount', '=', False)]}"/>

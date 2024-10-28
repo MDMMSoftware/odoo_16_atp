@@ -517,8 +517,8 @@ class AccountReconciliation(models.AbstractModel):
             line_vals['currency_id'] = currency.id
         move_vals.update({'department_id':line_vals.get('department_id',False), 'branch_id':line_vals.get('branch_id',False)})
         analytic_dct = {}
-        project_data = self.env['analytic.project.code'].browse(line_vals.get('project_id'))
-        division_data = self.env['analytic.division'].browse(line_vals.get('division_id'))
+        project_data = self.env.get('analytic.project.code') and self.env['analytic.project.code'].browse(line_vals.get('project_id'))
+        division_data = self.env.get('analytic.division') and self.env['analytic.division'].browse(line_vals.get('division_id'))
         if project_data and project_data.analytic_project_id and project_data.analytic_project_id.id:
             analytic_dct[project_data.analytic_project_id.id] = 100
         if division_data and division_data.analytic_account_id and division_data.analytic_account_id.id:

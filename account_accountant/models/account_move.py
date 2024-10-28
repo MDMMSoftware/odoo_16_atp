@@ -152,6 +152,9 @@ class AccountMoveLine(models.Model):
         datas = super()._prepare_exchange_difference_move_vals(amounts_list, company, exchange_date, **kwargs)  
         if datas and datas["move_vals"]:
             line_ids = datas["move_vals"]["line_ids"]
+            move_ids = datas["move_vals"]
+            if self.move_id and self.move_id.branch_id:
+                move_ids['branch_id'] = self.move_id.branch_id.id
             if line_ids and self.move_id and self.move_id.payment_id:
                 payment_id = self[0].move_id.payment_id
                 datas["move_vals"]["department_id"] = payment_id.department_id.id
@@ -169,3 +172,13 @@ class AccountMoveLine(models.Model):
                         line_id[-1]["analytic_distribution"] = analytic_dct
         return datas
     
+    
+    def calculate_cogs_adjustment(self):
+        valuations = self.env['stock.valuation.layer'].search([('account_move_id','in',self.move_id.ids)])
+        for move in self.move_id:
+            move.button_draft()
+            move.ref = None
+            move.unlink()
+        for svl in valuations:
+            if not svl.account_move_id:
+                svl._validate_accounting_entries()
