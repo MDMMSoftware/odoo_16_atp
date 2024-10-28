@@ -20,7 +20,9 @@
         'views/adjustment.xml',
         'views/account_move.xml',
         'views/stock_move.xml',
-        'views/stock_lot.xml'
+        'views/stock_lot.xml',
+        'views/stock_ledger_wizard.xml'
+        
     ],
     'license': "AGPL-3",
     'installable': True,
