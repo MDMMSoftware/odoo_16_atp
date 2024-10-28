@@ -209,11 +209,11 @@ class StockLedgerReport(models.TransientModel):
                 sheet.write(x_offset,10,temp['price'],text_format)
                 sheet.write(x_offset,11,temp['qty_op'],text_format)
                 # sheet.write(x_offset,12,temp['op_amt'],text_format)
-                sheet.write(x_offset,11,temp['qty_in'],text_format)
-                sheet.write(x_offset,12,temp['qty_out'],text_format)
-                sheet.write(x_offset,13,temp['qty_bal'],text_format)
-                sheet.write(x_offset,14,temp['amount'],text_format)
-                sheet.write(x_offset,15,temp['balance'],text_format)
+                sheet.write(x_offset,12,temp['qty_in'],text_format)
+                sheet.write(x_offset,13,temp['qty_out'],text_format)
+                sheet.write(x_offset,14,temp['qty_bal'],text_format)
+                sheet.write(x_offset,15,temp['amount'],text_format)
+                sheet.write(x_offset,16,temp['balance'],text_format)
                 x_offset+=1
 
         workbook.close()
