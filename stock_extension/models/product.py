@@ -45,6 +45,15 @@ class ProductTemplate(models.Model):
         ('uniq_product_code_product', 'unique(product_code,company_id)', 'Product Code must be unique withing same company!!'),
     ]          
 
+    def copy(self, default=None):
+        default = dict(default or {})
+        
+        default['product_code'] = self.product_code + ' (Copy)'
+
+        copy_record = super(ProductTemplate, self).copy(default)
+        
+        return copy_record
+
     def _compute_dead_stock(self):
         for rec in self:
             product_id = self.env['product.product'].search([('product_tmpl_id','=',rec.id)],limit=1)
