@@ -388,35 +388,6 @@ class AccountMove(models.Model):
             compute_all_disc2 = {k: frozendict(v) for k, v in compute_line_disc.items()}
             compute_all_disc.update(compute_all_disc2)    
             move.compute_all_disc = {k: frozendict(v) for k, v in compute_all_disc.items()}
-            
-            
-         
-
-    # @api.constrains('global_discount')
-    # def check_discount_amt(self):
-    #     for move in self:
-    #         if move.global_discount:
-    #             for line in move.line_ids:
-    #                 line.discount = 0
-    #                 line.discount_amt = 0
-    #                 line.discount_type = None
-    #         else:
-    #             move.discount = 0
-    #             move.discount_amt = 0
-    #             move.discount_type = None
-    
-    # @api.onchange('discount_account_id')
-    # def onchange_discount_account_id(self):
-    #     if self.global_discount:
-    #         self.discount = 0
-    #         self.discount_amt = 0
-    #         self.discount_type = None
-            
-    #     else:
-    #         for line in self.line_ids:
-    #             line.discount = 0
-    #             line.discount_amt = 0
-    #             line.discount_type = None
                 
     @api.depends('discount_amt')
     def _compute_amount_currency(self):
