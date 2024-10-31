@@ -609,6 +609,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 elif col_expr_label == 'communication' or col_expr_label == 'partner_name':
                     col_class = 'o_account_report_line_ellipsis'
                     formatted_value = report.format_value(col_value, figure_type=column['figure_type'])
+                elif col_expr_label == 'name' or col_expr_label == 'journal_name':
+                    col_class = 'o_account_report_line_ellipsis'
+                    formatted_value = report.format_value(col_value, figure_type=column['figure_type'])
                 else:
                     formatted_value = report.format_value(col_value, figure_type=column['figure_type'])
                     if col_expr_label not in ('debit', 'credit'):

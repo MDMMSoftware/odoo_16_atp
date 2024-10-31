@@ -38,36 +38,57 @@
                 <field name="name">Date</field>
                 <field name="expression_label">date</field>
                 <field name="figure_type">none</field>
+                <field name="sequence">10</field> 
+            </record>
+            <record id="general_ledger_report_journal" model="account.report.column">
+                <field name="name">Journal</field>
+                <field name="expression_label">journal_name</field>
+                <field name="figure_type">none</field>
+                <field name="sequence">20</field> 
             </record>
             <record id="general_ledger_report_communication" model="account.report.column">
                 <field name="name">Communication</field>
                 <field name="expression_label">communication</field>
                 <field name="figure_type">none</field>
+                <field name="sequence">30</field> 
+            </record>
+            <record id="general_ledger_report_label" model="account.report.column">
+                <field name="name">Label</field>
+                <field name="expression_label">name</field>
+                <field name="figure_type">none</field>
+                <field name="sequence">40</field> 
             </record>
             <record id="general_ledger_report_partner_name" model="account.report.column">
                 <field name="name">Partner</field>
                 <field name="expression_label">partner_name</field>
                 <field name="figure_type">none</field>
+                <field name="sequence">50</field> 
             </record>
             <record id="general_ledger_report_amount_currency" model="account.report.column">
                 <field name="name">Currency</field>
                 <field name="expression_label">amount_currency</field>
                 <field name="figure_type">monetary</field>
+                <field name="sequence">60</field> 
             </record>
             <record id="general_ledger_report_debit" model="account.report.column">
                 <field name="name">Debit</field>
                 <field name="expression_label">debit</field>
                 <field name="figure_type">monetary</field>
+                <field name="sequence">70</field> 
             </record>
             <record id="general_ledger_report_credit" model="account.report.column">
                 <field name="name">Credit</field>
                 <field name="expression_label">credit</field>
                 <field name="figure_type">monetary</field>
+                <field name="sequence">80</field> 
+
             </record>
             <record id="general_ledger_report_balance" model="account.report.column">
                 <field name="name">Balance</field>
                 <field name="expression_label">balance</field>
                 <field name="figure_type">monetary</field>
+                <field name="sequence">90</field> 
+
             </record>
         </field>
     </record>
