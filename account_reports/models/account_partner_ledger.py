@@ -205,14 +205,14 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 {init_query}
             )     
             SELECT 
-                rd.groupby                               AS groupby ,
-                rd.column_group_key                      AS column_group_key ,
-                rd.debit                                 AS debit , 
-                rd.credit                                AS credit ,
-                ( initd.balance + rd.debit ) - rd.credit AS balance ,
-                initd.balance                            AS initial_balance 
+                rd.groupby                                             AS groupby ,
+                rd.column_group_key                                    AS column_group_key ,
+                rd.debit                                               AS debit , 
+                rd.credit                                              AS credit ,
+                ( COALESCE(initd.balance,0.0) + rd.debit ) - rd.credit AS balance ,
+                COALESCE(initd.balance,0.0)                            AS initial_balance 
             FROM range_datas AS rd
-            INNER JOIN initial_datas AS initd
+            LEFT JOIN initial_datas AS initd
             ON initd.partner_id = rd.groupby;            
         """
         final_params = params + init_params
@@ -523,7 +523,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.date,
                     account_move_line.date_maturity,
                     account_move_line.name,
-                    CASE WHEN account_move.reversed_entry_id IS NOT NULL THEN account_move_line.ref || '(Reversal of ' || r_move.ref || ' )' ELSE account_move_line.ref END AS ref,
+                    CASE WHEN account_move.reversed_entry_id IS NOT NULL THEN account_move.ref || '(Reversal of ' || r_move.ref || ' )' WHEN account_move.ref IS NULL THEN account_move_line.move_name ELSE account_move.ref END AS ref,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -563,7 +563,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.date,
                     account_move_line.date_maturity,
                     account_move_line.name,
-                    account_move_line.ref,
+                    CASE WHEN account_move.ref IS NULL THEN account_move_line.move_name ELSE account_move.ref END AS ref,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -707,7 +707,9 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         for column in options['columns']:
             col_expr_label = column['expression_label']
             if col_expr_label == 'ref':
-                col_value = report._format_aml_name(aml_query_result['name'], aml_query_result['ref'], aml_query_result['move_name'])
+                # col_value = report._format_aml_name(aml_query_result['name'], aml_query_result['ref'], aml_query_result['move_name'])
+                col_value = aml_query_result['ref']
+                pass
             else:
                 col_value = aml_query_result[col_expr_label] if column['column_group_key'] == aml_query_result['column_group_key'] else None
 
