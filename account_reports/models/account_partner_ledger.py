@@ -38,7 +38,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         totals_by_column_group = {
             column_group_key: {
                 total: 0.0
-                for total in ['debit', 'credit', 'balance']
+                for total in ['initial_balance','debit', 'credit', 'balance']
             }
             for column_group_key in options['column_groups']
         }
@@ -50,10 +50,12 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 partner_values[column_group_key]['debit'] = partner_sum.get('debit', 0.0)
                 partner_values[column_group_key]['credit'] = partner_sum.get('credit', 0.0)
                 partner_values[column_group_key]['balance'] = partner_sum.get('balance', 0.0)
+                partner_values[column_group_key]['initial_balance'] = partner_sum.get('initial_balance', 0.0)
 
                 totals_by_column_group[column_group_key]['debit'] += partner_values[column_group_key]['debit']
                 totals_by_column_group[column_group_key]['credit'] += partner_values[column_group_key]['credit']
                 totals_by_column_group[column_group_key]['balance'] += partner_values[column_group_key]['balance']
+                totals_by_column_group[column_group_key]['initial_balance'] += partner_values[column_group_key]['initial_balance']
 
             lines.append(self._get_report_line_partners(options, partner, partner_values, level_shift=level_shift))
 
@@ -108,7 +110,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         prefix_groups_threshold = int(self.env['ir.config_parameter'].sudo().get_param(prefix_group_parameter_name, 0))
         if prefix_groups_threshold:
             options['groupby_prefix_groups_threshold'] = prefix_groups_threshold
-        desired_list = ['JRNL','Account','Label','Ref','Due Date','Matching','Initial Balance','Debit','Credit','Amount Currency','Balance'] # start of addition
+        desired_list = ['JRNL','Account','Label','Ref','Due Date','Matching','Ex.Rate','Initial Balance','Debit','Credit','Amount Currency','Balance'] # start of addition
         result = []
         for list in desired_list:
             for res in options['columns']:
@@ -181,7 +183,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                                 - (optional) lines:                 [line_vals_1, line_vals_2, ...]
         """
         def assign_sum(row):
-            fields_to_assign = ['balance', 'debit', 'credit']
+            fields_to_assign = ['balance', 'debit', 'credit','initial_balance']
             if any(not company_currency.is_zero(row[field]) for field in fields_to_assign):
                 groupby_partners.setdefault(row['groupby'], defaultdict(lambda: defaultdict(float)))
                 for field in fields_to_assign:
@@ -191,10 +193,33 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
 
         # Execute the queries and dispatch the results.
         query, params = self._get_query_sums(options)
-
+        
+        # Execute Initial queries
+        init_query, init_params = self._get_initial_balance_values_header_rows(options)
+        
+        final_query = f""" 
+            WITH range_datas AS (
+                {query}
+            ),
+            initial_datas AS (
+                {init_query}
+            )     
+            SELECT 
+                rd.groupby                                             AS groupby ,
+                rd.column_group_key                                    AS column_group_key ,
+                rd.debit                                               AS debit , 
+                rd.credit                                              AS credit ,
+                ( COALESCE(initd.balance,0.0) + rd.debit ) - rd.credit AS balance ,
+                COALESCE(initd.balance,0.0)                            AS initial_balance 
+            FROM range_datas AS rd
+            LEFT JOIN initial_datas AS initd
+            ON initd.partner_id = rd.groupby;            
+        """
+        final_params = params + init_params
         groupby_partners = {}
 
-        self._cr.execute(query, params)
+        # self._cr.execute(query, params)
+        self._cr.execute(final_query, final_params)
         for res in self._cr.dictfetchall():
             assign_sum(res)
 
@@ -203,13 +228,14 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
 
         self._cr.execute(query, params)
         totals = {}
-        for total_field in ['debit', 'credit', 'balance']:
+        for total_field in ['debit', 'credit', 'balance','initial_balance']:
             totals[total_field] = {col_group_key: 0 for col_group_key in options['column_groups']}
 
         for row in self._cr.dictfetchall():
             totals['debit'][row['column_group_key']] += row['debit']
             totals['credit'][row['column_group_key']] += row['credit']
             totals['balance'][row['column_group_key']] += row['balance']
+            totals['balance'][row['column_group_key']] += row['initial_balance']
 
             if row['groupby'] not in groupby_partners:
                 continue
@@ -222,6 +248,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 groupby_partners[None][column_group_key]['debit'] += totals['credit'][column_group_key]
                 groupby_partners[None][column_group_key]['credit'] += totals['debit'][column_group_key]
                 groupby_partners[None][column_group_key]['balance'] -= totals['balance'][column_group_key]
+                groupby_partners[None][column_group_key]['initial_balance'] -= totals['initial_balance'][column_group_key]
 
         # Retrieve the partners to browse.
         # groupby_partners.keys() contains all account ids affected by:
@@ -253,7 +280,8 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         # Create the currency table.
         ct_query = self.env['res.currency']._get_query_currency_table(options)
         for column_group_key, column_group_options in report._split_options_per_column_group(options).items():
-            tables, where_clause, where_params = report._query_get(column_group_options, 'normal')
+            # tables, where_clause, where_params = report._query_get(column_group_options, 'normal')
+            tables, where_clause, where_params = report._query_get(column_group_options, 'normal_customize')
             params.append(column_group_key)
             params += where_params
             queries.append(f"""
@@ -268,8 +296,36 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 WHERE {where_clause}
                 GROUP BY account_move_line.partner_id
             """)
-
-        return ' UNION ALL '.join(queries), params
+            
+        return ' UNION ALL '.join(queries), params  
+    
+    
+    def _get_initial_balance_values_header_rows(self, options):
+        queries = []
+        params = []
+        report = self.env.ref('account_reports.partner_ledger_report')
+        ct_query = self.env['res.currency']._get_query_currency_table(options)
+        for column_group_key, column_group_options in report._split_options_per_column_group(options).items():
+            # Get sums for the initial balance.
+            # period: [('date' <= options['date_from'] - 1)]
+            new_options = self._get_options_initial_balance(column_group_options)
+            tables, where_clause, where_params = report._query_get(new_options, 'normal')
+            params.append(column_group_key)
+            params += where_params
+            queries.append(f"""
+                SELECT
+                    account_move_line.partner_id,
+                    %s                                                                                    AS column_group_key,
+                    SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,
+                    SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit,
+                    SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance
+                FROM {tables}
+                LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
+                WHERE {where_clause}
+                GROUP BY account_move_line.partner_id
+            """)
+            
+        return ' UNION ALL '.join(queries), params  
 
     def _get_initial_balance_values(self, partner_ids, options):
         queries = []
@@ -467,7 +523,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.date,
                     account_move_line.date_maturity,
                     account_move_line.name,
-                    CASE WHEN account_move.reversed_entry_id IS NOT NULL THEN account_move_line.ref || '(Reversal of ' || r_move.ref || ' )' ELSE account_move_line.ref END AS ref,
+                    CASE WHEN account_move.reversed_entry_id IS NOT NULL THEN account_move.ref || '(Reversal of ' || r_move.ref || ' )' WHEN account_move.ref IS NULL THEN account_move_line.move_name ELSE account_move.ref END AS ref,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -475,6 +531,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.currency_id,
                     account_move_line.amount_currency,
                     account_move_line.matching_number,
+                    account_move_line.exchange_rate,
                     ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,
                     ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,
                     ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,
@@ -484,6 +541,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     {account_name}                                                                   AS account_name,
                     journal.code                                                                     AS journal_code,
                     {journal_name}                                                                   AS journal_name,
+                    INITCAP(journal.type)                                                            AS journal_type,                    
                     %s                                                                               AS column_group_key,
                     'directly_linked_aml'                                                            AS key
                 FROM {tables}
@@ -505,7 +563,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.date,
                     account_move_line.date_maturity,
                     account_move_line.name,
-                    account_move_line.ref,
+                    CASE WHEN account_move.ref IS NULL THEN account_move_line.move_name ELSE account_move.ref END AS ref,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -513,6 +571,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     account_move_line.currency_id,
                     account_move_line.amount_currency,
                     account_move_line.matching_number,
+                    account_move_line.exchange_rate,
                     CASE WHEN aml_with_partner.balance > 0 THEN 0 ELSE ROUND(
                         partial.amount * currency_table.rate, currency_table.precision
                     ) END                                                                               AS debit, 
@@ -528,6 +587,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     {account_name}                                                                      AS account_name,
                     journal.code                                                                        AS journal_code,
                     {journal_name}                                                                      AS journal_name,
+                    INITCAP(journal.type)                                                               AS journal_type,
                     %s                                                                                  AS column_group_key,
                     'indirectly_linked_aml'                                                             AS key
                 FROM {tables}
@@ -647,7 +707,9 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         for column in options['columns']:
             col_expr_label = column['expression_label']
             if col_expr_label == 'ref':
-                col_value = report._format_aml_name(aml_query_result['name'], aml_query_result['ref'], aml_query_result['move_name'])
+                # col_value = report._format_aml_name(aml_query_result['name'], aml_query_result['ref'], aml_query_result['move_name'])
+                col_value = aml_query_result['ref']
+                pass
             else:
                 col_value = aml_query_result[col_expr_label] if column['column_group_key'] == aml_query_result['column_group_key'] else None
 

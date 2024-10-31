@@ -61,12 +61,12 @@
         <field name="column_ids">
             <record id="partner_ledger_report_journal_code" model="account.report.column">
                 <field name="name">JRNL</field>
-                <field name="expression_label">journal_code</field>
+                <field name="expression_label">journal_type</field>
                 <field name="figure_type">none</field>
             </record>
             <record id="partner_ledger_report_account_code" model="account.report.column">
                 <field name="name">Account</field>
-                <field name="expression_label">account_code</field>
+                <field name="expression_label">account_name</field>
                 <field name="figure_type">none</field>
             </record>
             <record id="partner_ledger_report_label" model="account.report.column">
@@ -89,6 +89,11 @@
                 <field name="expression_label">matching_number</field>
                 <field name="figure_type">none</field>
             </record>
+            <record id="partner_ledger_report_exchange_rate" model="account.report.column">
+                <field name="name">Ex.Rate</field>
+                <field name="expression_label">exchange_rate</field>
+                <field name="figure_type">none</field>
+            </record>            
             <record id="partner_ledger_report_initial_balance" model="account.report.column">
                 <field name="name">Initial Balance</field>
                 <field name="expression_label">initial_balance</field>
