@@ -417,6 +417,9 @@ $indent-size-md: 3px;
         font-weight: bold;
     }
     tr.o_account_reports_initial_balance {
+
+        display: none;
+
         > td > span:last-child {
             margin-left: 30px;
         }

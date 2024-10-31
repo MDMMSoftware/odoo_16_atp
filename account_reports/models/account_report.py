@@ -1692,7 +1692,7 @@ class AccountReport(models.Model):
         self.ensure_one()
 
         available_scopes = dict(self.env['account.report.expression']._fields['date_scope'].selection)
-        if date_scope not in available_scopes:
+        if (date_scope not in available_scopes) and ( date_scope != 'normal_customize' ):
             raise UserError(_("Unknown date scope: %s", date_scope))
 
         domain = [
