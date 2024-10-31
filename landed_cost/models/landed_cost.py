@@ -358,9 +358,21 @@ class StockLandedCost(models.Model):
         for key, value in towrite_dict.items():
             AdjustementLines.browse(key).write({'additional_landed_cost': value})
         return True
-# class AccountMove(models.Model):
-#     _inherit = 'account.move'
     
+    
+class AccountMove(models.Model):
+    
+    _inherit = 'account.move'
+    
+    def button_create_landed_costs(self):  
+        datas = super().button_create_landed_costs()
+        move_id = datas.get('res_id')
+        if move_id:
+            move_id = self.env['stock.landed.cost'].sudo().browse(move_id)
+            if move_id and not move_id.branch_id:
+                move_id.branch_id = self.branch_id.id
+        return datas
+        
 #     stock_landed_costs_ids = fields.Many2many(comodel_name='stock.landed.cost',copy=False)
     
     

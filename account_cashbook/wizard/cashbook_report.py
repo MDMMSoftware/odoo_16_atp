@@ -101,7 +101,7 @@ class ExcelWizardCashReport(models.AbstractModel):
         
         sql_query = f""" 
 				SELECT 
-					MAX(aa.code) AS acccount_code,
+					aa.code AS acccount_code,
 					MAX(aa.name) AS account_name,
 					INITCAP(MAX(aj.type)) AS type,
 					{dynamic_sql[:-1]}
@@ -111,8 +111,8 @@ class ExcelWizardCashReport(models.AbstractModel):
 				LEFT JOIN account_journal AS aj
 					ON aj.default_account_id = aa.id
 				WHERE aml.account_id IN {account_ids_text} AND aml.parent_state IN ('{"','".join(form_datas['entry_type'].split(","))}') AND aml.date <= '{form_datas['start_date']}'
-				GROUP BY aa.id
-				ORDER BY aa.id        
+				GROUP BY aa.code
+				ORDER BY aa.code        
         """
 
         sheet = workbook.add_worksheet("Cash & Bank Summary Report")

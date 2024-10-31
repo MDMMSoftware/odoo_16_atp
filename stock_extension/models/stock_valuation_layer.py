@@ -520,7 +520,7 @@ class StockPicking(models.Model):
                                 
                                 valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                                 # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id and x.state != 'cancel')
                                 amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
                                 new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                                 
@@ -528,7 +528,7 @@ class StockPicking(models.Model):
                                 from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
                                 valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                                 # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id)                            
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id and x.state != 'cancel')                            
                                 amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
                                 new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                             
