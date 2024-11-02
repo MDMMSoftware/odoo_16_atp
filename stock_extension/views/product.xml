@@ -23,12 +23,60 @@
             </field>
         </record>
 
-        <!-- Product Template Form View -->
+        <!-- Product Template Normal Form View -->
+        <record id="product_product_general_form_view_inherited" model="ir.ui.view">
+            <field name="name">product.product.general.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml"> 
+                <xpath expr="//div[@name='button_box']//button[@name='action_view_sales']" position="after">
+                    <button class="oe_stat_button"
+                            name="open_pricelist_rules"
+                            icon="fa-list-ul"
+                            groups="product.group_product_pricelist"
+                            type="object">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="pricelist_item_count"/>
+                                </span>
+                                <span attrs="{'invisible': [('pricelist_item_count', '=', 1)]}">
+                                    Extra Prices
+                                </span>
+                                <span attrs="{'invisible': [('pricelist_item_count', '!=', 1)]}">
+                                    Extra Price
+                                </span>
+                            </div>
+                    </button>                       
+                </xpath>
+            </field>
+        </record>
+
+
+        <!-- Product Template Normal Form View -->
         <record id="product_template_general_form_view" model="ir.ui.view">
             <field name="name">product.template.general.inherit</field>
             <field name="model">product.template</field>
             <field name="inherit_id" ref="product.product_template_only_form_view"/>
             <field name="arch" type="xml"> 
+                <xpath expr="//sheet[@name='product_form']//div[@name='button_box']//button[@name='action_view_sales']" position="after">
+                    <button class="oe_stat_button"
+                            name="open_pricelist_rules"
+                            icon="fa-list-ul"
+                            groups="product.group_product_pricelist"
+                            type="object">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="pricelist_item_count"/>
+                                </span>
+                                <span attrs="{'invisible': [('pricelist_item_count', '=', 1)]}">
+                                    Extra Prices
+                                </span>
+                                <span attrs="{'invisible': [('pricelist_item_count', '!=', 1)]}">
+                                    Extra Price
+                                </span>
+                            </div>
+                    </button>                    
+                </xpath>             
                 <xpath expr="//field[@name='barcode']" position="attributes">  
                     <attribute name="invisible">1</attribute>
                 </xpath>
@@ -47,11 +95,15 @@
                 </xpath>
             </field>
         </record>
+
         <record id="prduct_template_form_view_inherited_stock" model="ir.ui.view">
             <field name="name">product.template.form.inherit</field>
             <field name="model">product.template</field>
             <field name="inherit_id" ref="product.product_template_form_view"/>
-            <field name="arch" type="xml"> 
+            <field name="arch" type="xml">
+                <!-- button box -->
+                <xpath expr="//sheet[@name='product_form']//div[@name='button_box']//button[@name='open_pricelist_rules']" position="replace">
+                </xpath>                 
                 <xpath expr="//sheet[@name='product_form']//div[@name='options']//span[2]" position="after">
                     <span class="d-inline-block">
                         <field name="expense_ok"/>

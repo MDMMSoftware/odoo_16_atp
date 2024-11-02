@@ -205,14 +205,14 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 {init_query}
             )     
             SELECT 
-                rd.groupby                                             AS groupby ,
-                rd.column_group_key                                    AS column_group_key ,
-                rd.debit                                               AS debit , 
-                rd.credit                                              AS credit ,
-                ( COALESCE(initd.balance,0.0) + rd.debit ) - rd.credit AS balance ,
-                COALESCE(initd.balance,0.0)                            AS initial_balance 
+                CASE WHEN rd.groupby IS NULL THEN initd.partner_id ELSE rd.groupby  END                  AS groupby ,
+                CASE WHEN rd.groupby IS NULL THEN initd.column_group_key ELSE  rd.column_group_key  END  AS column_group_key ,
+                COALESCE(rd.debit,0.0)                                                                   AS debit ,
+                COALESCE(rd.credit,0.0)                                                                  AS credit ,
+                ( COALESCE(initd.balance,0.0) + COALESCE(rd.debit,0.0) ) - COALESCE(rd.credit,0.0)       AS balance ,
+                COALESCE(initd.balance,0.0)                                                              AS initial_balance 
             FROM range_datas AS rd
-            LEFT JOIN initial_datas AS initd
+            FULL OUTER JOIN initial_datas AS initd
             ON initd.partner_id = rd.groupby;            
         """
         final_params = params + init_params
