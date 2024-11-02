@@ -101,6 +101,7 @@
             <field name="arch" type="xml">
                 <field name="origin" position="after">
                     <field name="internal_ref"/>
+                    <filter name="receipt_date" string="Receipt Date" date="date_planned"/>
                 </field>
             </field>
         </record>   
