@@ -107,6 +107,8 @@ class StockValuationLayer(models.Model):
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
                 origin_unit_cost = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
+                if len(svl)>1:
+                    svl = svl.filtered(lambda x:x.quantity>0)
                 if abs(abs(svl.value)-abs(svl.quantity*unit_cost)) >0:
                     # for am in am_vals:
                     am['line_ids'].append((0, 0, {
