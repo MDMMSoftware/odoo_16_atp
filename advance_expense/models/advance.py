@@ -715,6 +715,13 @@ class AccountPayment(models.Model):
         #     else:
         #         self.prepaid_id.payment_status = 'not_paid'
         
+    @api.model_create_multi
+    def create(self,vals_list):
+        payment = super(AccountPayment, self).create(vals_list)
+        if payment.desc:
+            payment.line_ids.write({'name':payment.desc})
+        
+        return payment
 
     def action_change_status(self):
         to_status = self._context.get('to_status',None)
