@@ -452,7 +452,7 @@ class AccountPayment(models.Model):
     allow_division_feature = fields.Boolean(string="Use Division Feature?", related="company_id.allow_division_feature")
     advance_user_ids = fields.Many2many('res.partner', 'advance_users_rel',
                                 compute='_compute_advance_user_ids')
-    reconcilation_move_ids = fields.Many2many('account.move')
+    reconcilation_move_ids = fields.Many2many('account.move',copy=False)
     
     
     def action_open_reconcilation_entry(self):
