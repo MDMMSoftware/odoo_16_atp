@@ -122,44 +122,10 @@ class StockLocationValuationReport(models.Model):
                     'res_id': check_adjustment.id,
                 }
             
-    def recalculate_costing_for_wrong_transfer(self):
+    def recalculate_costing_for_wrong_transfer(self,product_id):
         
         # product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
-        product_ids = self.env['product.product'].search([('company_id','=',1),('product_code','in',('08880-13805',
-                                '13540-17011-ATK',
-                                '23220-74021-ATK',
-                                '260340-0580',
-                                '31170-RAA-A01-CN',
-                                '334399-J-KYB',
-                                '341232-M-KYB',
-                                '344485-J-KYB',
-                                '3PK-830-BD',
-                                '48815-30551-ATK',
-                                '48820-52010-ATK',
-                                '51321-SLA-003-ATK',
-                                '51360-TG0-T02S-ATK',
-                                '551106-J-KYB',
-                                '7PK-2415-BD',
-                                'CLT-45-CTR',
-                                'CLT-46-CTR',
-                                'CP-CN-4D35',
-                                'D-5070-B',
-                                'EGFM-1044S',
-                                'ESSP1044STH',
-                                'GS-NTC-4D33-GP-2',
-                                'LCPM20A1LG',
-                                'LCPM20A1LR',
-                                'LP-12371-31160-CN',
-                                'LP-6301-2RSCM-KYJP',
-                                'LP-CBMZ-13-CTR',
-                                'ME-221974',
-                                'MR-993340-ATK',
-                                'OS-NTC-104-139-13',
-                                'R-168-STD-TH',
-                                'SB-3752L',
-                                'SB-3752R',
-                                'VOS-MZ-5SFE',
-                                'WV56TA-82'))])
+        product_ids = self.env['product.product'].browse(product_id)
         # product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
