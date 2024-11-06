@@ -69,6 +69,30 @@ class AccountMove(models.Model):
         for res in self:
             res.button_draft()
             res.action_post()
+                     
+    def action_reset_to_draft_for_cost_update(self):
+        for res in self:
+            matched_debit_ids = res.line_ids.matched_debit_ids
+            matched_credit_ids = res.line_ids.matched_credit_ids
+            all_related_reconcile_move_ids = matched_credit_ids.debit_move_id.move_id + matched_credit_ids.credit_move_id.move_id + matched_debit_ids.debit_move_id.move_id + matched_debit_ids.credit_move_id.move_id            
+            move_ids_lst = []
+            for move_id in all_related_reconcile_move_ids:
+                if move_id.id in move_ids_lst or move_id.journal_id.type == 'general':
+                    continue
+                if move_id.id == res.id:
+                    continue
+                move_ids_lst.append(move_id.id)
+            res.button_draft()
+            res.action_post()            
+            original_move_line = res.line_ids.filtered(lambda line: line.display_type == 'payment_term' and not line.reconciled)
+            for move_id in move_ids_lst:
+                target_move = res.env['account.move'].browse(move_id)
+                target_move_line = target_move.line_ids.filtered(lambda line: line.account_id.id == original_move_line.account_id.id and not line.reconciled)
+                if original_move_line and target_move_line and (original_move_line.balance * target_move_line.balance) < 0:
+                    (original_move_line+target_move_line).reconcile()
+                else:
+                    raise UserError(f"Cannot re-reconcile with {original_move_line.move_id.ref} and {target_move_line.move_id.name} ")
+                            
 class AccountMoveLine(models.Model):
     _name = "account.move.line"
     _inherit = "account.move.line"

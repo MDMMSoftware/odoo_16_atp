@@ -122,6 +122,9 @@ class ReconcilePaymentTransfer(models.Model):
                 'line_ids': m_line,
                 'payment_id': payment_id.id,
                 'partner_id': payment_id.partner_id.id,
+                'branch_id': payment_id.branch_id.id,
+                'currency_id':payment_id.currency_id.id,
+                'exchange_rate':payment_id.exchange_rate,
             }
             move_id = self.env['account.move'].create(move_vals)
             move_id._post()
@@ -164,6 +167,9 @@ class ReconcilePaymentTransfer(models.Model):
                 'line_ids': m_line,
                 'payment_id': payment_id.id,
                 'partner_id': payment_id.partner_id.id,
+                'branch_id': payment_id.branch_id.id,
+                'currency_id':payment_id.currency_id.id,
+                'exchange_rate':payment_id.exchange_rate,                
             }
             move_id = self.env['account.move'].create(move_vals)
             move_id._post()
@@ -182,8 +188,8 @@ class ReconcilePaymentTransfer(models.Model):
                 'currency_id':data_ary['currency_id'],
                 'exchange_rate': data_ary['exchange_rate'],
                 'amount_currency':amount_currency,
-                'debit': deb_amt,
-                'credit': cred_amt,                
+                'debit': deb_amt*data_ary['exchange_rate'],
+                'credit': cred_amt*data_ary['exchange_rate'],                
                 'date_maturity': data_ary['date_maturity'],
                 'name': data_ary['name'],
                 'account_id': account_id,

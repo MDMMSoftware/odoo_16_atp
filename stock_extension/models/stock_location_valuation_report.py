@@ -122,10 +122,11 @@ class StockLocationValuationReport(models.Model):
                     'res_id': check_adjustment.id,
                 }
             
-    def recalculate_costing_for_wrong_transfer(self):
+    def recalculate_costing_for_wrong_transfer(self,product_id):
         
-        product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
-        product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
+        # product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
+        product_ids = self.env['product.product'].browse(product_id)
+        # product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
@@ -138,6 +139,59 @@ class StockLocationValuationReport(models.Model):
                 
                 for layer in val_report.filtered(lambda x:x.by_location==location):
                     svl_vals = valuation.sudo().search([('stock_move_id','=',layer.stock_move_id.id)])
+                    if not layer.unit_cost:
+                        for svl in svl_vals:
+                            if svl.stock_move_id.origin_returned_move_id:
+                                price = valuation.sudo().search([('stock_move_id','=',svl.stock_move_id.origin_returned_move_id.id)])[0].unit_cost or 0
+                                svl.write({'unit_cost':price,'value':price*layer.balance})
+                                layer.write({'unit_cost':price,'total_amt':price*layer.balance})
+                           
+                                
+                                if svl.account_move_id:
+                                    svl.account_move_id.button_draft()
+                                    for line in svl.account_move_id.line_ids.filtered(lambda x:x.product_id==product):
+                                        if line.credit:
+                                            query = """
+                                                UPDATE account_move_line
+                                                    SET credit = %s where id IN %s
+                                            """
+                                            self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
+                                        if line.debit:
+                                            query = """
+                                                UPDATE account_move_line
+                                                    SET debit = %s where id IN %s
+                                            """
+                                            self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
+                                    svl.account_move_id.action_post()
+                                
+                                    
+                            else:
+                                if svl.stock_move_id.picking_id.requisition_id:
+                                    from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',svl.stock_move_id.picking_id.requisition_id.id),('state','!=','cancel')]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:not x.origin_returned_move_id).picking_id
+                                    from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==svl.stock_move_id.product_id and x.state != 'cancel')
+                                    amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost or 0
+                                    svl.write({'unit_cost':amount_unit,'value':amount_unit*layer.balance})
+                                    layer.write({'unit_cost':amount_unit,'total_amt':amount_unit*layer.balance})
+                            
+                                    
+                                    if svl.account_move_id:
+                                        svl.account_move_id.button_draft()
+                                        for line in svl.account_move_id.line_ids.filtered(lambda x:x.product_id==product):
+                                            if line.credit:
+                                                query = """
+                                                    UPDATE account_move_line
+                                                        SET credit = %s where id IN %s
+                                                """
+                                                self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
+                                            if line.debit:
+                                                query = """
+                                                    UPDATE account_move_line
+                                                        SET debit = %s where id IN %s
+                                                """
+                                                self.env.cr.execute(query, [abs(svl.value),tuple(line.ids)])
+                                        svl.account_move_id.action_post()
+                                    else:
+                                        svl._validate_accounting_entries()
                     val_cost += layer.balance*layer.unit_cost
                     val_qty += layer.balance
                     if layer.balance>0:
@@ -178,7 +232,7 @@ class StockLocationValuationReport(models.Model):
                     
 
                     if layer.unit_cost:
-                        if layer.report_type == 'transfer':
+                        if layer.report_type in ('transfer','transfer_return'):
                             pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
                             if pos_svl:
                                 if not pos_svl.account_move_id:

@@ -452,7 +452,7 @@ class AccountPayment(models.Model):
     allow_division_feature = fields.Boolean(string="Use Division Feature?", related="company_id.allow_division_feature")
     advance_user_ids = fields.Many2many('res.partner', 'advance_users_rel',
                                 compute='_compute_advance_user_ids')
-    reconcilation_move_ids = fields.Many2many('account.move')
+    reconcilation_move_ids = fields.Many2many('account.move',copy=False)
     
     
     def action_open_reconcilation_entry(self):
@@ -715,6 +715,13 @@ class AccountPayment(models.Model):
         #     else:
         #         self.prepaid_id.payment_status = 'not_paid'
         
+    @api.model_create_multi
+    def create(self,vals_list):
+        payment = super(AccountPayment, self).create(vals_list)
+        if payment.desc:
+            payment.line_ids.write({'name':payment.desc})
+        
+        return payment
 
     def action_change_status(self):
         to_status = self._context.get('to_status',None)

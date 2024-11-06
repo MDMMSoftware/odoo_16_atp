@@ -107,6 +107,8 @@ class StockValuationLayer(models.Model):
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
                 origin_unit_cost = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
+                if len(svl)>1:
+                    svl = svl.filtered(lambda x:x.quantity>0)
                 if abs(abs(svl.value)-abs(svl.quantity*unit_cost)) >0:
                     # for am in am_vals:
                     am['line_ids'].append((0, 0, {
@@ -528,8 +530,11 @@ class StockPicking(models.Model):
                                 from_req = self.env['stock.picking'].sudo().search([('requisition_id','=',self.requisition_id.id)]).filtered(lambda x:x.location_id.usage=='internal').move_ids.filtered(lambda x:x.origin_returned_move_id).picking_id
                                 valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                                 # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
-                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id and x.state != 'cancel')                            
+                                from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id and x.state != 'cancel') 
+                                                            
                                 amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                                if not from_req_move:
+                                    amount_unit = valuation.sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])[0].unit_cost
                                 new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                             
                             if not valuation_ids:
