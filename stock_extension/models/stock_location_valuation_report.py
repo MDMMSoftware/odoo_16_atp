@@ -122,18 +122,18 @@ class StockLocationValuationReport(models.Model):
                     'res_id': check_adjustment.id,
                 }
             
-    def recalculate_costing_for_wrong_transfer(self,product_id):
+    def recalculate_costing_for_wrong_transfer(self,product_id,location_id):
         
         # product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
         product_ids = self.env['product.product'].browse(product_id)
-        # location_ids_vals = self.env['stock.location'].browse(location_id)
+        location_ids_vals = self.env['stock.location'].browse(location_id)
         # product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
             location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
             product.product_tmpl_id.write({'can_be_recalculate' : True})
-            for location in location_ids:
+            for location in location_ids_vals:
                 product_cost = 0
                 val_qty = 0
                 val_cost = 0
