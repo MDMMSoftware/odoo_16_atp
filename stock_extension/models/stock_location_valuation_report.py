@@ -122,18 +122,18 @@ class StockLocationValuationReport(models.Model):
                     'res_id': check_adjustment.id,
                 }
             
-    def recalculate_costing_for_wrong_transfer(self,product_id,location_id):
+    def recalculate_costing_for_wrong_transfer(self,product_id):
         
         # product_ids = self.search([('report_type','=','transfer'),('company_id','=',1)]).product_id
         product_ids = self.env['product.product'].browse(product_id)
-        location_ids_vals = self.env['stock.location'].browse(location_id)
+        # location_ids_vals = self.env['stock.location'].browse(location_id)
         # product_ids = self.env['product.product'].search([('id','in',product_ids.ids),('can_be_recalculate','=',False)],limit=500)
         valuation = self.env['stock.valuation.layer']
         for product in product_ids:
             val_report = self.search([('product_id','=',product.id)],order='id')
             location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
             product.product_tmpl_id.write({'can_be_recalculate' : True})
-            for location in location_ids_vals:
+            for location in location_ids:
                 product_cost = 0
                 val_qty = 0
                 val_cost = 0
@@ -277,88 +277,88 @@ class StockLocationValuationReport(models.Model):
                                     svl_vals._validate_accounting_entries()
                                     
                                     
-    def recalculate_costing_for_location_transfer(self,product_id):
+    # def recalculate_costing_for_location_transfer(self,product_id):
     
-        product_ids = self.env['product.product'].browse(product_id)
-        valuation = self.env['stock.valuation.layer']
-        for product in product_ids:
-            val_report = self.search([('product_id','=',product.id)],order='id')
-            location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
-            product.product_tmpl_id.write({'can_be_recalculate' : True})
-            for location in location_ids:
-                product_cost = 0
-                val_qty = 0
-                val_cost = 0
+    #     product_ids = self.env['product.product'].browse(product_id)
+    #     valuation = self.env['stock.valuation.layer']
+    #     for product in product_ids:
+    #         val_report = self.search([('product_id','=',product.id)],order='id')
+    #         location_ids = val_report.mapped('by_location').filtered(lambda x:x.usage!='transit')
+    #         product.product_tmpl_id.write({'can_be_recalculate' : True})
+    #         for location in location_ids:
+    #             product_cost = 0
+    #             val_qty = 0
+    #             val_cost = 0
                 
-                for layer in val_report.filtered(lambda x:x.by_location==location):
-                    svl_vals = valuation.sudo().search([('stock_move_id','=',layer.stock_move_id.id)])
+    #             for layer in val_report.filtered(lambda x:x.by_location==location):
+    #                 svl_vals = valuation.sudo().search([('stock_move_id','=',layer.stock_move_id.id)])
                     
-                    if layer.report_type=='transfer' and layer.balance>0:
-                        out_layer = layer.search([('seq','=',layer.seq)]).filtered(lambda x:x.by_location.usage!='transit' and x.product_code==layer.product_code and x.id != layer.id)
-                        if round(out_layer.unit_cost,0)!=round(layer.unit_cost,0):
-                            layer.write({'unit_cost':out_layer.unit_cost,'total_amt':out_layer.unit_cost*layer.balance})
-                            for svl in svl_vals:
-                                svl.write({'unit_cost':out_layer.unit_cost,'value':out_layer.unit_cost*layer.balance})
-                                if svl.account_move_id:
-                                    svl.account_move_id.button_draft()
-                                    svl.account_move_id.ref = None
-                                    svl.account_move_id.unlink()
-                                    svl._validate_accounting_entries()
-                    if layer.report_type in ('transfer_return','delivery_return') and layer.balance>0:
-                        if round(product_cost,0)!=round(layer.unit_cost,0):
-                            layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
-                            for svl in svl_vals:
-                                svl.write({'unit_cost':product_cost,'value':product_cost*layer.balance})
-                                if svl.account_move_id:
-                                    svl.account_move_id.button_draft()
-                                    svl.account_move_id.ref = None
-                                    svl.account_move_id.unlink()
-                                    svl._validate_accounting_entries()
-                    if layer.report_type not in ('adjustment','receipt'):
-                        if layer.unit_cost!=abs(product_cost):
-                            if (not (layer.report_type=='transfer' and layer.balance>0)) and (not (layer.report_type in ('transfer_return','delivery_return') and layer.balance>0)):
-                                layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
-                                for svl in svl_vals:
-                                    svl.write({'unit_cost':product_cost,'value':product_cost*layer.balance})
-                                    if svl.account_move_id:
-                                        svl.account_move_id.button_draft()
-                                        svl.account_move_id.ref = None
-                                        svl.account_move_id.unlink()
-                                        svl._validate_accounting_entries()
-                    if layer.qty_in==0 and layer.qty_out==0:
-                        val_cost += layer.total_amt
-                    else:
-                        val_cost += layer.balance*layer.unit_cost
-                    val_qty += layer.balance
-                    if layer.balance>0 or (layer.qty_in==0 and layer.qty_out==0):
-                        if val_qty:
-                            product_cost=val_cost/val_qty
-                        else:
-                            product_cost = val_cost
-                        warehouse_valuation_ids = product.warehouse_valuation.filtered(lambda x:x.location_id==location)
+    #                 if layer.report_type=='transfer' and layer.balance>0:
+    #                     out_layer = layer.search([('seq','=',layer.seq)]).filtered(lambda x:x.by_location.usage!='transit' and x.product_code==layer.product_code and x.id != layer.id)
+    #                     if round(out_layer.unit_cost,0)!=round(layer.unit_cost,0):
+    #                         layer.write({'unit_cost':out_layer.unit_cost,'total_amt':out_layer.unit_cost*layer.balance})
+    #                         for svl in svl_vals:
+    #                             svl.write({'unit_cost':out_layer.unit_cost,'value':out_layer.unit_cost*layer.balance})
+    #                             if svl.account_move_id:
+    #                                 svl.account_move_id.button_draft()
+    #                                 svl.account_move_id.ref = None
+    #                                 svl.account_move_id.unlink()
+    #                                 svl._validate_accounting_entries()
+    #                 if layer.report_type in ('transfer_return','delivery_return') and layer.balance>0:
+    #                     if round(product_cost,0)!=round(layer.unit_cost,0):
+    #                         layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
+    #                         for svl in svl_vals:
+    #                             svl.write({'unit_cost':product_cost,'value':product_cost*layer.balance})
+    #                             if svl.account_move_id:
+    #                                 svl.account_move_id.button_draft()
+    #                                 svl.account_move_id.ref = None
+    #                                 svl.account_move_id.unlink()
+    #                                 svl._validate_accounting_entries()
+    #                 if layer.report_type not in ('adjustment','receipt'):
+    #                     if layer.unit_cost!=abs(product_cost):
+    #                         if (not (layer.report_type=='transfer' and layer.balance>0)) and (not (layer.report_type in ('transfer_return','delivery_return') and layer.balance>0)):
+    #                             layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
+    #                             for svl in svl_vals:
+    #                                 svl.write({'unit_cost':product_cost,'value':product_cost*layer.balance})
+    #                                 if svl.account_move_id:
+    #                                     svl.account_move_id.button_draft()
+    #                                     svl.account_move_id.ref = None
+    #                                     svl.account_move_id.unlink()
+    #                                     svl._validate_accounting_entries()
+    #                 if layer.qty_in==0 and layer.qty_out==0:
+    #                     val_cost += layer.total_amt
+    #                 else:
+    #                     val_cost += layer.balance*layer.unit_cost
+    #                 val_qty += layer.balance
+    #                 if layer.balance>0 or (layer.qty_in==0 and layer.qty_out==0):
+    #                     if val_qty:
+    #                         product_cost=val_cost/val_qty
+    #                     else:
+    #                         product_cost = val_cost
+    #                     warehouse_valuation_ids = product.warehouse_valuation.filtered(lambda x:x.location_id==location)
                 
-                        if not warehouse_valuation_ids:
-                            vals = self.env['warehouse.valuation'].create({'location_id':location.id,
-                                                                        'location_cost':product_cost})
-                            if vals:
-                                product.write({'warehouse_valuation':[(4,vals.id)]})
-                        else:
-                            warehouse_valuation_ids.write({'location_cost':product_cost})
+    #                     if not warehouse_valuation_ids:
+    #                         vals = self.env['warehouse.valuation'].create({'location_id':location.id,
+    #                                                                     'location_cost':product_cost})
+    #                         if vals:
+    #                             product.write({'warehouse_valuation':[(4,vals.id)]})
+    #                     else:
+    #                         warehouse_valuation_ids.write({'location_cost':product_cost})
                     
                     
 
-                    if layer.unit_cost:
-                        if layer.report_type in ('transfer','transfer_return'):
-                            pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
-                            if pos_svl:
-                                if not pos_svl.account_move_id:
-                                    pos_svl._validate_accounting_entries()
+                    # if layer.unit_cost:
+                    #     if layer.report_type in ('transfer','transfer_return'):
+                    #         pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
+                    #         if pos_svl:
+                    #             if not pos_svl.account_move_id:
+                    #                 pos_svl._validate_accounting_entries()
                                     
-                        else:
+                    #     else:
                                 
-                            if len(svl_vals)==1:
-                                if not svl_vals.account_move_id:
-                                    svl_vals._validate_accounting_entries()
+                    #         if len(svl_vals)==1:
+                    #             if not svl_vals.account_move_id:
+                    #                 svl_vals._validate_accounting_entries()
                                     
             
                     
