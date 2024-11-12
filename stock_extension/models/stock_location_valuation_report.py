@@ -225,6 +225,17 @@ class StockLocationValuationReport(models.Model):
                                         svl.account_move_id.ref = None
                                         svl.account_move_id.unlink()
                                         svl._validate_accounting_entries()
+                    if layer.report_type == 'adjustment' and layer.balance<0:
+                        if layer.unit_cost!=abs(product_cost):
+                            
+                            layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
+                            for svl in svl_vals:
+                                svl.write({'unit_cost':product_cost,'value':product_cost*layer.balance})
+                                if svl.account_move_id:
+                                    svl.account_move_id.button_draft()
+                                    svl.account_move_id.ref = None
+                                    svl.account_move_id.unlink()
+                                    svl._validate_accounting_entries()
                     if layer.qty_in==0 and layer.qty_out==0:
                         val_cost += layer.total_amt
                     else:
