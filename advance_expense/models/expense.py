@@ -627,6 +627,7 @@ class AccountMoveLine(models.Model):
     employee_id = fields.Many2one(comodel_name='hr.employee',string="Employee")
     is_journal_acc = fields.Boolean(default=False)
     division_id = fields.Many2one(comodel_name='analytic.division',string="Division")
+    internal_ref = fields.Char(string="Internal Reference", related='move_id.internal_ref',store=False)
 
     @api.onchange('product_id')
     def _remove_account_auto_expense_account(self):

@@ -11,6 +11,7 @@
                 </xpath>
             </field>
         </record>
+
         <record id="view_move_expense_form_inherit" model="ir.ui.view">
             <field name="name">account.move.expense.form.inherit</field>
             <field name="model">account.move</field>
@@ -248,6 +249,17 @@
             </field>
         </record>
 
+        <record id="view_account_move_line_filter_inherited" model="ir.ui.view">
+            <field name="name">account.move.line.filter</field>
+            <field name="model">account.move.line</field>
+            <field name="inherit_id" ref="account.view_account_move_line_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='tax_ids']" position="after">
+                    <field name="internal_ref"/>
+                </xpath>
+            </field>
+        </record>        
+
         <record id="view_move_line_tree_inherited" model="ir.ui.view">
             <field name="name">account.move.line.tree.inherited</field>
             <field name="model">account.move.line</field>
@@ -261,6 +273,7 @@
                     <field name="voucher_no" optional="hide"/>  
                     <field name="voucher_date" optional="hide"/>                      
                     <field name="remark" optional="hide"/>   
+                    <field name="internal_ref" optional="hide"/>   
                     <field name="is_journal_acc" invisible="1"/>                                                                     
                 </xpath>
                 <xpath expr="//field[@name='account_id']" position="after">
