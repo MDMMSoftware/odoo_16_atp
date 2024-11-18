@@ -120,7 +120,15 @@ class ProductTemplate(models.Model):
                 'plan_id': res.analytic_plan_id.id
             })  
             res.analytic_account_id = analytic_account
-        return res  
+        return res
+      
+    def write(self, vals_list):
+        if 'product_code' in vals_list:
+            pp_id = self.env['product.product'].sudo().search([('product_tmpl_id','=',self.id)]).id
+            if self.env['stock.move'].sudo().search([('product_id','=',pp_id)],limit=1):
+                raise ValidationError("Deleting a product with stock in / out is permitted...")
+        res = super().write(vals_list)
+        return res
 
     def name_get(self):
         return [(rec.id,'%s' %(rec.product_code)) for rec in self]  
