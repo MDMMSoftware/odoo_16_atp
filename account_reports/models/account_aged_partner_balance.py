@@ -80,7 +80,8 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
 
         date_to = fields.Date.from_string(options['date']['date_to'])
         periods = [
-            (False, fields.Date.to_string(date_to)),
+            (False, fields.Date.to_string(date_to + relativedelta(days=1))),
+            (fields.Date.to_string(date_to), fields.Date.to_string(date_to)),
             (minus_days(date_to, 1), minus_days(date_to, 7)),
             (minus_days(date_to, 8), minus_days(date_to, 30)),
             (minus_days(date_to, 31), minus_days(date_to, 60)),
@@ -88,6 +89,16 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
             (minus_days(date_to, 91), minus_days(date_to, 120)),
             (minus_days(date_to, 121), False),
         ]
+
+        # periods = [
+        #     (False, fields.Date.to_string(date_to)),
+        #     (minus_days(date_to, 1), minus_days(date_to, 7)),
+        #     (minus_days(date_to, 8), minus_days(date_to, 30)),
+        #     (minus_days(date_to, 31), minus_days(date_to, 60)),
+        #     (minus_days(date_to, 61), minus_days(date_to, 90)),
+        #     (minus_days(date_to, 91), minus_days(date_to, 120)),
+        #     (minus_days(date_to, 121), False),
+        # ]
 
         def build_result_dict(report, query_res_lines):
             rslt = {f'period{i}': 0 for i in range(len(periods))}
