@@ -112,7 +112,7 @@
             <field name="state">code</field>
         </record>
 
-        <record id="ir_cron_recalculate_costing_for_location" model="ir.cron">
+        <!-- <record id="ir_cron_recalculate_costing_for_location" model="ir.cron">
             <field name="name">Recalculate Costing for Location Transfer</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
@@ -122,6 +122,6 @@
             <field name="model_id" ref="model_stock_location_valuation_report"/>
             <field name="code">model.recalculate_costing_for_location_transfer()</field>
             <field name="state">code</field>
-        </record>
+        </record> -->
     </data>
 </odoo>
