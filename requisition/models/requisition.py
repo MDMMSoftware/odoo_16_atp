@@ -546,3 +546,14 @@ class StockPicking(models.Model):
             if backorder.requisition_id:
                 backorder.requisition_id.sudo().write({'picking_ids':[(4,backorder.id)]})
         return backorders
+    
+class ReturnPicking(models.TransientModel):
+    _inherit = 'stock.return.picking'
+
+    def _create_returns(self):  
+        new_picking_id, picking_type_id = super()._create_returns()
+        if self.product_return_moves and self.product_return_moves.move_id:
+            origin_picking_id = self.product_return_moves[0].move_id[0].picking_id
+            if origin_picking_id and origin_picking_id.requisition_id:
+                origin_picking_id.requisition_id.sudo().write({'picking_ids':[(4, new_picking_id)]})
+        return new_picking_id, picking_type_id    
