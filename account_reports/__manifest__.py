@@ -38,6 +38,7 @@ Accounting Reports
         'wizard/multicurrency_revaluation.xml',
         'wizard/report_export_wizard.xml',
         'wizard/fiscal_year.xml',
+        'wizard/cash_flow_diff.xml',
         'views/account_activity.xml',
         'views/account_account_views.xml',
         'views/account_tax_views.xml',

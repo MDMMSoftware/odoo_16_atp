@@ -7,7 +7,27 @@
         <field name="arch" type="xml">
             <field name="currency_id" position="before">
                 <field name="non_trade" attrs="{'invisible': [('account_type', 'not in', ('liability_payable','asset_receivable'))]}"/>
+                <field name="cash_flow_type"/>
             </field>
         </field>
     </record>
+
+    <record id="view_cash_flow_type_tree" model="ir.ui.view">
+        <field name="name">Cash Flow  Tree</field>
+        <field name="model">cash.flow.type</field>
+        <field name="arch" type="xml">
+            <tree string="Cash Flow List" editable="bottom">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_cash_flow_type_tree" model="ir.actions.act_window">
+        <field name="name">Cash Flow Type</field>
+        <field name="res_model">cash.flow.type</field>
+        <field name="view_id" ref="view_cash_flow_type_tree"/>
+        <field name="help">Create and Manage Cash Flow Type</field>
+    </record>
+
+    <menuitem id="menu_cash_flow_type_tree" action="action_cash_flow_type_tree" parent="account.account_account_menu" sequence="8"/>
 </odoo>
