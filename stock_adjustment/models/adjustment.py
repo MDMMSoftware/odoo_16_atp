@@ -375,7 +375,77 @@ class StockAdjustment(models.Model):
             'target': 'new',
             }
         else:
-            raise ValidationError('Report Not Not Found')          
+            raise ValidationError('Report Not Not Found')    
+        
+    def recalculate_costing_for_wrong_adj(self):
+        
+        
+        sql = """with stock_journal as ( 
+                select 
+                move.id,move.name,sm.adjustment_line_id,line.product_id,m_line.credit,adjust.id as adjust_id,adjust.name as adj_name
+                from stock_inventory_adjustment_line as line
+                inner join stock_inventory_adjustment as adjust
+                on line.adjust_id = adjust.id
+                inner join adjustment_move_rel as move_rel
+                on move_rel.adjust_id = adjust.id
+                inner join account_move as move
+                on move_rel.move_id = move.id
+                inner join stock_move as sm
+                on move.stock_move_id = sm.id and line.id = sm.adjustment_line_id
+                inner join account_move_line as m_line
+                on m_line.move_id = move.id and m_line.credit <> 0 and m_line.account_id = 5
+                ),adjust_movement as (
+                select 
+                move.id,move.name,sm.adjustment_line_id,line.product_id,m_line.debit
+                from stock_inventory_adjustment_line as line
+                inner join stock_inventory_adjustment as adjust
+                on line.adjust_id = adjust.id
+                inner join adjustment_move_rel as move_rel
+                on move_rel.adjust_id = adjust.id
+                inner join account_move as move
+                on move_rel.move_id = move.id
+                inner join stock_move as sm
+                on move.stock_move_id = sm.id and line.id = sm.adjustment_line_id
+                inner join account_move_line as m_line
+                on m_line.move_id = move.id and m_line.debit <> 0 and m_line.account_id = 5
+                )
+                select 
+                sj.adj_name,sj.id as sj_id,sj.name as sj_name,adj_m.id as adj_m_id,adj_m.name as adj_m_name,sj.credit,adj_m.debit
+                from stock_journal as sj
+                inner join adjust_movement as adj_m
+                on sj.product_id = adj_m.product_id and sj.adjustment_line_id = adj_m.adjustment_line_id
+                where floor(sj.credit) <> floor(adj_m.debit)"""
+                
+        self.env.cr.execute(sql,)
+        res = self.env.cr.dictfetchall()
+        for val in res:
+            move = self.env['account.move'].browse(val['sj_id'])
+            move.button_draft()
+            for line in move.line_ids:
+                if line.credit:
+                    query = """
+                        UPDATE account_move_line
+                            SET credit = %s where id IN %s
+                    """
+                    self.env.cr.execute(query, [abs(val['debit']),tuple(line.ids)])
+                    query = """
+                        UPDATE account_move_line
+                            SET balance = debit-credit,amount_currency=debit-credit where id IN %s
+                    """
+                    self.env.cr.execute(query, [tuple(line.ids)])
+                if line.debit:
+                    query = """
+                        UPDATE account_move_line
+                            SET debit = %s where id IN %s
+                    """
+                    self.env.cr.execute(query, [abs(val['debit']),tuple(line.ids)])
+                    query = """
+                        UPDATE account_move_line
+                            SET balance = debit-credit,amount_currency=debit-credit where id IN %s
+                    """
+                    self.env.cr.execute(query, [tuple(line.ids)])
+            move.action_post()
+        return res      
     
     # def action_return(self):
         
