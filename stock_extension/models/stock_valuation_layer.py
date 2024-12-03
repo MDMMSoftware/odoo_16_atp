@@ -56,7 +56,7 @@ class StockValuationLayer(models.Model):
             move = self.env['stock.move'].browse(am['stock_move_id'])
             svl = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',am['stock_move_id'])])
             journal_id, acc_src, acc_dest, acc_valuation = move._get_accounting_data_for_valuation()
-            if move.picking_type_id.code in ('outgoing','incoming') and move.origin_returned_move_id:
+            if move.picking_type_id.code in ('outgoing') and move.origin_returned_move_id:
                 
                 if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                     # for am in am_vals:
