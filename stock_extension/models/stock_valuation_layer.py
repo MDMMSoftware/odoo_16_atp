@@ -127,7 +127,7 @@ class StockValuationLayer(models.Model):
                             'ref': "COGS Adjustment",
                             'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                             'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                            'account_id':acc_src,
+                            'account_id':acc_dest,
                         }))
                     elif abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                         am['line_ids'].append((0, 0, {
@@ -149,7 +149,7 @@ class StockValuationLayer(models.Model):
                             'ref': "COGS Adjustment",
                             'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                             'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                            'account_id':acc_src,
+                            'account_id':acc_dest,
                         }))
                     
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
