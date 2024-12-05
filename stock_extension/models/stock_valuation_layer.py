@@ -105,7 +105,7 @@ class StockValuationLayer(models.Model):
                     }))
             
             elif move.picking_type_id and move.picking_type_id.code =='incoming' and move.origin_returned_move_id and move.sale_line_id:
-                if not move.sale_line_id.order_id.invoice_count:
+                if (not move.sale_line_id.order_id.invoice_count) or (not move.sale_line_id.order_id.invoice_ids.filtered(lambda x:x.state!='cancel')):
                     if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                         # for am in am_vals:
                         am['line_ids'].append((0, 0, {
