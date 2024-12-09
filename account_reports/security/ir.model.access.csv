@@ -13,3 +13,5 @@ access_account_report_horizontal_group_readonly,account.report.horizontal.group.
 access_account_report_horizontal_group_ac_user,account.report.horizontal.group.ac.user,model_account_report_horizontal_group,account.group_account_manager,1,1,1,1
 access_account_report_horizontal_group_rule_readonly,account.report.horizontal.group.rule.readonly,model_account_report_horizontal_group_rule,account.group_account_readonly,1,0,0,0
 access_account_report_horizontal_group_rule_ac_user,account.report.horizontal.group.rule.ac.user,model_account_report_horizontal_group_rule,account.group_account_manager,1,1,1,1
+access_cash_flow_diff,access_cash_flow_diff,model_cash_flow_diff,account.group_account_user,1,1,1,0
+access_cash_flow_type,access_cash_flow_type,model_cash_flow_type,account.group_account_user,1,1,1,1

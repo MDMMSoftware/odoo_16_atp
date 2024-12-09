@@ -161,5 +161,17 @@
         </field>
     </record>
     <menuitem id="menu_stock_adjustment_diff_report" name="Stock Adjustment Diff Report" parent="stock.menu_warehouse_report" action="action_stock_adjustment_diff_report"/>
+    <record id="ir_cron_recalculate_costing_for_adjustment" model="ir.cron">
+        <field name="name">Recalculate Costing for Adjustment</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="nextcall" eval="(DateTime.now().replace(hour=2, minute=0) + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')" />
+        <field name="doall" eval="False"/>
+        <field name="model_id" ref="model_stock_inventory_adjustment"/>
+        <field name="code">model.recalculate_costing_for_wrong_adj()</field>
+        <field name="state">code</field>
+    </record>
+    
     </data>
 </odoo>

@@ -54,9 +54,9 @@ class StockValuationLayer(models.Model):
                            
         for am in am_vals:
             move = self.env['stock.move'].browse(am['stock_move_id'])
-            svl = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',am['stock_move_id'])])
+            svl = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',am['stock_move_id'])])
             journal_id, acc_src, acc_dest, acc_valuation = move._get_accounting_data_for_valuation()
-            if move.picking_type_id.code=='outgoing' and move.origin_returned_move_id:
+            if move.picking_type_id and move.picking_type_id.code =='outgoing' and move.origin_returned_move_id:
                 
                 if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                     # for am in am_vals:
@@ -81,7 +81,7 @@ class StockValuationLayer(models.Model):
                         'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
                         'account_id':acc_src,
                     }))
-                else:
+                elif abs(svl.value)-abs(svl.quantity*move._get_price_unit()) <0:
                     am['line_ids'].append((0, 0, {
                         'name': "COGS Adjustment",
                         'product_id': svl.product_id.id,
@@ -103,9 +103,57 @@ class StockValuationLayer(models.Model):
                         'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
                         'account_id':acc_src,
                     }))
+            
+            elif move.picking_type_id and move.picking_type_id.code =='incoming' and move.origin_returned_move_id and move.sale_line_id:
+                if (not move.sale_line_id.order_id.invoice_count) or (not move.sale_line_id.order_id.invoice_ids.filtered(lambda x:x.state!='cancel')):
+                    if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) <0:
+                        # for am in am_vals:
+                        am['line_ids'].append((0, 0, {
+                            'name': "COGS Adjustment",
+                            'product_id': svl.product_id.id,
+                            'quantity': svl.quantity,
+                            'product_uom_id': svl.product_id.uom_id.id,
+                            'ref': "COGS Adjustment",
+                            'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                            'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                            'account_id': svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id,
+                        }))
+
+                        am['line_ids'].append((0, 0, {
+                            'name': "COGS Adjustment",
+                            'product_id': svl.product_id.id,
+                            'quantity': svl.quantity,
+                            'product_uom_id': svl.product_id.uom_id.id,
+                            'ref': "COGS Adjustment",
+                            'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                            'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                            'account_id':acc_dest,
+                        }))
+                    elif abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
+                        am['line_ids'].append((0, 0, {
+                            'name': "COGS Adjustment",
+                            'product_id': svl.product_id.id,
+                            'quantity': svl.quantity,
+                            'product_uom_id': svl.product_id.uom_id.id,
+                            'ref': "COGS Adjustment",
+                            'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                            'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                            'account_id': svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id,
+                        }))
+
+                        am['line_ids'].append((0, 0, {
+                            'name': "COGS Adjustment",
+                            'product_id': svl.product_id.id,
+                            'quantity': svl.quantity,
+                            'product_uom_id': svl.product_id.uom_id.id,
+                            'ref': "COGS Adjustment",
+                            'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
+                            'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
+                            'account_id':acc_dest,
+                        }))
                     
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
-                origin_unit_cost = self.env['stock.valuation.layer'].sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
+                origin_unit_cost = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
                 if len(svl)>1:
                     svl = svl.filtered(lambda x:x.quantity>0)
