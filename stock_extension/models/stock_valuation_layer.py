@@ -462,9 +462,9 @@ class SaleOrder(models.Model):
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
+    
     exchange_rate = fields.Float(string='Exchange Rate',default=1.0,tracking=True)
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")
-
     
     def button_validate(self):
         if not self.branch_id and ((self.location_id and self.location_id.warehouse_id and self.location_id.warehouse_id.branch_id) or (self.location_dest_id and self.location_dest_id.warehouse_id and self.location_dest_id.warehouse_id.branch_id) ):
@@ -734,10 +734,6 @@ class StockPicking(models.Model):
 
                     if move.picking_id.requisition_id and move.origin_returned_move_id:
                         move.picking_id.requisition_id.write({'picking_ids':[(4, move.picking_id.id)]})
-    
-
-                
-
         return res
     
     def action_cancel(self):
@@ -764,6 +760,27 @@ class StockPicking(models.Model):
             }
         else:
             raise ValidationError('Report Not Not Found')   
+        
+    def copy(self, default=None):
+        if self.sale_id:
+            if (not default) or (default and 'Return' not in default.get('origin','')):
+                raise ValidationError("You can't duplicate a transfer if the transfer is related with the sales.")
+        return super().copy(default)    
+    
+class ReturnPickingLine(models.TransientModel):
+    _inherit = "stock.return.picking.line" 
+    
+    readonly_quantity = fields.Boolean("Readonly Quantity",default=False)   
+    
+class ReturnPicking(models.TransientModel):
+    _inherit = 'stock.return.picking'    
+    
+    @api.model
+    def _prepare_stock_return_picking_line_vals_from_move(self, stock_move):
+        datas = super()._prepare_stock_return_picking_line_vals_from_move(stock_move)
+        if datas and datas.get('quantity',0) <= 0:
+            datas.update({'readonly_quantity':True})
+        return datas   
 
 class StockMove(models.Model):
     _inherit = "stock.move.line"       
@@ -771,7 +788,6 @@ class StockMove(models.Model):
     division_id = fields.Many2one(comodel_name='analytic.division',string="Division")
     allow_division_feature = fields.Boolean(string="Use Division Feature?",related="company_id.allow_division_feature")   
 
-    
 class StockMove(models.Model):
     _inherit = "stock.move"
 

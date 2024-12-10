@@ -364,14 +364,28 @@ class AccountMove(models.Model):
     
     _inherit = 'account.move'
     
-    def button_create_landed_costs(self):  
-        datas = super().button_create_landed_costs()
-        move_id = datas.get('res_id')
-        if move_id:
-            move_id = self.env['stock.landed.cost'].sudo().browse(move_id)
-            if move_id and not move_id.branch_id:
-                move_id.branch_id = self.branch_id.id
-        return datas
+    # inherit create_landed_cost function to calculate exchange amount and carry branch_id
+    def button_create_landed_costs(self):
+        """Create a `stock.landed.cost` record associated to the account move of `self`, each
+        `stock.landed.costs` lines mirroring the current `account.move.line` of self.
+        """
+        self.ensure_one()
+        landed_costs_lines = self.line_ids.filtered(lambda line: line.is_landed_costs_line)
+
+        landed_costs = self.env['stock.landed.cost'].create({
+            'vendor_bill_id': self.id,
+            'branch_id': self.branch_id.id,
+            'cost_lines': [(0, 0, {
+                'product_id': l.product_id.id,
+                'name': l.product_id.name,
+                'account_id': l.product_id.product_tmpl_id.get_product_accounts()['stock_input'].id,
+                # 'price_unit': l.currency_id._convert(l.price_subtotal, l.company_currency_id, l.company_id, l.move_id.date),
+                'price_unit': l.price_subtotal * l.move_id.exchange_rate if l.company_id.currency_id.id != l.currency_id.id else l.currency_id._convert(l.price_subtotal, l.company_currency_id, l.company_id, l.move_id.date),
+                'split_method': l.product_id.split_method_landed_cost or 'equal',
+            }) for l in landed_costs_lines],
+        })
+        action = self.env["ir.actions.actions"]._for_xml_id("stock_landed_costs.action_stock_landed_cost")
+        return dict(action, view_mode='form', res_id=landed_costs.id, views=[(False, 'form')])    
         
 #     stock_landed_costs_ids = fields.Many2many(comodel_name='stock.landed.cost',copy=False)
     
