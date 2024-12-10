@@ -262,6 +262,7 @@ class Employees(models.Model):
             deleted_user = self.env['res.partner'].sudo().search([('name','=',record.name),('id','!=',user_id.partner_id.id)])
             if deleted_user:
                 deleted_user.sudo().unlink()
+            return True
 
     def _auto_create_user(self,limit_amount):  
         no_user_account_employees = self.env['hr.employee'].search([('user_id','=',False),('employee_id','!=',False)],limit=int(limit_amount)) 
@@ -358,6 +359,7 @@ class Employees(models.Model):
             emp.service_day = int(service_day)
             emp.service_year_2 = years
             
+    @api.model_create_multi        
     def create(self,vals):
         if not self.env.user.has_group('hr.group_hr_user'):
             raise ValidationError("You don't have enough access to create employeess!!!")
