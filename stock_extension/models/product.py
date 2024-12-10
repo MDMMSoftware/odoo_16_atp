@@ -5,10 +5,9 @@ from odoo import api, fields, models,_
 from odoo.exceptions import ValidationError
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
+from odoo.tools import float_compare
+
 ACCOUNT_DOMAIN = "['&', '&', '&', ('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card')), ('company_id', '=', current_company_id), ('is_off_balance', '=', False)]"
-
-
-
     
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
@@ -183,6 +182,58 @@ class ProductProduct(models.Model):
 
         if self.env['product.packaging'].search(domain, order="id", limit=1):
             raise ValidationError(_("A packaging already uses the barcode"))
+        
+    def _compute_average_price(self, qty_invoiced, qty_to_invoice, stock_moves, is_returned=False):
+        """Go over the valuation layers of `stock_moves` to value `qty_to_invoice` while taking
+        care of ignoring `qty_invoiced`. If `qty_to_invoice` is greater than what's possible to
+        value with the valuation layers, use the product's standard price.
+
+        :param qty_invoiced: quantity already invoiced
+        :param qty_to_invoice: quantity to invoice
+        :param stock_moves: recordset of `stock.move`
+        :param is_returned: if True, consider the incoming moves
+        :returns: the anglo saxon price unit
+        :rtype: float
+        """
+        self.ensure_one()
+        if not qty_to_invoice:
+            return 0
+
+        candidates = stock_moves\
+            .sudo()\
+            .filtered(lambda m: is_returned == bool(m.origin_returned_move_id and sum(m.stock_valuation_layer_ids.mapped('quantity')) >= 0))\
+            .mapped('stock_valuation_layer_ids')\
+            .sorted()
+
+        value_invoiced = self.env.context.get('value_invoiced', 0)
+        ## added line 
+        if qty_invoiced == 0 and value_invoiced != 0:
+            value_invoiced = 0
+        if 'value_invoiced' in self.env.context:
+            qty_valued, valuation = candidates._consume_all(qty_invoiced, value_invoiced, qty_to_invoice)
+        else:
+            qty_valued, valuation = candidates._consume_specific_qty(qty_invoiced, qty_to_invoice)
+
+        # If there's still quantity to invoice but we're out of candidates, we chose the standard
+        # price to estimate the anglo saxon price unit.
+        missing = qty_to_invoice - qty_valued
+        for sml in stock_moves.move_line_ids:
+            if not sml.owner_id or sml.owner_id == sml.company_id.partner_id:
+                continue
+            missing -= sml.product_uom_id._compute_quantity(sml.qty_done, self.uom_id, rounding_method='HALF-UP')
+        if float_compare(missing, 0, precision_rounding=self.uom_id.rounding) > 0:
+            # valuation_price
+            matched_valuations = candidates.filtered(lambda v:abs(v.quantity) == abs(qty_to_invoice)).sorted()
+            if matched_valuations:
+                stock_moves[0].sale_line_id.order_id.message_post(body=f"Used valuation price - {matched_valuations[0].unit_cost} for the missing quantity {missing} ")
+                valuation +=  matched_valuations[0].unit_cost * missing
+            else:
+                stock_moves[0].sale_line_id.order_id.message_post(body=f"Used standard price - {self.standard_price} when confirming the invoice becuase of insufficient candidates!! ")
+                valuation += self.standard_price * missing
+            ## This is original code 
+            # valuation += self.standard_price * missing                
+
+        return valuation / qty_to_invoice        
 
     @api.model
     def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
