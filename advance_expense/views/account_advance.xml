@@ -328,7 +328,6 @@
             <field name="inherit_id" ref="account.view_account_payment_form" />
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_draft']" position="replace">
-                    <button name="action_draft" string="RESET TO DRAFT" type="object" class="btn btn-warning" attrs="{'invisible': [('x_state', 'in', ['draft','paid','refuse','cancel'])]}" groups="account.group_account_invoice" data-hotkey="w"/>
                 </xpath>
                 <xpath expr="//form//header//field[@name='state']" position="replace">
                         <field name="state" widget="statusbar" invisible="1" statusbar_visible="draft,posted"/>
@@ -345,15 +344,13 @@
                 <xpath expr="//form//header//button[@name='action_post']" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
-                <xpath expr="//form//header//button[@name='action_draft']" position="attributes">
-                    <!-- <attribute name="invisible">1</attribute> -->
-                </xpath>
                 <xpath expr="//form//header//button[@name='action_cancel']" position="after">
                     <button name="action_change_status" context="{'to_status':'check'}" string="Submit" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'draft')]}"/>
                     <button name="action_change_status" context="{'to_status':'finance_approve'}" string="Finance Check" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'check')]}"/> 
                     <button name="action_change_status" context="{'to_status':'director_approve'}" string="Finance  Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'finance_approve')]}"/> 
                     <button name="action_change_status" context="{'to_status':'waiting_payment'}" string="Director Approve" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'director_approve')]}"/>
                     <button name="action_change_status" context="{'to_status':'paid'}" string="Payment" type="object" class="oe_highlight btn-info" attrs="{'invisible': [('x_state', '!=', 'waiting_payment')]}"/>
+                    <button name="action_draft" string="RESET TO DRAFT" type="object" class="btn btn-warning" attrs="{'invisible': [('x_state', 'in', ['draft','paid','refuse','cancel'])]}" groups="account.group_account_invoice" data-hotkey="w"/>                    
                     <button name="action_change_status" context="{'to_status':'refuse'}" string="Refuse" type="object" class="oe_highlight btn-danger" attrs="{'invisible': [('x_state', 'not in', ['check','finance_approve','director_approve'])]}"/>
                     <button name="action_change_status" context="{'to_status':'cancel'}" string="Cancel" type="object" class="oe_highlight btn-danger" attrs="{'invisible': [('x_state', '!=', 'paid')]}"/>
                 </xpath>  
