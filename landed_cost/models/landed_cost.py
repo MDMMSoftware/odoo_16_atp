@@ -131,6 +131,18 @@ class StockLandedCost(models.Model):
             cost.reconcile_landed_cost()
         return True
     
+    def redistribute_amounts_after_landed_cost_exchange_rate(self):
+        if self.vendor_bill_id and self.vendor_bill_id.currency_id.id != self.company_id.currency_id.id:
+            bill_landed_cost_line = self.vendor_bill_id.line_ids.filtered(lambda x:x.is_landed_costs_line == True)
+            if bill_landed_cost_line:
+                amount_total = 0
+                for cost_line in self.cost_lines:
+                    if cost_line.product_id == bill_landed_cost_line.product_id and cost_line.price_unit == bill_landed_cost_line.price_subtotal:
+                        cost_line.price_unit = bill_landed_cost_line.price_subtotal * bill_landed_cost_line.move_id.exchange_rate
+                        amount_total += cost_line.price_unit
+                if amount_total:
+                    self.amount_total = amount_total
+                self.compute_landed_cost_with_distributed_exchange_rate()
     
     # def reconcile_landed_cost(self):
     #     for cost in self:
@@ -358,6 +370,92 @@ class StockLandedCost(models.Model):
         for key, value in towrite_dict.items():
             AdjustementLines.browse(key).write({'additional_landed_cost': value})
         return True
+    
+    def compute_landed_cost_with_distributed_exchange_rate(self):
+        AdjustementLines = self.env['stock.valuation.adjustment.lines']
+        AdjustementLines.search([('cost_id', 'in', self.ids)]).unlink()
+
+        towrite_dict = {}
+        for cost in self.filtered(lambda cost: cost._get_targeted_move_ids()):
+            rounding = cost.currency_id.rounding
+            total_qty = 0.0
+            total_cost = 0.0
+            total_weight = 0.0
+            total_volume = 0.0
+            total_line = 0.0
+            all_val_line_values = cost.get_valuation_lines()
+            for val_line_values in all_val_line_values:
+                for cost_line in cost.cost_lines:
+                    val_line_values.update({'cost_id': cost.id, 'cost_line_id': cost_line.id})
+                    self.env['stock.valuation.adjustment.lines'].create(val_line_values)
+                total_qty += val_line_values.get('quantity', 0.0)
+                total_weight += val_line_values.get('weight', 0.0)
+                total_volume += val_line_values.get('volume', 0.0)
+
+                former_cost = val_line_values.get('former_cost', 0.0)
+                # round this because former_cost on the valuation lines is also rounded
+                total_cost += cost.currency_id.round(former_cost)
+
+                total_line += 1
+
+            for line in cost.cost_lines:
+                value_split = 0.0
+                invoice_total = 0
+                valuation_layers = self.env['stock.valuation.layer']
+                total_cost_line = valuation_layers.search([('stock_move_id','in',cost.valuation_adjustment_lines.move_id.ids)])
+                for val in total_cost_line:
+                    invoice_total += abs(val.value)
+                if not invoice_total:
+                    raise ValidationError(_("Invoice Total must not be zero"))
+                    
+                for valuation in cost.valuation_adjustment_lines:
+                    value = 0.0
+                    if valuation.cost_line_id and valuation.cost_line_id.id == line.id:
+                        if line.split_method == 'by_quantity' and total_qty:
+                            per_unit = sum(self.env['stock.valuation.layer'].search([('stock_move_id','in',valuation.move_id.ids)]).mapped('value'))
+                            value = (line.price_unit/invoice_total)*per_unit
+                        elif line.split_method == 'by_weight' and total_weight:
+                            per_unit = (line.price_unit / total_weight)
+                            value = valuation.weight * per_unit
+                        elif line.split_method == 'by_volume' and total_volume:
+                            per_unit = (line.price_unit / total_volume)
+                            value = valuation.volume * per_unit
+                        elif line.split_method == 'equal':
+                            value = (line.price_unit / total_line)
+                        elif line.split_method == 'by_current_cost_price' and total_cost:
+                            per_unit = (line.price_unit / total_cost)
+                            value = valuation.former_cost * per_unit
+                        else:
+                            value = (line.price_unit / total_line)
+
+                        if rounding:
+                            value = tools.float_round(value, precision_rounding=rounding, rounding_method='UP')
+                            fnc = min if line.price_unit > 0 else max
+                            value = fnc(value, line.price_unit - value_split)
+                            value_split += value
+
+                        if valuation.id not in towrite_dict:
+                            towrite_dict[valuation.id] = value
+                        else:
+                            towrite_dict[valuation.id] += value
+        account_move_updated = False
+        for key, value in towrite_dict.items():
+            adjustment_valulation_line = AdjustementLines.browse(key)
+            valuation_layer_id = self.stock_valuation_layer_ids.filtered(lambda x:x.product_id.id == AdjustementLines.browse(key).product_id.id)
+            if valuation_layer_id:
+                valuation_layer_id.write({'value':value})
+                if valuation_layer_id.account_move_id and not account_move_updated:
+                    account_move_updated = True
+                    for line_id in valuation_layer_id.account_move_id.line_ids:
+                        debit = credit = 0.0
+                        if line_id.debit != 0:
+                            debit = value
+                        elif line_id.credit != 0:
+                            credit = value
+                        self.env.cr.execute("UPDATE account_move_line SET debit = %s, credit = %s , balance = %s WHERE id = %s;",(debit,credit,debit-credit,line_id.id))
+                    valuation_layer_id.account_move_id.line_ids[0].debit = valuation_layer_id.account_move_id.line_ids[0].debit
+            adjustment_valulation_line.write({'additional_landed_cost': value})
+        return True    
     
     
 class AccountMove(models.Model):
