@@ -27,6 +27,8 @@ class SaleSummaryReport(models.Model):
     move_id = fields.Many2one('account.move',string="Move ID",readonly=True)
     invoice_user_id = fields.Many2one('res.users',string="Sale Person")
     sale_team_id = fields.Many2one('crm.team',string="Sale Team")
+    currency_id = fields.Many2one('res.currency',string="Currency")
+
     # project_code_id = fields.Many2one('analytic.project.code', 'Project Code',readonly=True)
     # pj_desc = fields.Char('Description',readonly=True)
     # analytic_company_id = fields.Many2one('analytic.company', 'Company',readonly=True)
@@ -74,6 +76,7 @@ class SaleSummaryReport(models.Model):
             ,am.company_id as company_id
             ,am.department_id as department_id
             ,am.branch_id as branch_id
+            ,am.currency_id as currency_id
             ,(case when am.move_type='out_refund' then -1*am.amount_untaxed else am.amount_untaxed end) as total_amount
             ,(case when am.move_type='out_refund' then -1*am.discount_amt_currency else am.discount_amt_currency end) as discount
             ,(case when am.move_type='out_refund' then -1*am.amount_tax else am.amount_tax end) as tax
