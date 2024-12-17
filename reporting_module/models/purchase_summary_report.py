@@ -27,6 +27,7 @@ class PurchaseSummaryReport(models.Model):
     balance = fields.Float('Balance',readonly=True)
     vendor_category_id = fields.Many2one('res.partner.vendor.category',string="Vendor Category",readonly=True)
     move_id = fields.Many2one('account.move',string="Move ID",readonly=True)
+    currency_id = fields.Many2one('res.currency',string="Currency")
 
     def compute_get_payment_type(self):
         for rec in self:
@@ -76,6 +77,7 @@ class PurchaseSummaryReport(models.Model):
             ,am.company_id as company_id
             ,am.department_id as department_id
             ,am.branch_id as branch_id
+            ,am.currency_id as currency_id
             ,(case when am.move_type='in_refund' then -1*am.amount_untaxed else am.amount_untaxed end) as total_amount
             ,(case when am.move_type='in_refund' then -1*am.discount_amt_currency else am.discount_amt_currency end) as discount
             ,(case when am.move_type='in_refund' then -1*am.amount_tax else am.amount_tax end) as tax

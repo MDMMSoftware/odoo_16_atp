@@ -44,6 +44,7 @@
                     <field name="company_id" />
                     <field name="department_id" />
                     <field name="branch_id" />
+                    <field name="currency_id"/>
                     <field name="total_amount" sum="total_amount"/>
                     <field name="discount" sum="discount"/>
                     <field name="tax" sum="tax"/>
@@ -58,12 +59,21 @@
             </field>
         </record>
 
+        <record model="ir.ui.view" id="view_sale_summary_pivot">
+            <field name="name">sale.summary.pivot</field>
+            <field name="model">sale.summary.report</field>
+            <field name="arch" type="xml">
+                <pivot string="Sale Summary Report" display_quantity="1" sample="1">
+                    <field name="total_amount" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
         <record id="action_view_sale_summary_report" model="ir.actions.act_window">          
             <field name="name">Sale Summary Report</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">sale.summary.report</field>
-            <field name="view_mode">tree</field>
-            <field name="view_id" ref="view_sale_summary_report_tree" />
+            <field name="view_mode">tree,pivot</field>
         </record>
 
         <menuitem id="menu_sale_summary_report" name="Sale Summary Report" parent="sale.menu_sale_report" action="action_view_sale_summary_report" sequence="10" />
