@@ -438,23 +438,26 @@ class StockLandedCost(models.Model):
                             towrite_dict[valuation.id] = value
                         else:
                             towrite_dict[valuation.id] += value
-        account_move_updated = False
+        invoice_total = 0 
+        invoice_ids = set()
         for key, value in towrite_dict.items():
             adjustment_valulation_line = AdjustementLines.browse(key)
             valuation_layer_id = self.stock_valuation_layer_ids.filtered(lambda x:x.product_id.id == AdjustementLines.browse(key).product_id.id)
             if valuation_layer_id:
                 valuation_layer_id.write({'value':value})
-                if valuation_layer_id.account_move_id and not account_move_updated:
-                    account_move_updated = True
-                    for line_id in valuation_layer_id.account_move_id.line_ids:
+                if valuation_layer_id.account_move_id:
+                    for line_id in valuation_layer_id.account_move_id.line_ids.filtered(lambda x:x.product_id.id == valuation_layer_id.product_id.id):
                         debit = credit = 0.0
                         if line_id.debit != 0:
                             debit = value
                         elif line_id.credit != 0:
                             credit = value
                         self.env.cr.execute("UPDATE account_move_line SET debit = %s, credit = %s , balance = %s WHERE id = %s;",(debit,credit,debit-credit,line_id.id))
-                    valuation_layer_id.account_move_id.line_ids[0].debit = valuation_layer_id.account_move_id.line_ids[0].debit
+                    invoice_total += value
+                    invoice_ids.add(valuation_layer_id.account_move_id.id)
             adjustment_valulation_line.write({'additional_landed_cost': value})
+        self.env.cr.execute("UPDATE account_move SET amount_total = %s, amount_total_signed = %s , amount_total_in_currency_signed = %s WHERE id = %s;",(invoice_total,invoice_total,invoice_total,list(invoice_ids)[0]))
+            
         return True    
     
     
