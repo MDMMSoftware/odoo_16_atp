@@ -849,25 +849,17 @@ class StockMove(models.Model):
         # from internal location to transit
         if self.picking_id.requisition_id and self.picking_type_id.code=='internal' and self.location_id.usage=='internal':
             if self.product_id.product_tmpl_id.categ_id.property_account_transfer_id:
-                if self._is_return_of_original():
-                    am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_src, acc_valuation, journal_id, qty, description, svl_id, cost))
-                    lines = self.with_company(self.company_id)._prepare_account_move_vals(self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id,acc_src, journal_id, qty, description, svl_id, cost)
-                else:
-                    # the original code use interim recived whenever from location is transit and to location is internal without checking return
-                    am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_valuation, acc_dest, journal_id, qty, description, svl_id, cost))
-                    lines = self.with_company(self.company_id)._prepare_account_move_vals(acc_dest,self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id, journal_id, qty, description, svl_id, cost)
+                decided_acc = acc_src if self._is_return_of_original() else acc_dest
+                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_valuation, decided_acc, journal_id, qty, description, svl_id, cost))
+                lines = self.with_company(self.company_id)._prepare_account_move_vals(decided_acc,self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id, journal_id, qty, description, svl_id, cost)
                 for val in lines.get('line_ids'):
                     am_vals[0]['line_ids'].append(val)
         # from transit location to internal
         if self.picking_id.requisition_id and self.picking_type_id.code=='internal' and self.location_dest_id.usage=='internal':
              if self.product_id.product_tmpl_id.categ_id.property_account_transfer_id:
-                if self._is_return_of_original():
-                    am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_valuation, acc_dest, journal_id, qty, description, svl_id, cost))
-                    lines = self.with_company(self.company_id)._prepare_account_move_vals(acc_dest,self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id, journal_id, qty, description, svl_id, cost)
-                else:
-                    # the original code use interim delivered whenever from location is internal and to location is transit without checking return
-                    am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_src, acc_valuation, journal_id, qty, description, svl_id, cost))
-                    lines = self.with_company(self.company_id)._prepare_account_move_vals(self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id,acc_src, journal_id, qty, description, svl_id, cost)
+                decided_acc = acc_dest if self._is_return_of_original() else acc_src
+                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(decided_acc, acc_valuation, journal_id, qty, description, svl_id, cost))
+                lines = self.with_company(self.company_id)._prepare_account_move_vals(self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id,decided_acc, journal_id, qty, description, svl_id, cost)
                 for val in lines.get('line_ids'):
                     am_vals[0]['line_ids'].append(val)
         for am_val in am_vals:
