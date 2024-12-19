@@ -88,9 +88,9 @@
 									<field name="part_id" optional="hide"/>
 									<field name="product_uom_category_id" invisible="1"/>
 									<field name="uom_id" />
-									<field name="remaining_from" />
-									<field name="remaining_to" />
-									<field name="remaining_transit" />
+									<field name="remaining_from" readonly="1" force_save="1" />
+									<field name="remaining_to"  readonly="1" force_save="1"/>
+									<field name="remaining_transit"  readonly="1" force_save="1"/>
                                     <field name="remaining_qty_compute" invisible="1"/>
 									<field name="remark" />
 								</tree>
