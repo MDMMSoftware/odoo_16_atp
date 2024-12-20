@@ -370,6 +370,14 @@ class SaleOrderLine(models.Model):
                 else:
                     raise ValidationError('Only One Account is allowed')
         self.analytic_distribution = dct    
+        
+    @api.model_create_multi
+    def create(self, values):
+        lines = super(SaleOrderLine, self).create(values)   
+        for line in lines:
+            if line.product_id and (line.state == 'sale' or line.order_id.state in ('sale','cancel')):
+                raise ValidationError("Unexpected error of creating sale order line when it is not in draft state !!!")    
+        return lines      
 
     @api.constrains('analytic_distribution')
     def _check_unit_product_analytic(self):
