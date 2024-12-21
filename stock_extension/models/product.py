@@ -94,6 +94,7 @@ class ProductTemplate(models.Model):
     analytic_account_id = fields.Many2one('account.analytic.account', string="Analytic Account")
     is_analytic_required = fields.Boolean(compute="_compute_is_analytic_required")
 
+    
     def _compute_is_analytic_required(self):
         for rec in self:
             if rec.can_be_unit and rec.tracking == 'none':
