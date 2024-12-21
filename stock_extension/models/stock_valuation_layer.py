@@ -569,12 +569,11 @@ class StockPicking(models.Model):
 
                         else:
                             valuation_ids = True
-                            if move.location_id.usage!='transit' and move.origin_returned_move_id:
+                            if move.location_id.usage != 'transit' and move.origin_returned_move_id:
                                 amount_unit = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
                                 
-                            if move.location_id.usage!='transit' and not move.origin_returned_move_id:
-                                
-                            #     valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
+                            if move.location_id.usage !='transit' and not move.origin_returned_move_id:
+                                # valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id)
                                 amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_id).location_cost
                             if move.location_dest_id.usage!='transit' and not move.origin_returned_move_id:
                                 
@@ -857,16 +856,20 @@ class StockMove(models.Model):
                 else:
                     cost = -1 * cost
                     am_vals.append(self.with_company(self.company_id).with_context(is_returned=True)._prepare_account_move_vals(acc_valuation, acc_src, journal_id, qty, description, svl_id, cost))
+        # from internal location to transit
         if self.picking_id.requisition_id and self.picking_type_id.code=='internal' and self.location_id.usage=='internal':
             if self.product_id.product_tmpl_id.categ_id.property_account_transfer_id:
-                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_valuation, acc_dest, journal_id, qty, description, svl_id, cost))
-                lines = self.with_company(self.company_id)._prepare_account_move_vals(acc_dest,self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id, journal_id, qty, description, svl_id, cost)
+                decided_acc = acc_src if self._is_return_of_original() else acc_dest
+                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_valuation, decided_acc, journal_id, qty, description, svl_id, cost))
+                lines = self.with_company(self.company_id)._prepare_account_move_vals(decided_acc,self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id, journal_id, qty, description, svl_id, cost)
                 for val in lines.get('line_ids'):
                     am_vals[0]['line_ids'].append(val)
+        # from transit location to internal
         if self.picking_id.requisition_id and self.picking_type_id.code=='internal' and self.location_dest_id.usage=='internal':
              if self.product_id.product_tmpl_id.categ_id.property_account_transfer_id:
-                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(acc_src, acc_valuation, journal_id, qty, description, svl_id, cost))
-                lines = self.with_company(self.company_id)._prepare_account_move_vals(self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id,acc_src, journal_id, qty, description, svl_id, cost)
+                decided_acc = acc_dest if self._is_return_of_original() else acc_src
+                am_vals.append(self.with_company(self.company_id)._prepare_account_move_vals(decided_acc, acc_valuation, journal_id, qty, description, svl_id, cost))
+                lines = self.with_company(self.company_id)._prepare_account_move_vals(self.product_id.product_tmpl_id.categ_id.property_account_transfer_id.id,decided_acc, journal_id, qty, description, svl_id, cost)
                 for val in lines.get('line_ids'):
                     am_vals[0]['line_ids'].append(val)
         for am_val in am_vals:
@@ -1119,6 +1122,15 @@ class StockMove(models.Model):
         self.env['stock.location.valuation.report'].sudo().create(svl_report_vals)            
         return self.env['stock.valuation.layer'].sudo().create(svl_vals_list)
     
+    def _is_return_of_original(self):
+        self.ensure_one()
+        res = self
+        returned_count = 0
+        while res.origin_returned_move_id:
+            if res.origin_returned_move_id:
+                res = res.origin_returned_move_id
+                returned_count += 1
+        return returned_count % 2 != 0
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
