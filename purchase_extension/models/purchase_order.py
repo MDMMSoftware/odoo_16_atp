@@ -255,7 +255,7 @@ class PurchaseOrder(models.Model):
                 if len(check_can_be_unit) > 1:
                     raise ValidationError('Only unit product is allowed to purchase!!')
                 keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
-                if len(set(keys)) > 1:  
+                if len(set(keys)) > 1:   
                     raise ValidationError('Only one analytic is allowed for unit products!!')
 # class AccountMove(models.Model):
 #     _inherit = 'account.move'

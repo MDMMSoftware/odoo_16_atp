@@ -24,15 +24,20 @@ class SaleAdvancePaymentInv(models.TransientModel):
         """
         result = super().create_invoices()
         if self.sale_order_ids.order_line.filtered(lambda x: x.product_id.can_be_unit):
-            move_id = self.env['account.move'].search(result['domain']+[('state','!=','cancel')],limit=1)
-            for move in move_id.line_ids:
-                for sale_line_ids in move.move_id.invoice_line_ids.sale_line_ids:
-                    if sale_line_ids.product_id and sale_line_ids.product_id.can_be_unit:
-                        dct = {}
-                        if move.analytic_distribution:
-                            dct = move.analytic_distribution
-                        dct.update(sale_line_ids.analytic_distribution)
-                        move.write({'analytic_distribution': dct})
+            move_id = None
+            if result['res_id'] != 0:
+                move_id = self.env['account.move'].browse(result['res_id'])
+            else:
+                move_id = self.env['account.move'].search(result['domain']+[('state','!=','cancel')],limit=1)
+            if move_id:
+                for move in move_id.line_ids:
+                    for sale_line_ids in move.move_id.invoice_line_ids.sale_line_ids:
+                        if sale_line_ids.product_id and sale_line_ids.product_id.can_be_unit:
+                            dct = {}
+                            if move.analytic_distribution:
+                                dct = move.analytic_distribution
+                            dct.update(sale_line_ids.analytic_distribution)
+                            move.write({'analytic_distribution': dct})
 
         return result
 
@@ -477,16 +482,16 @@ class SaleOrderLine(models.Model):
             if rec.product_uom_qty > rec.remaining_stock:
                 raise ValidationError('%s is not available to sale.Please check available stock.'% rec.product_id.name)        
 
-    @api.constrains('product_id','analytic_distribution')
-    def _check_analytic_distribution(self):
-        for rec in self:
-            check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
-            if check_can_be_unit:
-                if len(check_can_be_unit) > 1:
-                    raise ValidationError('Only unit product is allowed to purchase!!')
-                keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
-                if len(set(keys)) > 1:  
-                    raise ValidationError('Only one analytic is allowed for unit products!!')
+    # @api.constrains('product_id','analytic_distribution')
+    # def _check_analytic_distribution(self):
+    #     for rec in self:
+    #         check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
+    #         if check_can_be_unit:
+    #             if len(check_can_be_unit) > 1:
+    #                 raise ValidationError('Only unit product is allowed to purchase!!')
+    #             keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
+    #             if len(set(keys)) > 1:  
+    #                 raise ValidationError('Only one analytic is allowed for unit products!!')
  
 
 class StockPicking(models.Model):
