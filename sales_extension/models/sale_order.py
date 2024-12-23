@@ -482,16 +482,16 @@ class SaleOrderLine(models.Model):
             if rec.product_uom_qty > rec.remaining_stock:
                 raise ValidationError('%s is not available to sale.Please check available stock.'% rec.product_id.name)        
 
-    # @api.constrains('product_id','analytic_distribution')
-    # def _check_analytic_distribution(self):
-    #     for rec in self:
-    #         check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
-    #         if check_can_be_unit:
-    #             if len(check_can_be_unit) > 1:
-    #                 raise ValidationError('Only unit product is allowed to purchase!!')
-    #             keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
-    #             if len(set(keys)) > 1:  
-    #                 raise ValidationError('Only one analytic is allowed for unit products!!')
+    @api.constrains('product_id','analytic_distribution')
+    def _check_analytic_distribution(self):
+        for rec in self:
+            check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
+            if check_can_be_unit:
+                if len(check_can_be_unit) > 1:
+                    raise ValidationError('Only unit product is allowed to purchase!!')
+                keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
+                if len(set(keys)) > 1:  
+                    raise ValidationError('Only one analytic is allowed for unit products!!')
  
 
 class StockPicking(models.Model):
@@ -564,6 +564,20 @@ class AccountMove(models.Model):
                 raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_cancel()
 
+    def action_post(self):
+        result =  super().action_post()
+        line_ids = self.line_ids.filtered(lambda x: not x.analytic_distribution)
+        for move in line_ids:
+            for sale_line_ids in move.move_id.invoice_line_ids.sale_line_ids:
+                if sale_line_ids.product_id and sale_line_ids.product_id.can_be_unit:
+                    dct = {}
+                    if move.analytic_distribution:
+                        dct = move.analytic_distribution
+                    dct.update(sale_line_ids.analytic_distribution)
+                    move.write({'analytic_distribution': dct})
+
+        return result
+    
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
