@@ -93,15 +93,17 @@ class AccountMove(models.Model):
                 else:
                     raise UserError(f"Cannot re-reconcile with {original_move_line.move_id.ref} and {target_move_line.move_id.name} ")
                 
-    def calculate_cogs_adjustment_entry(self):
-        valuations = self.env['stock.valuation.layer'].search([('account_move_id','in',self.ids)])
+    def calculate_cogs_adjustment_entry(self,move_ids=None):
+        if move_ids:
+            self = self.env['account.move'].sudo().browse(move_ids)
         for move in self:
+            valuations = self.env['stock.valuation.layer'].search([('account_move_id','=',move.id)])
             move.button_draft()
             move.ref = None
             move.unlink()
-        for svl in valuations:
-            if not svl.account_move_id:
-                svl._validate_accounting_entries()                   
+            for svl in valuations:
+                if not svl.account_move_id:
+                    svl._validate_accounting_entries()                   
                             
 class AccountMoveLine(models.Model):
     _name = "account.move.line"
