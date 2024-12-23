@@ -399,16 +399,26 @@ class StockValuationLayer(models.Model):
                 for line in move.line_ids:
                     if res.picking_type_id.code=='incoming':
                         line.write({'amount_currency':line.balance/res.exchange_rate})
-                        
-                    if res.picking_type_id.code=='outgoing':
                         for stock_move in self.stock_move_id:
-                            
-                            if stock_move.product_id.can_be_unit and stock_move.product_id.tracking == 'serial':
+                            if stock_move.product_id.can_be_unit:
                                 dct = {}
                                 if line.analytic_distribution:
                                     dct = line.analytic_distribution
                             
-                                dct [str(line.move_id.stock_valuation_layer_ids.lot_ids.analytic_account_id.id)] = 100
+                                dct [str(line.move_id.stock_valuation_layer_ids.product_id.analytic_account_id.id)] = 100
+                                line.write({'analytic_distribution': dct})
+
+                    if res.picking_type_id.code=='outgoing':
+                        for stock_move in self.stock_move_id:
+                            
+                            # if stock_move.product_id.can_be_unit and stock_move.product_id.tracking == 'serial':
+                            if stock_move.product_id.can_be_unit:
+                                dct = {}
+                                if line.analytic_distribution:
+                                    dct = line.analytic_distribution
+                            
+                                # dct [str(line.move_id.stock_valuation_layer_ids.lot_ids.analytic_account_id.id)] = 100
+                                dct [str(line.move_id.stock_valuation_layer_ids.product_id.analytic_account_id.id)] = 100
                                 line.write({'analytic_distribution': dct})
 
         account_moves._post()

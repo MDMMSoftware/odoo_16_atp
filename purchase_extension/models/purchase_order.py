@@ -28,6 +28,19 @@ class PurchaseOrder(models.Model):
     term_type = fields.Selection([('direct','Cash Purchase'),('credit','Credit Purchase')],string='Payment Type',default="credit") 
 
 
+    def action_create_invoice(self):
+        result = super().action_create_invoice()
+        bill = self.env['account.move'].browse(result['res_id'])
+        for move in bill.line_ids:
+            for purchase_line in move.move_id.invoice_line_ids.purchase_line_id:
+                if purchase_line.product_id and purchase_line.product_id.can_be_unit:
+                    dct = {}
+                    if move.analytic_distribution:
+                        dct = move.analytic_distribution
+                    dct.update(purchase_line.analytic_distribution)
+                    move.write({'analytic_distribution': dct})
+        return result
+    
     def _get_partner_domain(self):
         if self.env.company.allow_partner_domain_feature:
             return [
@@ -61,6 +74,13 @@ class PurchaseOrder(models.Model):
     
     def button_confirm(self):
         for order in self:
+            check_can_be_unit = order.order_line.filtered(lambda x: x.product_id.can_be_unit)
+            if check_can_be_unit:
+                if len(check_can_be_unit) > 1:
+                    raise ValidationError('Only unit product is allowed to purchase!!')
+                keys = [list(d.keys())[0] for d in order.order_line.mapped('analytic_distribution')]
+                if len(set(keys)) > 1:  
+                    raise ValidationError('Only one analytic is allowed for unit products!!')
             # check condition for ap one line vendor : duty owner
             if self.partner_id and self.partner_id.partner_type == 'vendor' and self.partner_id.is_duty_owner:
                 if hasattr(self.order_line[0], 'fleet_id'):
@@ -226,3 +246,22 @@ class PurchaseOrder(models.Model):
             name += '\n' + product_lang.description_purchase
 
         return name    
+
+    @api.constrains('product_id','analytic_distribution')
+    def _check_analytic_distribution(self):
+        for rec in self:
+            check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
+            if check_can_be_unit:
+                if len(check_can_be_unit) > 1:
+                    raise ValidationError('Only unit product is allowed to purchase!!')
+                keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
+                if len(set(keys)) > 1:   
+                    raise ValidationError('Only one analytic is allowed for unit products!!')
+# class AccountMove(models.Model):
+#     _inherit = 'account.move'
+    
+    
+#     def action_create_invoice(self):
+#         result = super().action_create_invoice()
+        
+#         return result

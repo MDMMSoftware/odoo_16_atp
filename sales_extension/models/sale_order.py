@@ -12,6 +12,35 @@ READONLY_FIELD_STATES = {
 HEADER_FIELDS = ['item code','description','quantity','unit price']
 HEADER_INDEXES = {}
 
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = 'sale.advance.payment.inv'
+
+    def create_invoices(self):
+        """
+        Overrides the create_invoices method to perform additional operations
+        after the invoices are created.
+        Returns:
+            result: The result of the super call to create_invoices.
+        """
+        result = super().create_invoices()
+        if self.sale_order_ids.order_line.filtered(lambda x: x.product_id.can_be_unit):
+            move_id = None
+            if result['res_id'] != 0:
+                move_id = self.env['account.move'].browse(result['res_id'])
+            else:
+                move_id = self.env['account.move'].search(result['domain']+[('state','!=','cancel')],limit=1)
+            if move_id:
+                for move in move_id.line_ids:
+                    for sale_line_ids in move.move_id.invoice_line_ids.sale_line_ids:
+                        if sale_line_ids.product_id and sale_line_ids.product_id.can_be_unit:
+                            dct = {}
+                            if move.analytic_distribution:
+                                dct = move.analytic_distribution
+                            dct.update(sale_line_ids.analytic_distribution)
+                            move.write({'analytic_distribution': dct})
+
+        return result
+
 class SaleOrder(models.Model):
     """inherited sale order"""
     _inherit = 'sale.order'
@@ -133,6 +162,14 @@ class SaleOrder(models.Model):
 
     def action_confirm(self):  
         for line in self.order_line:
+            check_can_be_unit = line.order_line.filtered(lambda x: x.product_id.can_be_unit)
+            if check_can_be_unit:
+                if len(check_can_be_unit) > 1:
+                    raise ValidationError('Only unit product is allowed to purchase!!')
+                keys = [list(d.keys())[0] for d in line.order_line.mapped('analytic_distribution')]
+                if len(set(keys)) > 1:  
+                    raise ValidationError('Only one analytic is allowed for unit products!!')
+
             if line.can_be_unit and not line.serial_no_id and not line.product_id.tracking == 'none':
                 raise ValidationError(_('Serial Number is required for unit product: ') + line.product_id.name)
             if line.can_be_unit and not line.product_id.tracking == 'none':
@@ -161,7 +198,7 @@ class SaleOrder(models.Model):
                 wiz.process()
             self._create_invoices(final=True)
             return self.action_view_invoice()
-            
+    
     def action_cancel(self):
         commission_moves = self.env['account.move'].search([('commercial_sale_id','=',self.id)])
         if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:
@@ -444,7 +481,18 @@ class SaleOrderLine(models.Model):
             rec.compute_remaining_stock()
             if rec.product_uom_qty > rec.remaining_stock:
                 raise ValidationError('%s is not available to sale.Please check available stock.'% rec.product_id.name)        
-        
+
+    @api.constrains('product_id','analytic_distribution')
+    def _check_analytic_distribution(self):
+        for rec in self:
+            check_can_be_unit = rec.order_id.order_line.filtered(lambda x: x.product_id.can_be_unit)
+            if check_can_be_unit:
+                if len(check_can_be_unit) > 1:
+                    raise ValidationError('Only unit product is allowed to purchase!!')
+                keys = [list(d.keys())[0] for d in rec.order_id.order_line.mapped('analytic_distribution')]
+                if len(set(keys)) > 1:  
+                    raise ValidationError('Only one analytic is allowed for unit products!!')
+ 
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
@@ -516,6 +564,20 @@ class AccountMove(models.Model):
                 raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_cancel()
 
+    def action_post(self):
+        result =  super().action_post()
+        line_ids = self.line_ids.filtered(lambda x: not x.analytic_distribution)
+        for move in line_ids:
+            for sale_line_ids in move.move_id.invoice_line_ids.sale_line_ids:
+                if sale_line_ids.product_id and sale_line_ids.product_id.can_be_unit:
+                    dct = {}
+                    if move.analytic_distribution:
+                        dct = move.analytic_distribution
+                    dct.update(sale_line_ids.analytic_distribution)
+                    move.write({'analytic_distribution': dct})
+
+        return result
+    
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
