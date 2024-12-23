@@ -23,7 +23,12 @@
                     <field name="product_name" optional="hide"/>
                     <field name="custom_part" readonly="1" optional="hide" />
                 </xpath>
-
+                <xpath expr="//div[@name='button_box']//button[@name='action_view_stock_valuation_layers']" position="after">
+                    <button string="Valuation Report" type="object"
+                        name="action_view_stock_valuation_reports"
+                        class="oe_stat_button" icon="fa-folder-open" groups="base.group_no_one"
+                        attrs="{'invisible': [('state', 'not in', ['done'])]}" />
+                </xpath>
                 <xpath expr="//sheet//page[@name='operations']//tree//field[@name='lot_ids']" position="attributes">
                     <attribute name="options">{'no_quick_create': True, 'no_create_edit' : True}</attribute>
                 </xpath>

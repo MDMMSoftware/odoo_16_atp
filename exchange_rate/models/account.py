@@ -223,21 +223,11 @@ class AccountMoveLine(models.Model):
     #         # Compute the partial amount expressed in company currency.
     #         if debit_rate:
     #             partial_debit_amount = company_currency.round(min_recon_amount / debit_rate)
-    #             # this code snipped is the customized code to avoid conflict the exchange gain / loss jounal when 
-    #             # foreign currency is in credit side and company currency is in debit side
-    #             if debit_rate == 1 and credit_rate != 1:
-    #                 partial_debit_amount = remaining_debit_amount
-    #             # customization                
     #             partial_debit_amount = min(partial_debit_amount, remaining_debit_amount)
     #         else:
     #             partial_debit_amount = 0.0
     #         if credit_rate:
     #             partial_credit_amount = company_currency.round(min_recon_amount / credit_rate)
-    #             # this code snipped is the customized code to avoid conflict the exchange gain / loss jounal when 
-    #             # foreign currency is in debit side and company currency is in credit side                
-    #             if credit_rate == 1 and debit_rate != 1:
-    #                 partial_credit_amount = -remaining_credit_amount  
-    #             # customization                                  
     #             partial_credit_amount = min(partial_credit_amount, -remaining_credit_amount)
     #         else:
     #             partial_credit_amount = 0.0
@@ -353,7 +343,7 @@ class AccountMoveLine(models.Model):
     #         res['debit_vals'] = None
     #     if credit_fully_matched:
     #         res['credit_vals'] = None
-    #     return res                
+    #     return res               
 
 class AccountPaymentRegister(models.TransientModel): 
     _inherit = 'account.payment.register'

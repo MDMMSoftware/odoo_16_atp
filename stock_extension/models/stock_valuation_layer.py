@@ -760,6 +760,13 @@ class StockPicking(models.Model):
         else:
             raise ValidationError('Report Not Not Found')   
         
+    def action_view_stock_valuation_reports(self):
+        stock_move_ids = self.move_ids.ids
+        report_ids = self.env['stock.location.valuation.report'].sudo().search([('stock_move_id','in',stock_move_ids)])
+        action_data = self.env['ir.actions.act_window']._for_xml_id('stock_extension.action_valuation_report')
+        action_data['domain'] = [('id', 'in', report_ids.ids)]
+        return action_data        
+        
     def copy(self, default=None):
         if self.sale_id:
             if (not default) or (default and 'Return' not in default.get('origin','')):
