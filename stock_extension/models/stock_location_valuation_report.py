@@ -204,6 +204,14 @@ class StockLocationValuationReport(models.Model):
                                     svl.account_move_id.ref = None
                                     svl.account_move_id.unlink()
                                     svl._validate_accounting_entries()
+                        for svl in svl_vals:
+                            if round(abs(svl.unit_cost),0)!=round(abs(layer.unit_cost),0):
+                                svl.write({'unit_cost':layer.unit_cost,'value':layer.unit_cost*layer.balance})
+                                if svl.account_move_id:
+                                    svl.account_move_id.button_draft()
+                                    svl.account_move_id.ref = None
+                                    svl.account_move_id.unlink()
+                                    svl._validate_accounting_entries()                                    
                     if layer.report_type in ('transfer_return','delivery_return') and layer.balance>0:
                         if round(product_cost,0)!=round(layer.unit_cost,0):
                             layer.write({'unit_cost':product_cost,'total_amt':product_cost*layer.balance})
@@ -214,6 +222,14 @@ class StockLocationValuationReport(models.Model):
                                     svl.account_move_id.ref = None
                                     svl.account_move_id.unlink()
                                     svl._validate_accounting_entries()
+                        for svl in svl_vals:
+                            if round(abs(svl.unit_cost),0)!=round(abs(layer.unit_cost),0):
+                                svl.write({'unit_cost':layer.unit_cost,'value':layer.unit_cost*layer.balance})
+                                if svl.account_move_id:
+                                    svl.account_move_id.button_draft()
+                                    svl.account_move_id.ref = None
+                                    svl.account_move_id.unlink()
+                                    svl._validate_accounting_entries()                                    
                     if layer.report_type not in ('adjustment','receipt'):
                         if layer.unit_cost!=abs(product_cost):
                             if (not (layer.report_type=='transfer' and layer.balance>0)) and (not (layer.report_type in ('transfer_return','delivery_return') and layer.balance>0)):
@@ -278,7 +294,7 @@ class StockLocationValuationReport(models.Model):
                         if layer.report_type in ('transfer','transfer_return'):
                             pos_svl = svl_vals.filtered(lambda x:x.quantity>0)
                             if pos_svl:
-                                if not pos_svl.account_move_id:
+                                if not pos_svl.account_move_id and ((not pos_svl.stock_move_id.picking_id) or (not pos_svl.stock_move_id.picking_id.requisition_id) or (pos_svl.stock_move_id.picking_id.requisition_id.transit_location_id)):
                                     pos_svl._validate_accounting_entries()
                                     
                         else:

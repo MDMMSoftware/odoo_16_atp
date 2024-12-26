@@ -60,7 +60,7 @@
 							<field name="required_date" attrs="{'readonly':[('state','not in',['draft','confirm','check'])]}"/>
 							<field name="src_location_id" attrs="{'readonly':[('state','not in',['draft','confirm','check'])],'required':['|','&amp;',('state','not in',['draft','confirm']),('requisition_type','=','issue'),('requisition_type','=','transfer')]}" options="{'no_create':True,'no_create_edit': True}"/>							
 							<field name="location_id" attrs="{'readonly':[('state','not in',['draft','confirm','check'])],'required':[('requisition_type','=','transfer')],'invisible':[('requisition_type','=','issue')]}" options="{'no_create':True,'no_create_edit': True}"/>
-							<field name="transit_location_id" attrs="{'readonly':[('state','not in',['draft','confirm','check'])],'invisible':[('requisition_type','=','issue')]}" options="{'no_create':True,'no_create_edit': True}"/>
+							<field name="transit_location_id" attrs="{'required':[('requisition_type','=','transfer')], 'readonly':[('state','not in',['draft','confirm','check'])], 'invisible':[('requisition_type','=','issue')]}" options="{'no_create':True,'no_create_edit': True}"/>
 							<field name="allow_division_feature" invisible="1"/>
 						</group>
 					</group>
