@@ -233,10 +233,10 @@ class SaleOrder(models.Model):
                     
                     amount_commercial += line.commercial_amt if line.commercial_type == 'amount' else (line.price_subtotal * line.commercial_amt /100)
                     amount_add += line.add_amt if line.add_type == 'amount' else (line.price_subtotal * line.add_amt /100)
-                order.update({
-                    'amount_commercial': amount_commercial,
-                    'amount_add': amount_add,
-                })
+            order.update({
+                'amount_commercial': amount_commercial,
+                'amount_add': amount_add,
+            })
 
     
     @api.depends_context('lang')
