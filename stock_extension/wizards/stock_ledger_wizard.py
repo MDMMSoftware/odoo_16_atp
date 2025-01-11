@@ -114,7 +114,8 @@ class StockLedgerReport(models.TransientModel):
                         slvr.qty_in as qty_in,
                         slvr.qty_out * -1 as qty_out,
                         uu.name::jsonb ->> 'en_US' as uom,
-                        slvr.unit_cost as price
+                        slvr.unit_cost as price,
+                        slvr.total_amt
                         from stock_location_valuation_report slvr
                         left join res_branch as rb on rb.id = slvr.branch_id
                         left join stock_location as sl_by on sl_by.id = slvr.by_location
@@ -125,7 +126,7 @@ class StockLedgerReport(models.TransientModel):
                         left join uom_uom as uu on uu.id = slvr.uom_id
                         where slvr.report_date >= %s and slvr.report_date <= %s and
                         slvr.product_id = %s and slvr.by_location = %s
-                        order by slvr.product_id,slvr.report_date
+                        order by slvr.product_id,slvr.report_date,slvr.id
                         '''
             self.env.cr.execute(slvr_sql,(self.start_date,self.end_date,product,self.location_id.id))
             stock_result = self.env.cr.dictfetchall()
@@ -161,10 +162,10 @@ class StockLedgerReport(models.TransientModel):
                 if first == 1:
                     qty_op = opening_result[0]['balance']
                     qty_bal = qty_op + sl['qty_in'] + sl['qty_out']
-                    if sl['qty_in'] == 0 and sl['qty_out'] == 0:
-                        amount = (sl['qty_in'] + sl['qty_out']) * opening_unit_cost
+                    if abs(sl['qty_in']) == 0 and abs(sl['qty_out']) == 0:
+                        amount = opening_unit_cost + sl['total_amt']
                     else:
-                        amount = opening_unit_cost                   
+                        amount = (sl['qty_in'] + sl['qty_out']) * opening_unit_cost                   
                     balance = round(op_amt + amount,2)
                     temp['qty_op'] = qty_op
                     temp['op_amt'] = op_amt
@@ -182,8 +183,8 @@ class StockLedgerReport(models.TransientModel):
                     op_amt = next_opening_amt
                     qty_op = next_opening_qty
                     qty_bal = qty_op + sl['qty_in'] + sl['qty_out']
-                    if sl['qty_in'] == 0 and sl['qty_out'] == 0:
-                        amount = round(sl['price'],2)
+                    if abs(sl['qty_in']) == 0 and abs(sl['qty_out']) == 0:
+                        amount = round(sl['total_amt'],2)
                     else:
                         amount = round((sl['qty_in'] + sl['qty_out']) * round(sl['price'],2),2)
                     balance = round(op_amt + amount,2)
