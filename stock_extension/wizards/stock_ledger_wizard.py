@@ -161,7 +161,10 @@ class StockLedgerReport(models.TransientModel):
                 if first == 1:
                     qty_op = opening_result[0]['balance']
                     qty_bal = qty_op + sl['qty_in'] + sl['qty_out']
-                    amount = (sl['qty_in'] + sl['qty_out']) * opening_unit_cost
+                    if sl['qty_in'] == 0 and sl['qty_out'] == 0:
+                        amount = (sl['qty_in'] + sl['qty_out']) * opening_unit_cost
+                    else:
+                        amount = opening_unit_cost                   
                     balance = round(op_amt + amount,2)
                     temp['qty_op'] = qty_op
                     temp['op_amt'] = op_amt
@@ -179,8 +182,10 @@ class StockLedgerReport(models.TransientModel):
                     op_amt = next_opening_amt
                     qty_op = next_opening_qty
                     qty_bal = qty_op + sl['qty_in'] + sl['qty_out']
-                    
-                    amount = round((sl['qty_in'] + sl['qty_out']) * round(sl['price'],2),2)
+                    if sl['qty_in'] == 0 and sl['qty_out'] == 0:
+                        amount = round(sl['price'],2)
+                    else:
+                        amount = round((sl['qty_in'] + sl['qty_out']) * round(sl['price'],2),2)
                     balance = round(op_amt + amount,2)
                     temp['qty_op'] = qty_op
                     temp['op_amt'] = op_amt
