@@ -390,6 +390,9 @@ class StockValuationLayer(models.Model):
             #         line[2].get('amount_currency')
         account_moves = self.env['account.move'].sudo().create(am_vals)
         for move in account_moves:
+            for line_id in move.line_ids:
+                if line_id.currency_id and move.currency_id and line_id.currency_id.id != move.currency_id.id:
+                    line_id.currency_id = move.currency_id
             for res in self.stock_move_id.picking_id:
                 res.exchange_rate = 1.0 if res.exchange_rate <= 0.0 else res.exchange_rate
                 if res.picking_type_id.code=='incoming':
@@ -580,7 +583,10 @@ class StockPicking(models.Model):
                                 valuation_ids = move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.location_dest_id)
                                 # amount_unit =  move.product_id.warehouse_valuation.filtered(lambda x:x.location_id==move.picking_id.requisition_id.src_location_id).location_cost
                                 from_req_move = from_req.move_ids.filtered(lambda x:x.product_id==move.product_id and x.state != 'cancel')
-                                amount_unit = valuation.sudo().search([('stock_move_id','=',from_req_move.id)])[0].unit_cost
+                                from_by_location = valuation.sudo().search([('stock_move_id','=',from_req_move.id),('by_location','=',self.requisition_id.src_location_id.id)])
+                                if not from_by_location:
+                                    raise ValidationError("By Location in transfer of source requisition is not found. ")
+                                amount_unit = from_by_location.unit_cost
                                 new_std_price = ((amount_unit * move.product_qty) + (valuation_ids.location_cost * product_tot_qty_available)) / (product_tot_qty_available + move.product_qty)
                                 
                             if move.location_dest_id.usage!='transit' and  move.origin_returned_move_id:
