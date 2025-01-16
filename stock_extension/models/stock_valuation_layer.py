@@ -152,7 +152,7 @@ class StockValuationLayer(models.Model):
                             'account_id':acc_dest,
                         }))
                     
-            elif move.picking_type_id.code=='internal' and move.origin_returned_move_id:
+            elif move.picking_type_id.code=='internal' and move.origin_returned_move_id and not move.picking_id.requisition_id:
                 origin_unit_cost = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
                 if len(svl)>1:
@@ -390,9 +390,9 @@ class StockValuationLayer(models.Model):
             #         line[2].get('amount_currency')
         account_moves = self.env['account.move'].sudo().create(am_vals)
         for move in account_moves:
-            for line_id in move.line_ids:
-                if line_id.currency_id and move.currency_id and line_id.currency_id.id != move.currency_id.id:
-                    line_id.currency_id = move.currency_id
+            # for line_id in move.line_ids:
+            #     if line_id.currency_id and move.currency_id and line_id.currency_id.id != move.currency_id.id:
+            #         line_id.currency_id = move.currency_id
             for res in self.stock_move_id.picking_id:
                 res.exchange_rate = 1.0 if res.exchange_rate <= 0.0 else res.exchange_rate
                 if res.picking_type_id.code=='incoming':

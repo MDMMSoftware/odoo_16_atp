@@ -161,6 +161,8 @@ class SaleOrder(models.Model):
             picking.write({"origin":name})
 
     def action_confirm(self):  
+        if not self.is_commission and self.amount_commercial > 0:
+            self.amount_commercial = 0
         for line in self.order_line:
             check_can_be_unit = line.order_line.filtered(lambda x: x.product_id.can_be_unit)
             if check_can_be_unit:
