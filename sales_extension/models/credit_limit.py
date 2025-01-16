@@ -143,6 +143,8 @@ class SaleOrder(models.Model):
                     order.credit_status = 'no'
                             
     def action_confirm(self):
+        if not self.is_commission and self.amount_commercial > 0:
+            self.amount_commercial = 0
         if self.term_type == 'credit' and self.company_id.account_use_credit_limit and self.partner_id.use_partner_credit_limit:
             if self.credit_status == 'hold':
                 raise ValidationError("As the credit limit of the partner is exceeded, you can't confirm the current sale order!!")
