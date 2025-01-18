@@ -56,8 +56,13 @@ class StockValuationLayer(models.Model):
             move = self.env['stock.move'].browse(am['stock_move_id'])
             svl = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',am['stock_move_id'])])
             journal_id, acc_src, acc_dest, acc_valuation = move._get_accounting_data_for_valuation()
+            # this is outgoing and has return : it meas purchase return
             if move.picking_type_id and move.picking_type_id.code =='outgoing' and move.origin_returned_move_id:
-                
+                # We use price difference account for purchase_return
+                # main_account_id = svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id
+                main_account_id = svl.product_id.property_account_creditor_price_difference
+                if not main_account_id:
+                    raise ValidationError("No price difference account is set up!!!")
                 if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
                     # for am in am_vals:
                     am['line_ids'].append((0, 0, {
@@ -68,7 +73,7 @@ class StockValuationLayer(models.Model):
                         'ref': "COGS Adjustment",
                         'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                         'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                        'account_id': svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id,
+                        'account_id': main_account_id.id,
                     }))
 
                     am['line_ids'].append((0, 0, {
@@ -90,7 +95,7 @@ class StockValuationLayer(models.Model):
                         'ref': "COGS Adjustment",
                         'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                         'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                        'account_id': svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id,
+                        'account_id': main_account_id.id,
                     }))
 
                     am['line_ids'].append((0, 0, {
@@ -103,7 +108,7 @@ class StockValuationLayer(models.Model):
                         'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
                         'account_id':acc_src,
                     }))
-            
+            # this is incoming and has return and has sale line_id : which means sales return
             elif move.picking_type_id and move.picking_type_id.code =='incoming' and move.origin_returned_move_id and move.sale_line_id:
                 if (not move.sale_line_id.order_id.invoice_count) or (not move.sale_line_id.order_id.invoice_ids.filtered(lambda x:x.state!='cancel')):
                     if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) <0:
@@ -151,7 +156,8 @@ class StockValuationLayer(models.Model):
                             'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
                             'account_id':acc_dest,
                         }))
-                    
+            # this is internal transfer and has return : which means internal transfer return 
+            # this will be unnecessary becuase we don't use internal transfer and we use requsitiion for internal transfer and no cogs in requisition   
             elif move.picking_type_id.code=='internal' and move.origin_returned_move_id and not move.picking_id.requisition_id:
                 origin_unit_cost = self.env['stock.valuation.layer'].sudo().sudo().search([('stock_move_id','=',move.origin_returned_move_id.id)])
                 unit_cost = origin_unit_cost and origin_unit_cost[0].unit_cost or 0
@@ -390,9 +396,6 @@ class StockValuationLayer(models.Model):
             #         line[2].get('amount_currency')
         account_moves = self.env['account.move'].sudo().create(am_vals)
         for move in account_moves:
-            # for line_id in move.line_ids:
-            #     if line_id.currency_id and move.currency_id and line_id.currency_id.id != move.currency_id.id:
-            #         line_id.currency_id = move.currency_id
             for res in self.stock_move_id.picking_id:
                 res.exchange_rate = 1.0 if res.exchange_rate <= 0.0 else res.exchange_rate
                 if res.picking_type_id.code=='incoming':
@@ -400,27 +403,17 @@ class StockValuationLayer(models.Model):
                 else:
                     move.write({'date':res.scheduled_date})
                 for line in move.line_ids:
-                    if res.picking_type_id.code=='incoming':
-                        line.write({'amount_currency':line.balance/res.exchange_rate})
+                    # if res.picking_type_id.code=='incoming':
+                    #     line.write({'amount_currency':line.balance/res.exchange_rate})
+                    # elif res.picking_type_id.code=='outgoing':
+                    if line.currency_id and move.currency_id and line.currency_id.id != move.currency_id.id:
+                        line.currency_id = move.currency_id 
+                    if res.picking_type_id.code in ['incoming','outgoing']:
                         for stock_move in self.stock_move_id:
                             if stock_move.product_id.can_be_unit:
                                 dct = {}
                                 if line.analytic_distribution:
                                     dct = line.analytic_distribution
-                            
-                                dct [str(line.move_id.stock_valuation_layer_ids.product_id.analytic_account_id.id)] = 100
-                                line.write({'analytic_distribution': dct})
-
-                    if res.picking_type_id.code=='outgoing':
-                        for stock_move in self.stock_move_id:
-                            
-                            # if stock_move.product_id.can_be_unit and stock_move.product_id.tracking == 'serial':
-                            if stock_move.product_id.can_be_unit:
-                                dct = {}
-                                if line.analytic_distribution:
-                                    dct = line.analytic_distribution
-                            
-                                # dct [str(line.move_id.stock_valuation_layer_ids.lot_ids.analytic_account_id.id)] = 100
                                 dct [str(line.move_id.stock_valuation_layer_ids.product_id.analytic_account_id.id)] = 100
                                 line.write({'analytic_distribution': dct})
 
