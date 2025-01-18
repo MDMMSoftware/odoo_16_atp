@@ -60,7 +60,7 @@ class StockValuationLayer(models.Model):
             if move.picking_type_id and move.picking_type_id.code =='outgoing' and move.origin_returned_move_id:
                 # We use price difference account for purchase_return
                 # main_account_id = svl.product_id.property_account_expense_id and svl.product_id.property_account_expense_id.id or svl.product_id.categ_id.property_account_expense_categ_id.id
-                main_account_id = svl.product_id.property_account_creditor_price_difference
+                main_account_id = ( svl.product_id.property_account_creditor_price_difference and svl.product_id.property_account_creditor_price_difference.id ) or ( svl.product_id.categ_id.property_account_creditor_price_difference_categ and  svl.product_id.categ_id.property_account_creditor_price_difference_categ.id)
                 if not main_account_id:
                     raise ValidationError("No price difference account is set up!!!")
                 if abs(svl.value)-abs(svl.quantity*move._get_price_unit()) >0:
@@ -73,7 +73,7 @@ class StockValuationLayer(models.Model):
                         'ref': "COGS Adjustment",
                         'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                         'balance': abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                        'account_id': main_account_id.id,
+                        'account_id': main_account_id,
                     }))
 
                     am['line_ids'].append((0, 0, {
@@ -95,7 +95,7 @@ class StockValuationLayer(models.Model):
                         'ref': "COGS Adjustment",
                         'partner_id': move.picking_id.partner_id and move.picking_id.partner_id.id or False,
                         'balance': -abs(abs(svl.value)-abs(svl.quantity*move._get_price_unit())),
-                        'account_id': main_account_id.id,
+                        'account_id': main_account_id,
                     }))
 
                     am['line_ids'].append((0, 0, {
