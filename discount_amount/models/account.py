@@ -483,7 +483,9 @@ class AccountMove(models.Model):
                     total_order_disc = 0
             total_discount_amt += total_order_disc+total_line_disc
 
-            exhange_rate = move.exchange_rate != 0.0 and move.exchange_rate or 1.0
+            exchange_rate = move.exchange_rate != 0.0 and move.exchange_rate or 1.0
+            if move.exchange_rate != exchange_rate:
+                move.exchange_rate = exchange_rate
             
             sign = move.direction_sign   
             if move.move_type in ('out_refund'):
@@ -531,7 +533,7 @@ class AccountMove(models.Model):
             move.discount_amt = total_discount_amt
             move.amount_untaxed = sign * total_untaxed_currency
             move.amount_tax = sign * (total_tax_currency)
-            move.amount_total = sign>0 and sign * (total_currency-(total_discount_amt/exhange_rate)) or sign * (total_currency+(total_discount_amt/exhange_rate))
+            move.amount_total = sign>0 and sign * (total_currency-(total_discount_amt/exchange_rate)) or sign * (total_currency+(total_discount_amt/exchange_rate))
             move.amount_residual = -sign * total_residual_currency
             move.amount_untaxed_signed = -total_untaxed
             move.amount_tax_signed = -total_tax
@@ -539,7 +541,7 @@ class AccountMove(models.Model):
             move.amount_residual_signed = total_residual
             move.amount_total_in_currency_signed = abs(move.amount_total) if move.move_type == 'entry' else -(sign * move.amount_total)
             move.amount_add = amount_add
-            move.exchange_rate = exhange_rate
+            # move.exchange_rate = exchange_rate
 
     @api.depends('invoice_payment_term_id', 'invoice_date', 'currency_id', 'amount_total_in_currency_signed', 'invoice_date_due')
     def _compute_needed_terms(self):
