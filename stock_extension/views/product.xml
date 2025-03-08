@@ -90,7 +90,7 @@
                     <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//field[@name='property_account_creditor_price_difference']" position="attributes"> 
-                    <attribute name="required">1</attribute>
+                    <attribute name="required">0</attribute>
                 </xpath>
                 <xpath expr="//field[@name='uom_po_id']" position="after">  
                     <field name="default_code" string="Internal Reference" attrs="{'invisible': [('product_variant_count', '>', 1)]}"/>

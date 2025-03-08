@@ -253,6 +253,13 @@ class AccountMove(models.Model):
                 raise ValidationError('Can not confirm commission bill when invoices are not confiemd yet.')
         return super().action_post()
     
+    def copy(self, default=None):
+        default = dict(default or {})
+        if self.commercial_sale_id:
+            raise ValidationError("You cannot duplicate the commerical bill!!")
+        copy_record = super(AccountMove, self).copy(default)
+        return copy_record
+    
     @contextmanager
     def _sync_dynamic_lines(self, container):
         with self._disable_recursion(container, 'skip_invoice_sync') as disabled:

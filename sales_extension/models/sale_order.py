@@ -203,7 +203,7 @@ class SaleOrder(models.Model):
     
     def action_cancel(self):
         commission_moves = self.env['account.move'].search([('commercial_sale_id','=',self.id)])
-        if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:
+        if commission_moves and any([state!='cancel' for state in commission_moves.mapped('state')]): 
             raise UserError('You can not cancel sale order which has a commission bill.')
         return super().action_cancel()
     
@@ -554,7 +554,7 @@ class AccountMove(models.Model):
         order_id = self.line_ids.sale_line_ids.order_id.id
         if order_id:
             commission_moves = self.env['account.move'].search([('commercial_sale_id','=',order_id)])
-            if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:   
+            if commission_moves and any([state!='cancel' for state in commission_moves.mapped('state')]):   
                 raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_draft()
     
@@ -562,7 +562,7 @@ class AccountMove(models.Model):
         order_id = self.line_ids.sale_line_ids.order_id.id
         if order_id:
             commission_moves = self.env['account.move'].search([('commercial_sale_id','=',order_id)])
-            if commission_moves and len(commission_moves) != 2 and commission_moves.reversal_move_id not in commission_moves:
+            if commission_moves and any([state!='cancel' for state in commission_moves.mapped('state')]):   
                 raise UserError('You can not reset to draft the invoice which has a commission bill.')
         return super().button_cancel()
 
