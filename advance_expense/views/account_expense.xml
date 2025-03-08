@@ -481,12 +481,12 @@
         <!-- from res_partner.xml -->
 
         <record id="account.res_partner_action_customer" model="ir.actions.act_window">
-            <field name="context">{}</field>
+            <field name="context">{'default_partner_type':'customer'}</field>
             <field name="domain">[('partner_type', '=', 'customer')]</field>
         </record> 
 
         <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
-            <field name="context">{}</field>
+            <field name="context">{'default_partner_type':'vendor'}</field>
             <field name="domain">[('partner_type', '=', 'vendor')]</field>
         </record>            
 
