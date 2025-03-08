@@ -132,12 +132,18 @@ class SaleOrder(models.Model):
                     'branch_id':record.branch_id and record.branch_id.id or False,
                 }
 
+
+                amount_commercial  = 0.0
+                if record.is_commission:
+                    for line in record.order_line:
+                        amount_commercial += line.commercial_amt if line.commercial_type == 'amount' else ((line.qty_delivered * line.price_unit) * line.commercial_amt /100)
+
                 line_vals = {
                     'product_id': product.id,
                     'product_uom_id':product.uom_id.id,
                     'name': str(record.name) + '|' + str(product.product_code)+'|'+payable_acc.name,
                     'quantity': 1,                    
-                    'price_unit': record.amount_commercial,
+                    'price_unit': amount_commercial,
                     'account_id': expense_acc.id,
                 }
                 invoice_vals['invoice_line_ids'].append((0, 0, line_vals))
@@ -156,8 +162,8 @@ class SaleOrder(models.Model):
     def compute_invisible_commercial(self):
         for rec in self:
             result = False
-            move_id = self.env['account.move'].search([('commercial_sale_id', '=', rec.id)],limit=1)
-            if not rec.is_commission or rec.amount_commercial <= 0.0 or rec.state != 'sale' or move_id:
+            move_ids = self.env['account.move'].search([('commercial_sale_id', '=', rec.id)])
+            if not rec.is_commission or rec.amount_commercial <= 0.0 or rec.state != 'sale' or (move_ids and any([state!='cancel' for state in move_ids.mapped('state')])):
                 result = True
             rec.invisible_commercial = result
             
@@ -230,7 +236,6 @@ class SaleOrder(models.Model):
             if order.is_commission or order.extra_amt:
                
                 for line in order.order_line:
-                    
                     amount_commercial += line.commercial_amt if line.commercial_type == 'amount' else (line.price_subtotal * line.commercial_amt /100)
                     amount_add += line.add_amt if line.add_type == 'amount' else (line.price_subtotal * line.add_amt /100)
             order.update({
@@ -301,7 +306,9 @@ class AccountMoveReversal(models.TransientModel):
     def reverse_moves(self):
         moves = self.move_ids
         order_id = self.move_ids.line_ids.sale_line_ids.order_id
-        if order_id and order_id.commercial_move_id and not order_id.commercial_move_id.reversal_move_id:
+        if moves.commercial_sale_id:
+            raise UserError("You cannot reverse the moves of a commission bill")
+        if order_id and order_id.commercial_move_id and (not order_id.commercial_move_id.reversal_move_id and order_id.commercial_move_id.state != 'cancel'):
             raise UserError('You cannot cancel the invoice which has a commission bill.')
 
         for move in moves:
