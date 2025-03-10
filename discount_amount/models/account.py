@@ -255,7 +255,7 @@ class AccountMove(models.Model):
     
     def copy(self, default=None):
         default = dict(default or {})
-        if self.commercial_sale_id:
+        if self.commercial_sale_id and not (default and default['ref'] and 'Reversal' in default['ref']):
             raise ValidationError("You cannot duplicate the commerical bill!!")
         copy_record = super(AccountMove, self).copy(default)
         return copy_record
